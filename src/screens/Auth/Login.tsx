@@ -6,6 +6,7 @@ import {
 } from 'react-native'
 import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT, SCREEN_WIDTH } from '../../constants'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { navigation } from '../../navigations/rootNavigation'
 const Login = (): JSX.Element => {
     const [hidePassword, sethidePassword] = useState(true)
     const [username, setusername] = useState<string>('')
@@ -17,11 +18,13 @@ const Login = (): JSX.Element => {
     const _onChangeUsername = (text: string): void => {
         allowLoginCheck(text, password, setallowLogin)
         setusername(text)
-
     }
     const _onChangePassword = (text: string): void => {
         allowLoginCheck(username, text, setallowLogin)
         setpassword(text)
+    }
+    const _onPressRegister = (): void => {
+        navigation.navigate('Register')
     }
     return (
         <SafeAreaView style={styles.container}>
@@ -107,7 +110,10 @@ const Login = (): JSX.Element => {
                     </TouchableOpacity>
                 </View>
             </View>
-            <View style={styles.registerWrapper}>
+            <TouchableOpacity
+                onPress={_onPressRegister}
+                activeOpacity={1}
+                style={styles.registerWrapper}>
                 <Text style={{
                     textAlign: 'center',
                     fontSize: 12,
@@ -118,7 +124,7 @@ const Login = (): JSX.Element => {
                         color: '#333'
                     }}>Don't have account?
                             </Text> Register now.</Text>
-            </View>
+            </TouchableOpacity>
         </SafeAreaView >
     )
 }

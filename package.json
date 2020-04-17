@@ -17,6 +17,7 @@
     "@react-navigation/native": "^5.1.5",
     "@react-navigation/stack": "^5.2.10",
     "firebase": "^7.14.0",
+    "formik": "^2.1.4",
     "react": "16.11.0",
     "react-native": "0.62.2",
     "react-native-firebase": "^5.6.0",
@@ -29,7 +30,8 @@
     "react-navigation": "^4.3.7",
     "react-redux": "^7.2.0",
     "redux": "^4.0.5",
-    "redux-thunk": "^2.3.0"
+    "redux-thunk": "^2.3.0",
+    "yup": "^0.28.3"
   },
   "devDependencies": {
     "@babel/core": "^7.6.2",
@@ -38,6 +40,7 @@
     "@types/jest": "^24.0.24",
     "@types/react-native": "^0.62.0",
     "@types/react-test-renderer": "16.9.2",
+    "@types/yup": "^0.26.36",
     "@typescript-eslint/eslint-plugin": "^2.27.0",
     "@typescript-eslint/parser": "^2.27.0",
     "babel-jest": "^24.9.0",
