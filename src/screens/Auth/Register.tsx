@@ -13,6 +13,7 @@ import * as yup from 'yup'
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Easing } from 'react-native'
 import { navigation } from '../../navigations/rootNavigation'
+import DatePicker, { MONTH_ALIAS } from '../../components/DatePicker'
 
 export interface RegisterFormValuesStep1 {
     phone: string,
@@ -24,17 +25,10 @@ export interface RegisterFormValuesStep2 {
     savePassword: boolean
 }
 export interface RegisterFormValuesStep3 {
-    birthday: {
-        date: number,
-        month: number,
-        year: number
-    }
+    date: number,
+    month: number,
+    year: number
 }
-const MONTH_ALIAS = ['Jan', 'Feb', 'Mar',
-    'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep',
-    'Oct', 'Nov', 'Dec'
-]
 const Register = () => {
     const _loadingDeg = new Animated.Value(0)
     const _loadingOpacity = new Animated.Value(0)
@@ -42,34 +36,32 @@ const Register = () => {
     const [phone, setPhone] = useState<string>('')
     const [fullname, setFullname] = useState<string>('')
     const [password, setPassword] = useState<string>('')
+    const [birthday, setBirthday] = useState<RegisterFormValuesStep3>({
+        date: 1,
+        month: 1,
+        year: 2020
+    })
     const [step, setStep] = useState<number>(1)
     const [validating, setValidating] = useState<boolean>(false)
     const [currentTab, setCurrentTab] = useState<number>(1)
     const _onToggleTab = (type: number): void => setCurrentTab(type)
-
     const _onPressNextStep = (): void => {
     }
     const _onValidatedStep1 = (values: RegisterFormValuesStep1) => {
-        if (step) {
-
-        }
         setStep(step + 1)
         setEmail(values.email)
         setPhone(values.phone)
     }
     const _onValidatedStep2 = (values: RegisterFormValuesStep2): void => {
-        if (step) {
-
-        }
         setStep(step + 1)
         setFullname(values.fullname)
         setPassword(values.password)
     }
     const _onValidatedStep3 = (values: RegisterFormValuesStep3): void => {
-        if (step) {
-
+        if (Math.floor(((new Date).getTime() - (new Date(`${MONTH_ALIAS[values.month]} ${values.date}, ${values.year}`).getTime())) / (1000 * 60 * 60 * 24 * 365)) > 5) {
+            setBirthday(values)
+            setStep(step + 1)
         }
-        setStep(step + 1)
     }
     const _startLoadingAnimation = (times: number) => {
         _loadingDeg.setValue(0)
@@ -86,15 +78,11 @@ const Register = () => {
         }).start()
     }
     const SchemaStep1 = yup.object().shape({
-        phone: yup.number().test('minLength', 'Phone number must contain least 8 numbers', number => {
-            return `${number}`.length >= 8
-        }).when('email', {
+        phone: yup.string().when('email', {
             is: (email: string) => !email || currentTab === 1,
-            then: yup.number().test('minLength', 'Phone number must contain least 8 numbers', number => {
-                return `${number}`.length >= 8
-            }).required()
+            then: yup.string().matches(/\d+/).required()
         }),
-        email: yup.string().email().when('phone', {
+        email: yup.string().when('phone', {
             is: (phone: string) => !phone || currentTab === 2,
             then: yup.string().email().required()
         })
@@ -105,11 +93,9 @@ const Register = () => {
         savePassword: yup.boolean().required()
     })
     const SchemaStep3 = yup.object().shape({
-        birthday: yup.object().shape({
-            date: yup.number().min(1).max(31).required(),
-            month: yup.string().min(0).max(11).required(),
-            year: yup.number().min(1900).max(2020)
-        })
+        date: yup.number().min(1).max(31).required(),
+        month: yup.string().min(0).max(11).required(),
+        year: yup.number().min(1900).max(2020).required()
     })
     return (
         <SafeAreaView style={styles.container}>
@@ -120,6 +106,7 @@ const Register = () => {
                         ? SCREEN_HEIGHT - 100 - STATUS_BAR_HEIGHT :
                         'auto'
                     : SCREEN_HEIGHT - 50 - STATUS_BAR_HEIGHT,
+                width: step === 3 ? '100%' : 0.9 * SCREEN_WIDTH
             }}>
                 {step === 1 && (
                     <Formik
@@ -447,19 +434,15 @@ const Register = () => {
                     </Formik>
                 )}
                 {step === 3 && (
-                    <ScrollView style={styles.step3ScrollView}>
+                    <ScrollView
+                        bounces={false}
+                        style={styles.step3ScrollView}>
                         <Formik
                             validateOnBlur={false}
                             validateOnChange={false}
                             onSubmit={_onValidatedStep3}
                             validationSchema={SchemaStep3}
-                            initialValues={{
-                                birthday: {
-                                    date: 1,
-                                    month: 0,
-                                    year: 1970
-                                }
-                            }}
+                            initialValues={birthday}
                         >
                             {(formikProps: FormikProps<RegisterFormValuesStep3>) => (
                                 <View style={styles.step3Wrapper}>
@@ -483,10 +466,84 @@ const Register = () => {
                                             Why do I need to provide my birthday?
                                         </Text>
                                     </View>
-                                    <View style={{}}>
+                                    <View style={styles.birthdayInputWrapper}>
+                                        <View style={styles.birthdayInput}>
+                                            <Text>
+                                                {MONTH_ALIAS[formikProps.values.month]} {formikProps.values.date}, {formikProps.values.year} </Text>
+                                            <View style={styles.currentYear}>
+                                                <Text style={{
+                                                    color: isEnoughAge(formikProps) ? "#000" : 'red'
+                                                }}>{getAges(formikProps)} Years Old</Text>
+                                            </View>
+                                        </View>
+                                        {!isEnoughAge(formikProps) && (
+                                            <Text style={{
+                                                color: '#666',
+                                                marginVertical: 2.5
+                                            }}>You need to input your birthday.</Text>
+                                        )}
 
+                                        <View style={{ alignItems: 'center' }}>
+                                            <Text style={{
+                                                marginVertical: 10,
+                                                textAlign: 'center',
+                                                color: '#666'
+                                            }}>Use your own birthday, even if this account is for a bussiness, a pet or something else.</Text>
+                                        </View>
                                     </View>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            _startLoadingAnimation(1)
+                                            formikProps.handleSubmit()
+                                        }}
+                                        activeOpacity={0.8}
+                                        style={{
+                                            ...styles.btnNextStep,
+                                            width: SCREEN_WIDTH * 0.9
+                                        }}>
+                                        <Animated.Text style={{
+                                            opacity: Animated.subtract(1, _loadingOpacity),
+                                            fontWeight: '600',
+                                            color: '#fff'
+                                        }}>Next</Animated.Text>
+                                        <Animated.Image
+                                            style={{
+                                                ...styles.loadingIcon,
+                                                position: 'absolute',
+                                                opacity: _loadingOpacity,
+                                                transform: [
+                                                    {
+                                                        rotate: _loadingDeg
+                                                            .interpolate({
+                                                                inputRange: [0, 100],
+                                                                outputRange: ['0deg',
+                                                                    '36000deg']
+                                                            })
+                                                    }
+                                                ]
+                                            }}
+                                            source={
+                                                require('../../assets/icons/loading.png')
+                                            } />
+
+                                    </TouchableOpacity>
+                                    <DatePicker
+                                        defaultDate={1}
+                                        defaultMonth="Jan"
+                                        defaultYear={2020}
+                                        onDateChange={(date: number) => {
+                                            formikProps.handleChange('date')(`${date}`)
+                                        }}
+                                        onMonthIndexChange={(index: number) => {
+                                            formikProps.handleChange('month')(`${index}`)
+                                        }}
+                                        onYearChange={(year: number) => {
+                                            formikProps.handleChange('year')(`${year}`)
+                                        }}
+                                    />
+
                                 </View>
+
                             )}
                         </Formik>
                     </ScrollView>
@@ -696,6 +753,29 @@ const styles = StyleSheet.create({
         height: 64,
         width: 64
     },
+    birthdayInputWrapper: {
+        width: '100%',
+        paddingHorizontal: 0.05 * SCREEN_WIDTH
+    },
+    birthdayInput: {
+        position: 'relative',
+        backgroundColor: 'rgb(242,242,242)',
+        width: '100%',
+        height: 44,
+        justifyContent: 'center',
+        borderColor: '#ddd',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingHorizontal: 15,
+    },
+    currentYear: {
+        position: 'absolute',
+        paddingHorizontal: 15,
+        height: 44,
+        justifyContent: 'center',
+        top: 0,
+        right: 0
+    },
     //
     btnLogin: {
         height: 50,
@@ -705,3 +785,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     }
 })
+function getAges(formikProps: FormikProps<RegisterFormValuesStep3>): React.ReactNode {
+    return Math.floor(((new Date).getTime() - (new Date(`${MONTH_ALIAS[formikProps.values.month]} ${formikProps.values.date}, ${formikProps.values.year}`).getTime())) / (1000 * 60 * 60 * 24 * 365))
+}
+
+function isEnoughAge(formikProps: FormikProps<RegisterFormValuesStep3>) {
+    return Math.floor(((new Date).getTime() - (new Date(`${MONTH_ALIAS[formikProps.values.month]} ${formikProps.values.date}, ${formikProps.values.year}`).getTime())) / (1000 * 60 * 60 * 24 * 365)) > 5
+}
+
