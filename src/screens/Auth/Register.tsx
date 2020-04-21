@@ -14,6 +14,8 @@ import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Easing } from 'react-native'
 import { navigation } from '../../navigations/rootNavigation'
 import DatePicker, { MONTH_ALIAS } from '../../components/DatePicker'
+import { Alert } from 'react-native'
+import { WelcomePropsRouteParams } from './Welcome'
 
 export interface RegisterFormValuesStep1 {
     phone: string,
@@ -36,6 +38,7 @@ const Register = () => {
     const [phone, setPhone] = useState<string>('')
     const [fullname, setFullname] = useState<string>('')
     const [password, setPassword] = useState<string>('')
+    const [savePassword, setSavePassword] = useState<boolean>(true)
     const [birthday, setBirthday] = useState<RegisterFormValuesStep3>({
         date: 1,
         month: 1,
@@ -56,11 +59,33 @@ const Register = () => {
         setStep(step + 1)
         setFullname(values.fullname)
         setPassword(values.password)
+        setSavePassword(values.savePassword)
     }
     const _onValidatedStep3 = (values: RegisterFormValuesStep3): void => {
-        if (Math.floor(((new Date).getTime() - (new Date(`${MONTH_ALIAS[values.month]} ${values.date}, ${values.year}`).getTime())) / (1000 * 60 * 60 * 24 * 365)) > 5) {
-            setBirthday(values)
-            setStep(step + 1)
+        const selectedDate = new Date(`${MONTH_ALIAS[values.month]} ${values.date}, ${values.year}`)
+        if (selectedDate.getDate() != values.date
+            || selectedDate.getFullYear() != values.year
+            || selectedDate.getMonth() != values.month) {
+            Alert.alert('Error', 'Invalid birthday!')
+            return;
+        }
+        if (Math.floor(((new Date).getTime() - (selectedDate.getTime())) / (1000 * 60 * 60 * 24 * 365)) > 5) {
+            /**
+             * HANDLER CREATE HERE
+             */
+            const params: WelcomePropsRouteParams = {
+                date: values.date,
+                month: values.month,
+                year: values.year,
+                phone,
+                email,
+                fullname,
+                password,
+                savePassword
+            }
+            navigation.navigate('Welcome', params)
+        } else {
+            Alert.alert('Error')
         }
     }
     const _startLoadingAnimation = (times: number) => {
@@ -80,7 +105,7 @@ const Register = () => {
     const SchemaStep1 = yup.object().shape({
         phone: yup.string().when('email', {
             is: (email: string) => !email || currentTab === 1,
-            then: yup.string().matches(/\d+/).required()
+            then: yup.string().min(6).matches(/[0-6]{6,}/).required()
         }),
         email: yup.string().when('phone', {
             is: (phone: string) => !phone || currentTab === 2,
@@ -201,8 +226,8 @@ const Register = () => {
                                             }}>
                                                 <TextInput
                                                     onBlur={formikProps.handleBlur('email')}
-                                                    onChangeText={(e) => {
-                                                        formikProps.handleChange('email')(e)
+                                                    onChangeText={(e: string) => {
+                                                        formikProps.handleChange('email')(e.toLowerCase())
                                                         formikProps.setFieldTouched('email', false, false)
                                                     }}
                                                     autoFocus={true}

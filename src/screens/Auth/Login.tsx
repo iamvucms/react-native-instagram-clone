@@ -1,33 +1,67 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
     StyleSheet, Text,
     SafeAreaView, TouchableOpacity,
-    View, Image, TextInput
+    View, Image, TextInput, Animated
 } from 'react-native'
 import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT, SCREEN_WIDTH } from '../../constants'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { navigation } from '../../navigations/rootNavigation'
+import { useSelector } from '../../reducers'
+import { useDispatch } from 'react-redux'
+import { LoginRequest, userLoginWithEmail } from '../../actions/userActions'
+import { Dispatch } from 'redux'
+import { userAction } from 'src/reducers/userReducer'
+import { ThunkDispatch } from 'redux-thunk'
 const Login = (): JSX.Element => {
+    const dispatch = useDispatch()
+    const [loading, setLoading] = useState<boolean>(false)
     const [hidePassword, sethidePassword] = useState(true)
-    const [username, setusername] = useState<string>('')
-    const [password, setpassword] = useState<string>('')
+    const [username, setUsername] = useState<string>('')
+    const [password, setPassword] = useState<string>('')
     const [allowLogin, setallowLogin] = useState(false)
-    const _onPressToggleHidePassword = (): void => {
-        sethidePassword(!hidePassword)
+    const _loadingDeg = new Animated.Value(0)
+    const _animationLoadingDeg = () => {
+        Animated.timing(_loadingDeg, {
+            useNativeDriver: true,
+            toValue: 1,
+            duration: 400
+        }).start(() => {
+            _loadingDeg.setValue(0)
+            if (loading) _animationLoadingDeg()
+        })
     }
-    const _onChangeUsername = (text: string): void => {
-        allowLoginCheck(text, password, setallowLogin)
-        setusername(text)
-    }
-    const _onChangePassword = (text: string): void => {
-        allowLoginCheck(username, text, setallowLogin)
-        setpassword(text)
-    }
-    const _onPressRegister = (): void => {
-        navigation.navigate('Register')
-    }
+    const {
+        _onChangeUsername,
+        _onChangePassword,
+        _onPressToggleHidePassword,
+        _onLogin,
+        _onPressRegister } = getEventHandlers(sethidePassword,
+            hidePassword, password, setallowLogin,
+            setUsername, username, setPassword, setLoading, dispatch)
     return (
         <SafeAreaView style={styles.container}>
+            {loading && <View style={styles.loadingWrapper}>
+                <View style={styles.loading}>
+                    <Animated.Image onLayout={_animationLoadingDeg} style={{
+                        width: 30,
+                        height: 30,
+                        marginRight: 10,
+                        transform: [
+                            {
+                                rotate: _loadingDeg.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: ['0deg', '360deg']
+                                })
+                            }
+                        ]
+                    }} source={require('../../assets/icons/waiting.png')} />
+                    <Text style={{
+                        fontWeight: '500'
+                    }}>Logining...</Text>
+                </View>
+            </View>
+            }
             <View style={styles.languageChooser}>
                 <TouchableOpacity style={styles.btnCurLanguage}>
                     <Text style={styles.curLanguage}>Tieng Viet (Viet Nam)</Text>
@@ -43,7 +77,7 @@ const Login = (): JSX.Element => {
                 </View>
                 <View style={styles.loginForm}>
                     <View style={styles.textInputWrapper}>
-                        <TextInput value={username} onChangeText={_onChangeUsername} placeholder="Username"
+                        <TextInput autoCapitalize="none" value={username} onChangeText={_onChangeUsername} placeholder="Username"
                             style={styles.input} />
                     </View>
                     <View style={styles.textInputWrapper}>
@@ -66,6 +100,7 @@ const Login = (): JSX.Element => {
                         </TouchableOpacity>
                     </View>
                     <TouchableOpacity
+                        onPress={_onLogin}
                         disabled={!allowLogin}
                         activeOpacity={0.6} style={{
                             ...styles.btnLogin,
@@ -80,6 +115,7 @@ const Login = (): JSX.Element => {
                 </View>
                 <View style={styles.otherOptionsWrapper}>
                     <TouchableOpacity
+                        onPress={() => navigation.navigate('ForgotPassword')}
                         style={styles.forgotPassword}
                         activeOpacity={1}>
                         <Text style={{
@@ -235,8 +271,51 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderTopColor: '#ddd',
         borderTopWidth: 1
-    }
+    },
+    loadingWrapper: {
+        width: SCREEN_WIDTH,
+        height: SCREEN_HEIGHT,
+        position: 'absolute',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        zIndex: 99
+    },
+    loading: {
+        flexDirection: 'row',
+        padding: 15,
+        borderRadius: 5,
+        backgroundColor: '#fff',
+        alignItems: 'center'
+    },
 })
+function getEventHandlers(sethidePassword: React.Dispatch<React.SetStateAction<boolean>>, hidePassword: boolean, password: string, setallowLogin: React.Dispatch<React.SetStateAction<boolean>>, setUsername: React.Dispatch<React.SetStateAction<string>>, username: string, setPassword: React.Dispatch<React.SetStateAction<string>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>, dispatch: ThunkDispatch<{}, {}, userAction>) {
+    const _onPressToggleHidePassword = (): void => {
+        sethidePassword(!hidePassword)
+    }
+    const _onChangeUsername = (text: string): void => {
+        allowLoginCheck(text, password, setallowLogin)
+        setUsername(text)
+    }
+    const _onChangePassword = (text: string): void => {
+        allowLoginCheck(username, text, setallowLogin)
+        setPassword(text)
+    }
+    const _onPressRegister = (): void => {
+        navigation.navigate('Register')
+    }
+    const _onLogin = async () => {
+        setLoading(true)
+        const loginData: userLoginWithEmail = {
+            email: username,
+            password,
+        }
+        await dispatch(LoginRequest(loginData))
+        setLoading(false)
+    }
+    return { _onChangeUsername, _onChangePassword, _onPressToggleHidePassword, _onLogin, _onPressRegister }
+}
+
 function allowLoginCheck(username: string, password: string, setallowLogin: React.Dispatch<React.SetStateAction<boolean>>) {
     if (username.length > 0 && password.length > 0)
         setallowLogin(true)

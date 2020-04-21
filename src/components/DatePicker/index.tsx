@@ -74,6 +74,33 @@ const DatePicker = (props: DatePickerProps): JSX.Element => {
                 break;
         }
     }
+    const _onSelectMonth = (index: number) => {
+        monthRef.current?.scrollTo({
+            x: 0,
+            y: index * 44
+        })
+        if (props.onMonthIndexChange) {
+            props.onMonthIndexChange(index)
+        }
+    }
+    const _onSelectDate = (index: number) => {
+        dateRef.current?.scrollTo({
+            x: 0,
+            y: index * 44
+        })
+        if (props.onDateChange) {
+            props.onDateChange(DATES[index])
+        }
+    }
+    const _onSelectYear = (index: number) => {
+        yearRef.current?.scrollTo({
+            x: 0,
+            y: index * 44
+        })
+        if (props.onYearChange) {
+            props.onYearChange(YEARS[index])
+        }
+    }
     return (
         <View style={[styles.container, props.style]}>
             <View style={styles.wrapper}>
@@ -100,7 +127,10 @@ const DatePicker = (props: DatePickerProps): JSX.Element => {
 
                         </TouchableOpacity>
                         {MONTH_ALIAS.map((month: string, index: number) => (
-                            <TouchableOpacity activeOpacity={1} key={index} style={styles.optionItem}>
+                            <TouchableOpacity
+                                onPress={_onSelectMonth.bind(null, index)}
+                                activeOpacity={1}
+                                key={index} style={styles.optionItem}>
                                 <Text style={{
                                     color: activeMonthIndex === index ? '#000' : '#666',
                                     fontWeight: activeMonthIndex === index ? '600' : '400',
@@ -135,7 +165,10 @@ const DatePicker = (props: DatePickerProps): JSX.Element => {
 
                         </TouchableOpacity>
                         {DATES.map((date: number, index: number) => (
-                            <TouchableOpacity activeOpacity={1} key={index} style={styles.optionItem}>
+                            <TouchableOpacity
+                                onPress={_onSelectDate.bind(null, index)}
+                                activeOpacity={1}
+                                key={index} style={styles.optionItem}>
                                 <Text style={{
                                     color: activeDateIndex === index ? '#000' : '#666',
                                     fontWeight: activeDateIndex === index ? '600' : '400',
@@ -170,7 +203,10 @@ const DatePicker = (props: DatePickerProps): JSX.Element => {
 
                         </TouchableOpacity>
                         {YEARS.map((years: number, index: number) => (
-                            <TouchableOpacity activeOpacity={1} key={index} style={styles.optionItem}>
+                            <TouchableOpacity
+                                onPress={_onSelectYear.bind(null, index)}
+                                activeOpacity={1}
+                                key={index} style={styles.optionItem}>
                                 <Text style={{
                                     color: activeYearIndex === index ? '#000' : '#666',
                                     fontWeight: activeYearIndex === index ? '600' : '400',
