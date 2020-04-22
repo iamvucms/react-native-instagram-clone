@@ -1,18 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react'
-import {
-    StyleSheet, Text,
-    SafeAreaView, TouchableOpacity,
-    View, Image, TextInput, Animated
-} from 'react-native'
-import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT, SCREEN_WIDTH } from '../../constants'
+import React, { useState } from 'react'
+import { Animated, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { navigation } from '../../navigations/rootNavigation'
-import { useSelector } from '../../reducers'
 import { useDispatch } from 'react-redux'
-import { LoginRequest, userLoginWithEmail } from '../../actions/userActions'
-import { Dispatch } from 'redux'
-import { userAction } from 'src/reducers/userReducer'
 import { ThunkDispatch } from 'redux-thunk'
+import { userAction } from 'src/reducers/userReducer'
+import { LoginRequest, userLoginWithEmail } from '../../actions/userActions'
+import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../constants'
+import { navigation } from '../../navigations/rootNavigation'
+import * as yup from 'yup'
+import { firestore, auth } from 'firebase'
 const Login = (): JSX.Element => {
     const dispatch = useDispatch()
     const [loading, setLoading] = useState<boolean>(false)
@@ -36,7 +32,8 @@ const Login = (): JSX.Element => {
         _onChangePassword,
         _onPressToggleHidePassword,
         _onLogin,
-        _onPressRegister } = getEventHandlers(sethidePassword,
+        _onPressRegister } = getEventHandlers(
+            sethidePassword,
             hidePassword, password, setallowLogin,
             setUsername, username, setPassword, setLoading, dispatch)
     return (
@@ -77,7 +74,7 @@ const Login = (): JSX.Element => {
                 </View>
                 <View style={styles.loginForm}>
                     <View style={styles.textInputWrapper}>
-                        <TextInput autoCapitalize="none" value={username} onChangeText={_onChangeUsername} placeholder="Username"
+                        <TextInput autoCapitalize="none" value={username} onChangeText={_onChangeUsername} placeholder="Username, email or phone number"
                             style={styles.input} />
                     </View>
                     <View style={styles.textInputWrapper}>
@@ -289,7 +286,16 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
 })
-function getEventHandlers(sethidePassword: React.Dispatch<React.SetStateAction<boolean>>, hidePassword: boolean, password: string, setallowLogin: React.Dispatch<React.SetStateAction<boolean>>, setUsername: React.Dispatch<React.SetStateAction<string>>, username: string, setPassword: React.Dispatch<React.SetStateAction<string>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>, dispatch: ThunkDispatch<{}, {}, userAction>) {
+function getEventHandlers(
+    sethidePassword: React.Dispatch<React.SetStateAction<boolean>>,
+    hidePassword: boolean,
+    password: string,
+    setallowLogin: React.Dispatch<React.SetStateAction<boolean>>,
+    setUsername: React.Dispatch<React.SetStateAction<string>>,
+    username: string,
+    setPassword: React.Dispatch<React.SetStateAction<string>>,
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>,
+    dispatch: ThunkDispatch<{}, {}, userAction>) {
     const _onPressToggleHidePassword = (): void => {
         sethidePassword(!hidePassword)
     }
@@ -306,17 +312,33 @@ function getEventHandlers(sethidePassword: React.Dispatch<React.SetStateAction<b
     }
     const _onLogin = async () => {
         setLoading(true)
+        let email = ''
+        await yup.string().required().email().validate(username).then(async re => {
+            email = username
+        }).catch(async err => {
+            const result = await firestore().collection('users')
+                .where('username', '==', username).get()
+            if (result.docs.length > 0) {
+                email = result.docs[0].data().email
+            }
+        })
         const loginData: userLoginWithEmail = {
-            email: username,
+            email: email,
             password,
         }
         await dispatch(LoginRequest(loginData))
         setLoading(false)
     }
-    return { _onChangeUsername, _onChangePassword, _onPressToggleHidePassword, _onLogin, _onPressRegister }
+    return {
+        _onChangeUsername, _onChangePassword,
+        _onPressToggleHidePassword, _onLogin, _onPressRegister
+    }
 }
 
-function allowLoginCheck(username: string, password: string, setallowLogin: React.Dispatch<React.SetStateAction<boolean>>) {
+function allowLoginCheck(
+    username: string,
+    password: string,
+    setallowLogin: React.Dispatch<React.SetStateAction<boolean>>) {
     if (username.length > 0 && password.length > 0)
         setallowLogin(true)
     else

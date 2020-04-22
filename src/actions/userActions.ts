@@ -14,7 +14,7 @@ export const LoginRequest = (user: userLoginWithEmail):
     return (dispatch: ThunkDispatch<{}, {}, userAction>) => {
         return auth().signInWithEmailAndPassword(user.email, user.password).then(rs => {
             if (rs.user) {
-                AsyncStorage.setItem('user_data', JSON.stringify(rs.user))
+                AsyncStorage.setItem('user', JSON.stringify(rs.user))
                 const result: userPayload = {
                     user: {
                         email: rs.user.email,
@@ -49,6 +49,7 @@ export const RegisterRequest = (userData: RegisterParams):
         return auth()
             .createUserWithEmailAndPassword(userData.email, userData.password)
             .then(rs => {
+                rs.user?.sendEmailVerification()
                 firestore().collection('users')
                     .add({
                         email: userData.email,

@@ -79,6 +79,8 @@ target 'Instagram' do
   pod 'RNGestureHandler', :path => '../node_modules/react-native-gesture-handler'
 
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
+  pod 'RNCAsyncStorage', :path => '../node_modules/@react-native-community/async-storage'
+
   target 'InstagramTests' do
     inherit! :complete
     # Pods for testing

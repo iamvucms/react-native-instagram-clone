@@ -13,11 +13,14 @@ import { StyleSheet } from 'react-native';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import RootStackNavigation from './src/navigations'
 import { Provider } from 'react-redux'
-import store from './src/store'
+import { persistor, store } from './src/store'
+import { PersistGate } from 'redux-persist/integration/react'
 const App = () => {
   return (
     <Provider store={store}>
-      <RootStackNavigation />
+      <PersistGate loading={null} persistor={persistor}>
+        <RootStackNavigation />
+      </PersistGate>
     </Provider>
   );
 };

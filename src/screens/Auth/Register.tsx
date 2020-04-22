@@ -679,7 +679,6 @@ const styles = StyleSheet.create({
     loadingIcon: {
         width: 36,
         height: 36,
-
     },
     btnPhoneCode: {
         position: 'absolute',

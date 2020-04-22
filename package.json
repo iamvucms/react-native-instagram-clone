@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "@react-native-community/async-storage": "^1.9.0",
     "@react-native-community/masked-view": "^0.1.8",
     "@react-native-firebase/app": "^6.4.0",
     "@react-native-firebase/firestore": "^6.4.0",
@@ -32,6 +33,7 @@
     "react-navigation": "^4.3.7",
     "react-redux": "^7.2.0",
     "redux": "^4.0.5",
+    "redux-persist": "^6.0.0",
     "redux-thunk": "^2.3.0",
     "yup": "^0.28.3"
   },
