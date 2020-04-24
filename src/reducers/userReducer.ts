@@ -4,11 +4,24 @@ type Photo = {
     id: number,
     src: string
 }
+export type UserInfo = {
+    email?: string,
+    birthday?: {
+        date: number,
+        month: number,
+        year: number
+    },
+    fullname?: string,
+    phone?: string,
+    username?: string,
+    avatarURL?: string
+}
 export interface userPayload {
     user: {
         email?: string | null,
         logined?: boolean,
-        firebaseUser?: firebase.UserInfo
+        firebaseUser?: firebase.UserInfo,
+        userInfo?: UserInfo
     },
     photos?: [] | Photo[]
 }
@@ -32,33 +45,27 @@ const reducer = (state: userPayload = defaultState, action: userAction): userPay
         case userActionTypes.LOGIN_REQUEST:
             state = { ...state, user: {} }
             return state
-            break;
         case userActionTypes.LOGIN_SUCCESS:
             action = <SuccessAction>action
             state = { ...state, user: { ...action.payload.user } }
             return state
-            break;
         case userActionTypes.LOGIN_FAILURE:
             action = <ErrorAction>action
             const message = action.payload.message
             Alert.alert('Error', message)
             return state
-            break;
         case userActionTypes.REGISTER_REQUEST:
             state = { ...state, user: {} }
             return state
-            break;
         case userActionTypes.REGISTER_SUCCESS:
             action = <SuccessAction>action
             state = { ...state, user: { ...action.payload.user } }
             return state
-            break;
         case userActionTypes.REGISTER_FAILURE:
             action = <ErrorAction>action
             const message2 = action.payload.message
             Alert.alert('Error', message2)
             return state
-            break;
         default:
             return state
     }

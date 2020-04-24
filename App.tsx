@@ -15,6 +15,7 @@ import RootStackNavigation from './src/navigations'
 import { Provider } from 'react-redux'
 import { persistor, store } from './src/store'
 import { PersistGate } from 'redux-persist/integration/react'
+import { auth } from 'firebase';
 const App = () => {
   return (
     <Provider store={store}>

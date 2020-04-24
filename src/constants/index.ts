@@ -14,12 +14,15 @@ const firebaseConfig = {
     messagingSenderId: "62284682844",
     appId: "1:62284682844:web:ef8af00934e5fa64dbf899"
 };
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig)
 export const STATUS_BAR_HEIGHT: number = getStatusBarHeight()
 export const SCREEN_HEIGHT: number = Math.round(Dimensions.get('window').height)
 export const SCREEN_WIDTH: number = Math.round(Dimensions.get('window').width)
 
+export const seenTypes = {
+    NOTSEEN: 0,
+    SEEN: 1,
+}
 export const userActionTypes = {
     LOGIN_REQUEST: 'LOGIN_REQUEST',
     LOGIN_SUCCESS: 'LOGIN_SUCCESS',
@@ -27,4 +30,9 @@ export const userActionTypes = {
     REGISTER_REQUEST: 'REGISTER_REQUEST',
     REGISTER_SUCCESS: 'REGISTER_SUCCESS',
     REGISTER_FAILURE: 'REGISTER_FAILURE'
+}
+export const storyActionTypes = {
+    FETCH_STORY_LIST_REQUEST: 'FETCH_STORY_LIST_REQUEST',
+    FETCH_STORY_LIST_SUCCESS: 'FETCH_STORY_LIST_SUCCESS',
+    FETCH_STORY_LIST_FAILURE: 'FETCH_STORY_LIST_FAILURE',
 }

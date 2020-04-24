@@ -2,20 +2,25 @@ import React from 'react'
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { SCREEN_WIDTH } from '../../constants'
+import { navigation } from '../../navigations/rootNavigation'
+
 const index = () => {
+   
     return (
         <TouchableOpacity
             activeOpacity={1}
             style={styles.navigationBar}>
             <TouchableOpacity
-                onPress={() => { }}
+                onPress={() => navigation.navigate('PhotoTaker')}
                 style={styles.btnBack}>
                 <Icon name="camera" size={24} />
             </TouchableOpacity>
             <View style={styles.centerBar}>
                 <Image style={styles.logo} source={require('../../assets/images/logo.png')} />
             </View>
-            <TouchableOpacity style={styles.btnMessenger}>
+            <TouchableOpacity
+                onPress={() => navigation.navigate('Direct')}
+                style={styles.btnMessenger}>
                 <Icon name="send" size={24} />
             </TouchableOpacity>
         </TouchableOpacity >
@@ -36,12 +41,13 @@ const styles = StyleSheet.create({
     centerBar: {
         height: 44,
         width: SCREEN_WIDTH - 44 * 2,
-        paddingHorizontal: 15
+        justifyContent: 'center',
+        alignItems: 'flex-start'
     },
     logo: {
         resizeMode: 'contain',
-        height: 44,
-        width: '100%'
+        height: 30,
+        width: 100
     },
     btnBack: {
         height: 44,

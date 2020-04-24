@@ -1,9 +1,9 @@
 import { userActionTypes } from "../constants";
 import { userAction, SuccessAction, ErrorAction, userPayload } from '../reducers/userReducer'
 import { WelcomePropsRouteParams } from "src/screens/Auth/Welcome";
-import { AsyncStorage } from "react-native";
 import { auth, firestore } from 'firebase'
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
+import { navigate } from "../navigations/rootNavigation";
 export interface userLoginWithEmail {
     email: string,
     password: string
@@ -14,15 +14,23 @@ export const LoginRequest = (user: userLoginWithEmail):
     return (dispatch: ThunkDispatch<{}, {}, userAction>) => {
         return auth().signInWithEmailAndPassword(user.email, user.password).then(rs => {
             if (rs.user) {
-                AsyncStorage.setItem('user', JSON.stringify(rs.user))
-                const result: userPayload = {
-                    user: {
-                        email: rs.user.email,
-                        logined: true,
-                        firebaseUser: rs.user
-                    }
-                }
-                dispatch(LoginSuccess(result))
+                let userx = rs.user
+                firestore().collection('users')
+                    .where('email', '==', user.email).get().then(snap => {
+                        if (snap.size > 0) {
+                            navigate('HomeTab') //ADD this line to fix initialRouteName not working on first time
+                            const result: userPayload = {
+                                user: {
+                                    email: userx.email,
+                                    logined: true,
+                                    firebaseUser: userx,
+                                    userInfo: snap.docs[0].data()
+                                }
+                            }
+                            dispatch(LoginSuccess(result))
+                        } else dispatch(LoginFailure())
+                    })
+
             } else dispatch(LoginFailure())
         }).catch(e => {
             dispatch(LoginFailure())
@@ -50,8 +58,8 @@ export const RegisterRequest = (userData: RegisterParams):
             .createUserWithEmailAndPassword(userData.email, userData.password)
             .then(rs => {
                 rs.user?.sendEmailVerification()
-                firestore().collection('users')
-                    .add({
+                firestore().collection('users').doc(userData.username)
+                    .set({
                         email: userData.email,
                         fullname: userData.fullname,
                         phone: userData.phone,
