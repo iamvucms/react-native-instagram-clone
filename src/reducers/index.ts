@@ -5,13 +5,16 @@ import {
 } from 'react-redux'
 import userReducer, { userPayload } from './userReducer'
 import storyReducer, { StoryList } from './storyReducer'
+import postReducer, { PostList } from './postReducer'
 export type AppState = {
     user: userPayload,
-    storyList: StoryList
+    storyList: StoryList,
+    postList: PostList
 }
 const rootReducer = combineReducers<AppState>({
     user: userReducer,
-    storyList: storyReducer
+    storyList: storyReducer,
+    postList: postReducer
 })
 export const useSelector:
     TypedUseSelectorHook<ReturnType<typeof rootReducer>> = useReduxSelector

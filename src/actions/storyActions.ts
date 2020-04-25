@@ -53,13 +53,18 @@ export const FetchStoryListRequest = (setLoadingStoryList: React.Dispatch<SetSta
                     }
                     return extraStory
                 })
-                fullStory.map((story, index) => {
-                    const isSeen: boolean = story.storyList.every(x => x.seen === seenTypes.SEEN)
-                    if (isSeen) {
-                        fullStory.splice(index, 1)
-                        fullStory.push(story)
-                    }
-                })
+                fullStory.sort((a, b) => (a.storyList.every(
+                    x => x.seen === seenTypes.SEEN) ? 1 : 0) - (b.storyList.every(
+                        x => x.seen === seenTypes.SEEN) ? 1 : 0))
+                // fullStory.map((story, index) => {
+                //     const isSeen: boolean = story story.storyList.every(
+                //         x => x.seen === seenTypes.SEEN)
+                //     if (isSeen) {
+                //         console.log(story.ownUser.username, index)
+                //         // fullStory.splice(index, 1)
+                //         fullStory.push(story)
+                //     }
+                // })
                 if (setLoadingStoryList) setLoadingStoryList(false)
                 dispatch(FetchStoryListSuccess(fullStory))
             } else dispatch(FetchStoryListFailure())

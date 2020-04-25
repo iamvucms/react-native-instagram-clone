@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, Image, TouchableOpacity, Animated } from 'react
 import { Story, ExtraStory } from '../../reducers/storyReducer'
 import LinearGradient from 'react-native-linear-gradient'
 import { Svg, Polygon } from 'react-native-svg'
+import { seenTypes } from '../../constants'
 export interface StoryPreviewItemProps {
     item: ExtraStory
 }
@@ -10,7 +11,7 @@ const StoryPreviewItem = ({ item: { ownUser, storyList } }: StoryPreviewItemProp
     const _loadingDeg = new Animated.Value(0)
     const [seen, setSeen] = useState<boolean>(false)
     useEffect(() => {
-        const isSeen: boolean = storyList.every(story => story.seen)
+        const isSeen: boolean = storyList.every(story => story.seen === seenTypes.SEEN)
         setSeen(isSeen)
     }, [])
     const [preloadingImage, setPreloadingImage] = useState<boolean>(false)

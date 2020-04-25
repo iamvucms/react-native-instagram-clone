@@ -4,7 +4,7 @@ import { firestore } from 'firebase'
 import { UserInfo } from './userReducer'
 export type Story = {
     userId?: string,
-    uid?: string,
+    uid?: number,
     type?: number,
     permission?: number,
     create_at?: firestore.Timestamp,

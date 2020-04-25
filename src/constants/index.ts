@@ -15,6 +15,14 @@ const firebaseConfig = {
     appId: "1:62284682844:web:ef8af00934e5fa64dbf899"
 };
 firebase.initializeApp(firebaseConfig)
+// firebase.firestore().collectionGroup('comments')
+//     .where('userId', '==', 'vucms').get().then(x => console.warn(x.docs[0].data()))
+//Refresh stories expired
+// firebase.firestore().collection('stories').get().then(docs => {
+//     docs.forEach(doc => doc.ref.update({
+//         create_at: new Date()
+//     }))
+// })
 export const STATUS_BAR_HEIGHT: number = getStatusBarHeight()
 export const SCREEN_HEIGHT: number = Math.round(Dimensions.get('window').height)
 export const SCREEN_WIDTH: number = Math.round(Dimensions.get('window').width)
@@ -35,4 +43,9 @@ export const storyActionTypes = {
     FETCH_STORY_LIST_REQUEST: 'FETCH_STORY_LIST_REQUEST',
     FETCH_STORY_LIST_SUCCESS: 'FETCH_STORY_LIST_SUCCESS',
     FETCH_STORY_LIST_FAILURE: 'FETCH_STORY_LIST_FAILURE',
+}
+export const postActionTypes = {
+    FETCH_POST_LIST_REQUEST: 'FETCH_POST_LIST_REQUEST',
+    FETCH_POST_LIST_SUCCESS: 'FETCH_POST_LIST_SUCCESS',
+    FETCH_POST_LIST_FAILURE: 'FETCH_POST_LIST_FAILURE',
 }
