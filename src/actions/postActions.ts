@@ -9,7 +9,7 @@ import { store } from "../store";
 import { UserInfo } from '../reducers/userReducer';
 import { SetStateAction } from 'react';
 
-export const FetchPostListRequest = (setLoadingPostList: React.Dispatch<SetStateAction<boolean>>):
+export const FetchPostListRequest = (setLoadingPostList?: React.Dispatch<SetStateAction<boolean>>):
     ThunkAction<Promise<void>, {}, {}, PostAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, PostAction>) => {
         try {
@@ -20,7 +20,37 @@ export const FetchPostListRequest = (setLoadingPostList: React.Dispatch<SetState
                 .get()
             const result = request.data()
             if (result) {
-                console.warn(result.folowings)
+                const follwingList: string[] = result.followings
+                const userIds: string[] = []
+                let collection: Post[] = []
+                while (follwingList.length > 0) {
+                    const rs = await firestore().collection('posts')
+                        .where('userId', 'in', follwingList.splice(0, 10))
+                        .orderBy('create_at', 'desc')
+                        .get()
+                    const temp = rs.docs.map(doc => {
+                        if (userIds.indexOf(doc.data().userId) < 0) userIds.push(doc.data().userId)
+                        return doc.data()
+                    })
+                    collection = collection.concat(temp)
+                }
+                let ownInfos: UserInfo[] = []
+                while (userIds.length > 0) {
+                    const rs = await firestore().collection('users')
+                        .where('username', 'in', userIds.splice(0, 10))
+                        .get()
+                    const temp = rs.docs.map(doc => {
+                        return doc.data()
+                    })
+                    ownInfos = ownInfos.concat(temp)
+                }
+                const extraPostList: PostList = collection.map((post, index) => {
+                    const extraPost: ExtraPost = Object.assign(post, {
+                        ownUser: ownInfos[index]
+                    })
+                    return extraPost
+                })
+                dispatch(FetchPostListSuccess(extraPostList))
             } else dispatch(FetchPostListFailure())
         } catch (e) {
             console.warn(e)

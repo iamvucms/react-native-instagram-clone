@@ -1,26 +1,27 @@
 import React, { useEffect } from 'react'
-import { StyleSheet, Text, View, ScrollView } from 'react-native'
+import { StyleSheet, View } from 'react-native'
+import { PostList } from '../../reducers/postReducer'
 import PostItem from './PostItem'
-import { useDispatch } from 'react-redux'
-import { useSelector } from '../../reducers'
-import { FetchPostListRequest } from '../../actions/postActions'
-
 export interface PostListProps {
-
+    data: PostList
 }
-const index = (props: PostListProps) => {
-    const dispatch = useDispatch()
-    const postList = useSelector(state => state.postList)
+const index = ({ data }: PostListProps) => {
+
     useEffect(() => {
-        // dispatch(FetchPostListRequest())
     }, [])
     return (
-        <View>
-            <PostItem />
+        <View style={styles.container}>
+            {data.map((post, index) => (
+                <PostItem key={index} item={post} />
+            ))}
         </View>
     )
 }
 
 export default React.memo(index)
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+    container: {
+
+    }
+})

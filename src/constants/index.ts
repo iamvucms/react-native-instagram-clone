@@ -17,7 +17,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig)
 // firebase.firestore().collectionGroup('comments')
 //     .where('userId', '==', 'vucms').get().then(x => console.warn(x.docs[0].data()))
-//Refresh stories expired
+// Refresh stories expired
 // firebase.firestore().collection('stories').get().then(docs => {
 //     docs.forEach(doc => doc.ref.update({
 //         create_at: new Date()

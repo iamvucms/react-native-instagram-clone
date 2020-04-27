@@ -11,7 +11,6 @@ export type Post = {
     permission?: number,
     create_at?: firestore.Timestamp,
     source?: string[],
-    seen?: number
 }
 export type ExtraPost = Post & {
     ownUser: UserInfo

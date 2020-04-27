@@ -9,7 +9,6 @@ const StoryAdderItem = () => {
         <TouchableOpacity
             activeOpacity={0.8}
             style={styles.container}>
-            {console.warn(user.user.userInfo?.avatarURL)}
             <Image style={styles.avatar} source={{
                 uri: user.user.userInfo?.avatarURL
             }} />

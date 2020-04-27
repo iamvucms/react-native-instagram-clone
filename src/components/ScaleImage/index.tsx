@@ -11,7 +11,6 @@ const index = (props: ScaleImageProps) => {
     const [rwidth, setRwidth] = useState<number>(0)
     const [rheight, setRheight] = useState<number>(0)
     let filteredProps = { ...props }
-
     Image.getSize(filteredProps.source.uri, (xwidth, xheight) => {
         if (props.width) {
             setRheight(xheight * props.width / xwidth)
@@ -22,7 +21,10 @@ const index = (props: ScaleImageProps) => {
         }
     }, Function)
     return (
-        <Image {...filteredProps} style={[filteredProps.style, {
+        <Image {...filteredProps} source={{
+            uri: filteredProps.source.uri,
+            cache: 'only-if-cached'
+        }} style={[filteredProps.style, {
             width: rwidth,
             height: rheight
         }]} />

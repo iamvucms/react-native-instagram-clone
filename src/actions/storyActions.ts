@@ -6,7 +6,7 @@ import { store } from "../store";
 import { UserInfo } from '../reducers/userReducer';
 import { SetStateAction } from 'react';
 
-export const FetchStoryListRequest = (setLoadingStoryList: React.Dispatch<SetStateAction<boolean>>):
+export const FetchStoryListRequest = (setLoadingStoryList?: React.Dispatch<SetStateAction<boolean>>):
     ThunkAction<Promise<void>, {}, {}, StoryAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, StoryAction>) => {
         try {
@@ -17,7 +17,7 @@ export const FetchStoryListRequest = (setLoadingStoryList: React.Dispatch<SetSta
                 .get()
             const result = request.data()
             if (result) {
-                const followingList: number[] = result.followings
+                const followingList: string[] = result.followings
                 let collection: Story[] = []
                 const ownIds: number[] = []
                 while (followingList.length > 0) {
