@@ -6,7 +6,7 @@ import { store } from "../store";
 import { UserInfo } from '../reducers/userReducer';
 import { SetStateAction } from 'react';
 
-export const FetchStoryListRequest = (setLoadingStoryList?: React.Dispatch<SetStateAction<boolean>>):
+export const FetchStoryListRequest = ():
     ThunkAction<Promise<void>, {}, {}, StoryAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, StoryAction>) => {
         try {
@@ -56,16 +56,6 @@ export const FetchStoryListRequest = (setLoadingStoryList?: React.Dispatch<SetSt
                 fullStory.sort((a, b) => (a.storyList.every(
                     x => x.seen === seenTypes.SEEN) ? 1 : 0) - (b.storyList.every(
                         x => x.seen === seenTypes.SEEN) ? 1 : 0))
-                // fullStory.map((story, index) => {
-                //     const isSeen: boolean = story story.storyList.every(
-                //         x => x.seen === seenTypes.SEEN)
-                //     if (isSeen) {
-                //         console.log(story.ownUser.username, index)
-                //         // fullStory.splice(index, 1)
-                //         fullStory.push(story)
-                //     }
-                // })
-                if (setLoadingStoryList) setLoadingStoryList(false)
                 dispatch(FetchStoryListSuccess(fullStory))
             } else dispatch(FetchStoryListFailure())
         } catch (e) {

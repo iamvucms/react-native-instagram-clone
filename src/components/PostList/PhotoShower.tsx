@@ -59,7 +59,7 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
                 {sources && sources.map((src, index) => (
                     <ImageBackground
                         key={index}
-                        source={{ uri: src, cache: 'only-if-cached', }}
+                        source={{ uri: src }}
                         blurRadius={20}
                         style={{
                             height: maxImageHeight,

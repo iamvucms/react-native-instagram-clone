@@ -1,30 +1,51 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
+    Animated, NativeScrollEvent,
+    NativeSyntheticEvent, RefreshControl,
     SafeAreaView, ScrollView, StyleSheet,
-    NativeSyntheticEvent, NativeScrollEvent, RefreshControl, LayoutChangeEvent
+    Text, View
 } from 'react-native'
+import { useDispatch } from 'react-redux'
+import { FetchPostListRequest, LoadMorePostListRequest } from '../../actions/postActions'
+import { FetchStoryListRequest } from '../../actions/storyActions'
 import HomeNavigationBar from '../../components/HomeNavigationBar'
 import PostList from '../../components/PostList/'
 import StoryPreviewList from '../../components/StoryPreviewList'
-import { useDispatch } from 'react-redux'
-import { FetchPostListRequest } from '../../actions/postActions'
-import { useSelector } from '../../reducers'
 import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../constants'
-import { FetchStoryListRequest } from '../../actions/storyActions'
+import { useSelector } from '../../reducers'
 const index = () => {
     const dispatch = useDispatch()
     const postList = useSelector(state => state.postList)
+    const _loadingDeg = new Animated.Value(0)
+    const _scrollRef = useRef<ScrollView>(null)
+    const [loadingMore, setLoadingMore] = useState<boolean>(false)
     const ref = useRef<{
         scrollHeight: number,
         preOffsetY: number
     }>({ scrollHeight: 0, preOffsetY: 0 })
     const [refreshing, setRefreshing] = useState<boolean>(false)
+    const _startAnimateLoading = () => {
+        Animated.timing(_loadingDeg, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true
+        }).start(() => {
+            _loadingDeg.setValue(0)
+            _startAnimateLoading()
+        })
+    }
     const _onScroll = ({ nativeEvent: {
-        contentOffset: { y }
+        contentOffset: { y }, contentSize: { height }
     } }: NativeSyntheticEvent<NativeScrollEvent>) => {
-
-        if (y > ref.current.scrollHeight - 200 && y > ref.current.preOffsetY) {
-            console.warn("reached")
+        if (y > height - 1000
+            && y > ref.current.preOffsetY
+            && !loadingMore
+        ) {
+            (async () => {
+                setLoadingMore(true)
+                await dispatch(LoadMorePostListRequest())
+                setLoadingMore(false)
+            })()
         }
         ref.current.preOffsetY = y
     }
@@ -37,16 +58,14 @@ const index = () => {
         await dispatch(FetchPostListRequest())
         setRefreshing(false)
     }
-    const _onLayoutHandler = ({ nativeEvent }: LayoutChangeEvent) => {
-        ref.current.scrollHeight = nativeEvent.layout.height
-    }
+
     return (
         <SafeAreaView style={styles.container}>
 
             <HomeNavigationBar />
             <ScrollView
+                ref={_scrollRef}
                 style={styles.scrollContainer}
-                onLayout={_onLayoutHandler}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -59,8 +78,34 @@ const index = () => {
             >
                 <StoryPreviewList />
                 <PostList data={postList} />
+                <View style={{
+                    ...styles.loadingIcon,
+                    opacity: loadingMore ? 1 : 0
+                }}>
+                    {loadingMore && <>
+                        <Animated.Image
+                            onLayout={_startAnimateLoading}
+                            style={{
+                                width: 30,
+                                height: 30,
+                                transform: [
+                                    {
+                                        rotate: _loadingDeg.interpolate({
+                                            inputRange: [0, 1],
+                                            outputRange: ['0deg', '360deg']
+                                        })
+                                    }
+                                ]
+                            }}
+                            source={require('../../assets/icons/waiting.png')} />
+                        <Text style={{
+                            fontWeight: '500',
+                            marginLeft: 5
+                        }}>Loading more...</Text></>}
+                </View>
             </ScrollView>
-        </SafeAreaView>
+
+        </SafeAreaView >
     )
 }
 
@@ -72,5 +117,12 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44 - 80
+    },
+    loadingIcon: {
+        position: 'relative',
+        height: 50,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 })

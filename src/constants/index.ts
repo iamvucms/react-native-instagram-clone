@@ -27,6 +27,7 @@ export const STATUS_BAR_HEIGHT: number = getStatusBarHeight()
 export const SCREEN_HEIGHT: number = Math.round(Dimensions.get('window').height)
 export const SCREEN_WIDTH: number = Math.round(Dimensions.get('window').width)
 
+export const LIMIT_PER_LOADING = 2
 export const seenTypes = {
     NOTSEEN: 0,
     SEEN: 1,
@@ -48,4 +49,7 @@ export const postActionTypes = {
     FETCH_POST_LIST_REQUEST: 'FETCH_POST_LIST_REQUEST',
     FETCH_POST_LIST_SUCCESS: 'FETCH_POST_LIST_SUCCESS',
     FETCH_POST_LIST_FAILURE: 'FETCH_POST_LIST_FAILURE',
+    LOAD_MORE_POST_LIST_REQUEST: 'LOAD_MORE_POST_LIST_REQUEST',
+    LOAD_MORE_POST_LIST_SUCCESS: 'LOAD_MORE_POST_LIST_SUCCESS',
+    LOAD_MORE_POST_LIST_FAILURE: 'LOAD_MORE_POST_LIST_FAILURE',
 }

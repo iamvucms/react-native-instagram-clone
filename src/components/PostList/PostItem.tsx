@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, SetStateAction } from 'react'
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
 import PhotoShower from './PhotoShower'
@@ -11,36 +11,15 @@ export interface PostItemProps {
 }
 const PostItem = ({ item }: PostItemProps) => {
     const [currentPage, setCurrentPage] = useState<number>(1)
+    const [content, setContent] = useState<JSX.Element[]>([])
     const user = useSelector(state => state.user.user)
     const isLiked = item.likes && item.likes?.indexOf(user.userInfo?.username || '') > -1
     const _onChangePageHandler = (page: number) => {
         setCurrentPage(page)
     }
-    const matchedGroups: {
-        match: string,
-        index: number
-    }[] = []
-    item.content?.replace(/@[a-zA-Z0-9._]{4,}/g,
-        (match, index) => {
-            matchedGroups.push({ match, index })
-            return ''
-        })
-    let splitedContent: JSX.Element[] = (item.content?.split('') || [])
-        .map(c => <Text>{c}</Text>)
-    const completedContent = splitedContent?.map((c, index) => {
-        matchedGroups.map(match => {
-            if (index === match.index) {
-                splitedContent[index] = <TouchableOpacity>
-                    <Text style={{
-                        color: '#318bfb'
-                    }}>{match.match}</Text>
-                </TouchableOpacity>
-                splitedContent.splice(index + 1, match.match.length - 1)
-            }
-        })
-        return c
-    })
-    console.warn(completedContent)
+    useEffect(() => {
+        setContent(createFilterContent(item.content || ''))
+    }, [item])
     return (
         <View style={styles.container}>
             <View style={styles.postHeader}>
@@ -79,10 +58,10 @@ const PostItem = ({ item }: PostItemProps) => {
                             <Icons name="share-variant" size={24} />
                         </TouchableOpacity>
                     </View>
-                    <CirclePagination
+                    {item.source && item.source.length > 1 && <CirclePagination
                         maxPage={item.source?.length || 0}
                         currentPage={currentPage}
-                    />
+                    />}
                     <TouchableOpacity>
                         <Icons name="bookmark-outline" size={24} />
                     </TouchableOpacity>
@@ -90,18 +69,33 @@ const PostItem = ({ item }: PostItemProps) => {
                 {item.likes && <Text style={{
                     fontWeight: "bold",
                     marginVertical: 5,
-                }}>{item.likes.length} likes</Text>}
-                <Text style={{
-                    fontWeight: "600",
-                    marginVertical: 5,
-                }}>{item.ownUser.username} <Text style={{
-                    fontWeight: '400'
+                }}>{item.likes.length >= 1000 ?
+                    (Math.round(item.likes.length / 1000) + 'k')
+                    : item.likes.length} {item.likes.length === 1 ? 'like' : 'likes'}</Text>}
+
+                <View style={{
+                    flexWrap: 'wrap',
+                    flexDirection: 'row',
+                    alignItems: 'center'
                 }}>
-                        {completedContent.map(jsx => jsx)}
+                    <Text style={{
+                        fontWeight: "600",
+                        marginVertical: 5,
+                    }}>{item.ownUser.username} </Text>
+                    {content.map(Jsx => Jsx)}
+                </View>
+                {item.comments && item.comments.length > 0 && < TouchableOpacity style={styles.btnViewCmt}>
+                    <Text style={{
+                        color: "#666",
+                    }}>
+                        View all {item.comments.length} comments
                     </Text>
-                </Text>
+                </TouchableOpacity>}
+                <View>
+
+                </View>
             </View>
-        </View>
+        </View >
     )
 }
 
@@ -109,7 +103,6 @@ export default React.memo(PostItem)
 
 const styles = StyleSheet.create({
     container: {
-
     },
     postHeader: {
         flexDirection: 'row',
@@ -148,5 +141,34 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         width: 24.3 * 3 + 15,
         justifyContent: 'space-between'
+    },
+    btnViewCmt: {
+        marginVertical: 10
     }
 })
+function createFilterContent(content: string): JSX.Element[] {
+    const matchedGroups: {
+        match: string,
+        index: number
+    }[] = []
+    content?.replace(/@[a-zA-Z0-9._]{4,}/g,
+        (match, index) => {
+            matchedGroups.push({ match, index })
+            return match
+        })
+    let splitedContent: JSX.Element[] = (content?.split('') || [])
+        .map((c, i) => <Text key={i}>{c}</Text>)
+    let i = 0
+    matchedGroups.map((match) => {
+        splitedContent.splice(match.index - i + 1, match.match.length - 1)
+        splitedContent[match.index - i] =
+            <TouchableOpacity key={match.index - i}>
+                <Text style={{
+                    color: '#318bfb',
+                    fontWeight: '500'
+                }}>{match.match}</Text>
+            </TouchableOpacity>
+        i += match.match.length - 1
+    })
+    return splitedContent
+}

@@ -25,7 +25,10 @@ const index = () => {
     }
     const dispatch = useDispatch()
     useEffect(() => {
-        dispatch(FetchStoryListRequest(setLoadingStoryList))
+        (async () => {
+            await dispatch(FetchStoryListRequest())
+            setLoadingStoryList(false)
+        })()
     }, [])
     return (
         <View style={styles.container}>
