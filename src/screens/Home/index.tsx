@@ -3,7 +3,8 @@ import {
     Animated, NativeScrollEvent,
     NativeSyntheticEvent, RefreshControl,
     SafeAreaView, ScrollView, StyleSheet,
-    Text, View
+    Text, View, KeyboardAvoidingView, Keyboard, TextInput,
+    TouchableOpacity
 } from 'react-native'
 import { useDispatch } from 'react-redux'
 import { FetchPostListRequest, LoadMorePostListRequest } from '../../actions/postActions'
@@ -12,6 +13,7 @@ import HomeNavigationBar from '../../components/HomeNavigationBar'
 import PostList from '../../components/PostList/'
 import StoryPreviewList from '../../components/StoryPreviewList'
 import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../constants'
+import CommentInputPopup from '../../components/CommentInputPopup'
 import { useSelector } from '../../reducers'
 const index = () => {
     const dispatch = useDispatch()
@@ -19,10 +21,19 @@ const index = () => {
     const _loadingDeg = new Animated.Value(0)
     const _scrollRef = useRef<ScrollView>(null)
     const [loadingMore, setLoadingMore] = useState<boolean>(false)
+    const _commentInputRef = useRef<TextInput>(null)
+    const [showCommentInput, setShowCommentInput] = useState<boolean>(false)
     const ref = useRef<{
         scrollHeight: number,
-        preOffsetY: number
-    }>({ scrollHeight: 0, preOffsetY: 0 })
+        preOffsetY: number,
+        currentCommentId: number,
+        commentContents: {
+            id: number, content: string
+        }[]
+    }>({
+        scrollHeight: 0, preOffsetY: 0,
+        commentContents: [], currentCommentId: 0
+    })
     const [refreshing, setRefreshing] = useState<boolean>(false)
     const _startAnimateLoading = () => {
         Animated.timing(_loadingDeg, {
@@ -50,6 +61,9 @@ const index = () => {
         ref.current.preOffsetY = y
     }
     useEffect(() => {
+        Keyboard.addListener('keyboardDidHide', () => {
+            setShowCommentInput(false)
+        })
         dispatch(FetchPostListRequest())
     }, [])
     const _onRefresh = async () => {
@@ -58,53 +72,83 @@ const index = () => {
         await dispatch(FetchPostListRequest())
         setRefreshing(false)
     }
-
+    const _showCommentInput = (id: number, prefix?: string) => {
+        if (id !== 0) {
+            const check = ref.current.commentContents.every((x, index) => {
+                if (x.id === id) {
+                    if (prefix) {
+                        ref.current.commentContents[index].content = prefix
+                    }
+                    return false
+                }
+                return true
+            })
+            if (check) {
+                ref.current.commentContents.push({
+                    id: id,
+                    content: prefix || ''
+                })
+            }
+            ref.current.currentCommentId = id
+            setShowCommentInput(true)
+        }
+    }
+    const _setCommentContents = (id: number, content: string) => {
+        ref.current.commentContents.filter(x => x.id === id)[0].content = content
+    }
     return (
         <SafeAreaView style={styles.container}>
+            <KeyboardAvoidingView style={styles.keyboardAvoidingViewContainer} behavior="height">
+                <HomeNavigationBar />
+                <ScrollView
+                    ref={_scrollRef}
+                    style={styles.scrollContainer}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={_onRefresh}
+                        />
+                    }
+                    scrollEventThrottle={10}
+                    onScroll={_onScroll}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <StoryPreviewList />
+                    <PostList showCommentInput={_showCommentInput} data={postList} />
+                    <View style={{
+                        ...styles.loadingIcon,
+                        opacity: loadingMore ? 1 : 0
+                    }}>
+                        {loadingMore && <>
+                            <Animated.Image
+                                onLayout={_startAnimateLoading}
+                                style={{
+                                    width: 30,
+                                    height: 30,
+                                    transform: [
+                                        {
+                                            rotate: _loadingDeg.interpolate({
+                                                inputRange: [0, 1],
+                                                outputRange: ['0deg', '360deg']
+                                            })
+                                        }
+                                    ]
+                                }}
+                                source={require('../../assets/icons/waiting.png')} />
+                            <Text style={{
+                                fontWeight: '500',
+                                marginLeft: 5
+                            }}>Loading more...</Text></>}
+                    </View>
 
-            <HomeNavigationBar />
-            <ScrollView
-                ref={_scrollRef}
-                style={styles.scrollContainer}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={_onRefresh}
-                    />
-                }
-                scrollEventThrottle={10}
-                onScroll={_onScroll}
-                showsVerticalScrollIndicator={false}
-            >
-                <StoryPreviewList />
-                <PostList data={postList} />
-                <View style={{
-                    ...styles.loadingIcon,
-                    opacity: loadingMore ? 1 : 0
-                }}>
-                    {loadingMore && <>
-                        <Animated.Image
-                            onLayout={_startAnimateLoading}
-                            style={{
-                                width: 30,
-                                height: 30,
-                                transform: [
-                                    {
-                                        rotate: _loadingDeg.interpolate({
-                                            inputRange: [0, 1],
-                                            outputRange: ['0deg', '360deg']
-                                        })
-                                    }
-                                ]
-                            }}
-                            source={require('../../assets/icons/waiting.png')} />
-                        <Text style={{
-                            fontWeight: '500',
-                            marginLeft: 5
-                        }}>Loading more...</Text></>}
-                </View>
-            </ScrollView>
-
+                </ScrollView>
+                {showCommentInput && <CommentInputPopup
+                    setCommentContents={_setCommentContents}
+                    id={ref.current.currentCommentId}
+                    preValue={ref.current.commentContents
+                        .filter(x => x.id === ref.current.currentCommentId)[0]?.content || ""}
+                    commentInputRef={_commentInputRef} />}
+            </KeyboardAvoidingView>
         </SafeAreaView >
     )
 }
@@ -114,6 +158,9 @@ export default index
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#fff'
+    },
+    keyboardAvoidingViewContainer: {
+        position: "relative"
     },
     scrollContainer: {
         height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44 - 80

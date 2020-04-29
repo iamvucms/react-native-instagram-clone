@@ -74,7 +74,7 @@ export const FetchPostListFailure = (): PostErrorAction => {
         }
     }
 }
-export const FetchPostListSuccess = (payload: PostList): PostSuccessAction => {
+export const FetchPostListSuccess = (payload: PostList): PostSuccessAction<PostList> => {
     return {
         type: postActionTypes.FETCH_POST_LIST_SUCCESS,
         payload: payload
@@ -150,7 +150,35 @@ export const LoadMorePostListFailure = (): PostErrorAction => {
         }
     }
 }
-export const LoadMorePostListSuccess = (payload: PostList): PostSuccessAction => {
+export const LoadMorePostListSuccess = (payload: PostList): PostSuccessAction<PostList> => {
+    return {
+        type: postActionTypes.LOAD_MORE_POST_LIST_SUCCESS,
+        payload: payload
+    }
+}
+/**
+ * POST COMMENTS ACTIONS
+ */
+export const PostCommentRequest = ():
+    ThunkAction<Promise<void>, {}, {}, PostAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, PostAction>) => {
+        try {
+            // dispatch(PostCommentSuccess())
+        } catch (e) {
+            console.warn(e)
+            dispatch(PostCommentFailure())
+        }
+    }
+}
+export const PostCommentFailure = (): PostErrorAction => {
+    return {
+        type: postActionTypes.LOAD_MORE_POST_LIST_FAILURE,
+        payload: {
+            message: 'Can not load more posts!'
+        }
+    }
+}
+export const PostCommentSuccess = (payload: ExtraPost): PostSuccessAction<ExtraPost> => {
     return {
         type: postActionTypes.LOAD_MORE_POST_LIST_SUCCESS,
         payload: payload

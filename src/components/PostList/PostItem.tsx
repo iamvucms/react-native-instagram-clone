@@ -7,9 +7,10 @@ import { useSelector } from '../../reducers'
 import CirclePagination from '../CirclePagination'
 
 export interface PostItemProps {
-    item: ExtraPost
+    item: ExtraPost,
+    showCommentInput: (id: number, prefix?: string) => void
 }
-const PostItem = ({ item }: PostItemProps) => {
+const PostItem = ({ item, showCommentInput }: PostItemProps) => {
     const [currentPage, setCurrentPage] = useState<number>(1)
     const [content, setContent] = useState<JSX.Element[]>([])
     const user = useSelector(state => state.user.user)
@@ -91,7 +92,60 @@ const PostItem = ({ item }: PostItemProps) => {
                         View all {item.comments.length} comments
                     </Text>
                 </TouchableOpacity>}
-                <View>
+                <TouchableOpacity
+                    onPress={() => {
+                        showCommentInput(item.uid || 0)
+                    }}
+                    activeOpacity={1}
+                    style={styles.commentInputWrapper}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Image source={{ uri: user.userInfo?.avatarURL }}
+                            style={styles.commentAvatar} />
+                        <Text style={{
+                            color: "#666",
+                            marginHorizontal: 10
+                        }}>Add a comment...</Text>
+                    </View>
+                    <View style={styles.commentIconsWrapper}>
+                        <TouchableOpacity onPress={() => {
+                            showCommentInput(item.uid || 0, '❤')
+                        }}>
+                            <Text style={{
+                                fontSize: 10
+                            }}>❤</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => {
+                            showCommentInput(item.uid || 0, '🙌')
+                        }}>
+                            <Text style={{
+                                fontSize: 10
+                            }}>🙌</Text>
+                        </TouchableOpacity>
+                        <Icons
+                            name="plus-circle-outline"
+                            color="#666" />
+                    </View>
+                </TouchableOpacity>
+                <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginVertical: 5
+                }}>
+                    <Text style={{
+                        fontSize: 12,
+                        color: '#666'
+                    }}>3 hours ago</Text>
+                    <Text style={{
+                        fontSize: 12,
+                        color: '#666'
+                    }}> • </Text>
+                    <TouchableOpacity>
+                        <Text style={{
+                            fontSize: 12,
+                            color: '#318bfb',
+                            fontWeight: '500'
+                        }}>See Translation</Text>
+                    </TouchableOpacity>
 
                 </View>
             </View>
@@ -124,9 +178,9 @@ const styles = StyleSheet.create({
     avatar: {
         borderColor: '#ddd',
         borderWidth: 0.3,
-        height: 30,
-        width: 30,
-        borderRadius: 30,
+        height: 36,
+        width: 36,
+        borderRadius: 36,
         marginRight: 10,
     },
     reactionsWrapper: {
@@ -143,8 +197,26 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between'
     },
     btnViewCmt: {
-        marginVertical: 10
-    }
+        marginVertical: 5
+    },
+    commentInputWrapper: {
+        height: 24,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginVertical: 5
+    },
+    commentIconsWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: 14.3 * 3 + 15
+    },
+    commentAvatar: {
+        width: 24,
+        height: 24,
+        borderRadius: 24
+    },
 })
 function createFilterContent(content: string): JSX.Element[] {
     const matchedGroups: {

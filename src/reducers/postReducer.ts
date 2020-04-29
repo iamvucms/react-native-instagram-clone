@@ -30,11 +30,13 @@ export interface PostErrorAction {
         message: string
     }
 }
-export interface PostSuccessAction {
+export interface PostSuccessAction<T> {
     type: string,
-    payload: PostList
+    payload: T
 }
-export type PostAction = PostSuccessAction | PostErrorAction
+export type PostAction = PostSuccessAction<PostList>
+    | PostSuccessAction<ExtraPost>
+    | PostErrorAction
 const defaultState: PostList = []
 const reducer = (state: PostList = defaultState, action: PostAction): PostList => {
     switch (action.type) {
@@ -42,7 +44,7 @@ const reducer = (state: PostList = defaultState, action: PostAction): PostList =
             state = [...defaultState]
             return state
         case postActionTypes.FETCH_POST_LIST_SUCCESS:
-            action = <PostSuccessAction>action
+            action = <PostSuccessAction<PostList>>action
             state = [...action.payload]
             return state
         case postActionTypes.FETCH_POST_LIST_FAILURE:
@@ -54,7 +56,7 @@ const reducer = (state: PostList = defaultState, action: PostAction): PostList =
             state = [...defaultState]
             return state
         case postActionTypes.LOAD_MORE_POST_LIST_SUCCESS:
-            action = <PostSuccessAction>action
+            action = <PostSuccessAction<PostList>>action
             const newPostList = state.concat(action.payload)
             state = [...newPostList]
             return state
@@ -62,6 +64,17 @@ const reducer = (state: PostList = defaultState, action: PostAction): PostList =
             action = <PostErrorAction>action
             const message2 = action.payload.message
             Alert.alert('Error', message2)
+            return state
+        case postActionTypes.COMMENT_POST_REQUEST:
+            return state
+        case postActionTypes.COMMENT_POST_SUCCESS:
+            action = <PostSuccessAction<ExtraPost>>action
+            state = [...state]
+            return state
+        case postActionTypes.COMMENT_POST_FAILURE:
+            action = <PostErrorAction>action
+            const message3 = action.payload.message
+            Alert.alert('Error', message3)
             return state
         default:
             return state
