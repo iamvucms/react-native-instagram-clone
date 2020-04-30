@@ -54,7 +54,7 @@ export const FetchPostListRequest = ():
                 }
                 const extraPostList: PostList = collection.map((post, index) => {
                     const extraPost: ExtraPost = Object.assign(post, {
-                        ownUser: ownInfos[index]
+                        ownUser: ownInfos.filter(x => x.username === post.userId)[0]
                     })
                     return extraPost
                 })
@@ -159,28 +159,103 @@ export const LoadMorePostListSuccess = (payload: PostList): PostSuccessAction<Po
 /**
  * POST COMMENTS ACTIONS
  */
-export const PostCommentRequest = ():
+export const PostCommentRequest = (postId: number, content: string):
     ThunkAction<Promise<void>, {}, {}, PostAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, PostAction>) => {
         try {
-            // dispatch(PostCommentSuccess())
+            const me = store.getState().user.user
+            let postList = [...store.getState().postList]
+            const ref = firestore()
+            const rq = await ref.collection('posts').where('uid', '==', postId).get()
+            if (rq.docs.length > 0) {
+                const destinationPost = rq.docs[0]
+                const uid = new Date().getTime()
+                await destinationPost.ref.collection('comments').doc(`${uid}`).set({
+                    uid: uid,
+                    content,
+                    likes: [],
+                    userId: me.userInfo?.username,
+                    create_at: new Date()
+                })
+                const rq2 = await destinationPost.ref.collection('comments')
+                    .orderBy('create_at', 'desc').get()
+                postList = postList.map((post) => {
+                    if (post.uid === postId) {
+                        post = { ...post }
+                        post.comments = rq2.docs.map(x => x.data())
+                    }
+                    return post
+                })
+                dispatch(PostCommentSuccess(postList))
+            } else {
+                dispatch(PostCommentFailure())
+            }
         } catch (e) {
-            console.warn(e)
             dispatch(PostCommentFailure())
         }
     }
 }
 export const PostCommentFailure = (): PostErrorAction => {
     return {
-        type: postActionTypes.LOAD_MORE_POST_LIST_FAILURE,
+        type: postActionTypes.COMMENT_POST_FAILURE,
         payload: {
             message: 'Can not load more posts!'
         }
     }
 }
-export const PostCommentSuccess = (payload: ExtraPost): PostSuccessAction<ExtraPost> => {
+export const PostCommentSuccess = (payload: PostList): PostSuccessAction<PostList> => {
     return {
-        type: postActionTypes.LOAD_MORE_POST_LIST_SUCCESS,
+        type: postActionTypes.COMMENT_POST_SUCCESS,
+        payload: payload
+    }
+}
+/**
+ * TOGGLE LIKE POST ACTIONS
+ */
+export const ToggleLikePostRequest = (postId: number):
+    ThunkAction<Promise<void>, {}, {}, PostAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, PostAction>) => {
+        try {
+            const me = store.getState().user.user
+            let postList = [...store.getState().postList]
+            const ref = firestore()
+            const rq = await ref.collection('posts').where('uid', '==', postId).get()
+            if (rq.docs.length > 0) {
+                postList = postList.map((post) => {
+                    if (post.uid === postId) {
+                        const destinationPost: Post = rq.docs[0].data()
+                        const index = destinationPost.likes?.indexOf(
+                            me.userInfo?.username || '')
+                        if (index !== undefined && index > -1) {
+                            destinationPost.likes?.splice(index, 1)
+                        } else destinationPost.likes?.push(me.userInfo?.username || '')
+                        rq.docs[0].ref.update({
+                            likes: destinationPost.likes
+                        })
+                        post = { ...post, likes: destinationPost.likes }
+                    }
+                    return post
+                })
+                dispatch(ToggleLikePostSuccess(postList))
+            } else {
+                dispatch(ToggleLikePostFailure())
+            }
+        } catch (e) {
+            dispatch(ToggleLikePostFailure())
+        }
+    }
+}
+export const ToggleLikePostFailure = (): PostErrorAction => {
+    return {
+        type: postActionTypes.TOGGLE_LIKE_POST_FAILURE,
+        payload: {
+            message: 'Can not load more posts!'
+        }
+    }
+}
+export const ToggleLikePostSuccess = (payload: PostList): PostSuccessAction<PostList> => {
+    return {
+        type: postActionTypes.TOGGLE_LIKE_POST_SUCCESS,
         payload: payload
     }
 }

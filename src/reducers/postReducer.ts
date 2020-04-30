@@ -2,13 +2,7 @@ import { postActionTypes } from '../constants'
 import { Alert } from 'react-native'
 import { firestore } from 'firebase'
 import { UserInfo } from './userReducer'
-export type Comment = {
-    content?: string,
-    uid?: number,
-    userId?: string,
-    likes?: string[],
-    create_at?: firestore.Timestamp,
-}
+import { Comment } from './commentReducer'
 export type Post = {
     userId?: string,
     content?: string,
@@ -21,7 +15,7 @@ export type Post = {
     comments?: Comment[]
 }
 export type ExtraPost = Post & {
-    ownUser: UserInfo
+    ownUser?: UserInfo
 }
 export type PostList = ExtraPost[]
 export interface PostErrorAction {
@@ -68,13 +62,24 @@ const reducer = (state: PostList = defaultState, action: PostAction): PostList =
         case postActionTypes.COMMENT_POST_REQUEST:
             return state
         case postActionTypes.COMMENT_POST_SUCCESS:
-            action = <PostSuccessAction<ExtraPost>>action
-            state = [...state]
+            action = <PostSuccessAction<PostList>>action
+            state = [...action.payload]
             return state
         case postActionTypes.COMMENT_POST_FAILURE:
             action = <PostErrorAction>action
             const message3 = action.payload.message
             Alert.alert('Error', message3)
+            return state
+        case postActionTypes.TOGGLE_LIKE_POST_REQUEST:
+            return state
+        case postActionTypes.TOGGLE_LIKE_POST_SUCCESS:
+            action = <PostSuccessAction<PostList>>action
+            state = [...action.payload]
+            return state
+        case postActionTypes.TOGGLE_LIKE_POST_FAILURE:
+            action = <PostErrorAction>action
+            const message4 = action.payload.message
+            Alert.alert('Error', message4)
             return state
         default:
             return state

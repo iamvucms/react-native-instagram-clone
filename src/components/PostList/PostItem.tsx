@@ -5,12 +5,16 @@ import PhotoShower from './PhotoShower'
 import { ExtraPost } from '../../reducers/postReducer'
 import { useSelector } from '../../reducers'
 import CirclePagination from '../CirclePagination'
+import { useDispatch } from 'react-redux'
+import { ToggleLikePostRequest } from '../../actions/postActions'
+import { navigation } from '../../navigations/rootNavigation'
 
 export interface PostItemProps {
     item: ExtraPost,
     showCommentInput: (id: number, prefix?: string) => void
 }
 const PostItem = ({ item, showCommentInput }: PostItemProps) => {
+    const dispatch = useDispatch()
     const [currentPage, setCurrentPage] = useState<number>(1)
     const [content, setContent] = useState<JSX.Element[]>([])
     const user = useSelector(state => state.user.user)
@@ -21,6 +25,29 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
     useEffect(() => {
         setContent(createFilterContent(item.content || ''))
     }, [item])
+    const _toggleLikePost = () => {
+        dispatch(ToggleLikePostRequest(item.uid || 0))
+    }
+    let diffTime: string | number = (new Date().getTime() - (item.create_at?.toMillis() || 0)) / 1000
+    if (diffTime < 60) diffTime = 'Just now'
+    else if (diffTime > 60 && diffTime < 3600) {
+        diffTime = Math.floor(diffTime / 60)
+            + (Math.floor(diffTime / 60) > 1 ? ' minutes' : ' minute') + ' ago'
+    } else if (diffTime > 3600 && diffTime / 3600 < 24) {
+        diffTime = Math.floor(diffTime / 3600)
+            + (Math.floor(diffTime / 3600) > 1 ? ' hours' : ' hour') + ' ago'
+    }
+    else if (diffTime > 86400 && diffTime / 86400 < 30) {
+        diffTime = Math.floor(diffTime / 86400)
+            + (Math.floor(diffTime / 86400) > 1 ? ' days' : ' day') + ' ago'
+    } else {
+        diffTime = new Date(item.create_at?.toMillis() || 0).toDateString()
+    }
+    const _onViewAllComments = () => {
+        navigation.navigate('Comment', {
+            postId: item.uid
+        })
+    }
     return (
         <View style={styles.container}>
             <View style={styles.postHeader}>
@@ -28,11 +55,11 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                     style={styles.infoWrapper}>
                     <TouchableOpacity>
                         <Image style={styles.avatar}
-                            source={{ uri: item.ownUser.avatarURL }} />
+                            source={{ uri: item.ownUser?.avatarURL }} />
                     </TouchableOpacity>
                     <Text style={{
                         fontWeight: '600'
-                    }}>{item.ownUser.username}</Text>
+                    }}>{item.ownUser?.username}</Text>
                 </View>
                 <TouchableOpacity>
                     <Icons name="dots-vertical" size={24} />
@@ -44,7 +71,9 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
             <View style={styles.reactionsWrapper}>
                 <View style={styles.reactions}>
                     <View style={styles.lReactions}>
-                        <TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={_toggleLikePost}
+                        >
                             <Icons name={isLiked
                                 ? "heart" : "heart-outline"}
                                 size={24}
@@ -67,12 +96,12 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                         <Icons name="bookmark-outline" size={24} />
                     </TouchableOpacity>
                 </View>
-                {item.likes && <Text style={{
+                {item.likes && item.likes.length !== 0 && <Text style={{
                     fontWeight: "bold",
                     marginVertical: 5,
                 }}>{item.likes.length >= 1000 ?
                     (Math.round(item.likes.length / 1000) + 'k')
-                    : item.likes.length} {item.likes.length === 1 ? 'like' : 'likes'}</Text>}
+                    : item.likes.length} {item.likes.length < 2 ? 'like' : 'likes'}</Text>}
 
                 <View style={{
                     flexWrap: 'wrap',
@@ -82,16 +111,34 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                     <Text style={{
                         fontWeight: "600",
                         marginVertical: 5,
-                    }}>{item.ownUser.username} </Text>
+                    }}>{item.ownUser?.username} </Text>
                     {content.map(Jsx => Jsx)}
                 </View>
-                {item.comments && item.comments.length > 0 && < TouchableOpacity style={styles.btnViewCmt}>
-                    <Text style={{
-                        color: "#666",
-                    }}>
-                        View all {item.comments.length} comments
-                    </Text>
-                </TouchableOpacity>}
+                {item.comments && item.comments.length > 0 &&
+                    <>
+                        <View>
+                            <Text style={{
+                                fontWeight: "600",
+                                marginVertical: 5,
+                            }}>{item.comments[0].userId} <Text style={{
+                                fontWeight: '400'
+                            }}>
+                                    {item.comments[0].content}
+                                </Text></Text>
+                        </View>
+                        <TouchableOpacity
+                            onPress={_onViewAllComments}
+                            style={styles.btnViewCmt}>
+                            <Text style={{
+                                color: "#666",
+                            }}>
+                                View all {item.comments.length} comments
+                            </Text>
+                        </TouchableOpacity>
+
+                    </>
+                }
+
                 <TouchableOpacity
                     onPress={() => {
                         showCommentInput(item.uid || 0)
@@ -134,7 +181,7 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                     <Text style={{
                         fontSize: 12,
                         color: '#666'
-                    }}>3 hours ago</Text>
+                    }}>{diffTime}</Text>
                     <Text style={{
                         fontSize: 12,
                         color: '#666'

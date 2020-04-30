@@ -1,13 +1,12 @@
-import { RouteProp, CompositeNavigationProp } from '@react-navigation/native'
+import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { firestore } from 'firebase'
 import React, { useEffect, useRef, useState } from 'react'
 import { Alert, AlertButton, Animated, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useDispatch } from 'react-redux'
-import { commonParamList } from 'src/navigations'
 import { RegisterRequest } from '../../actions/userActions'
 import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../constants'
-import { useSelector } from '../../reducers'
+import { commonParamList } from '../../navigations/RootTab'
 import { RegisterFormValuesStep1, RegisterFormValuesStep2, RegisterFormValuesStep3 } from './Register'
 
 export type WelcomePropsRouteParams = RegisterFormValuesStep3

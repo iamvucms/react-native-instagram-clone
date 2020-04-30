@@ -6,7 +6,7 @@ import { auth, firestore } from 'firebase'
 import NavigationBar from '../../components/NavigationBar'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp } from '@react-navigation/native'
-import { commonParamList } from '../../navigations'
+import { commonParamList } from '../../navigations/RootTab'
 
 type ForgotPasswordRouteProp = RouteProp<commonParamList, 'ForgotPassword'>
 

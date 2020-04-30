@@ -2,24 +2,46 @@ import React, { RefObject, useState, useRef } from 'react'
 import {
     StyleSheet, Text, View,
     TouchableOpacity, TextInput, ScrollView,
-    Image
+    Image,
+    Animated,
+    Keyboard
 } from 'react-native'
 import { useSelector } from '../../reducers'
 import { SCREEN_WIDTH } from '../../constants'
+import { useDispatch } from 'react-redux'
+import { PostCommentRequest } from '../../actions/postActions'
 
 export interface CommentInputPopupProps {
     commentInputRef: RefObject<TextInput>,
     id: number,
-    setCommentContents: (id: number, content: string) => void,
+    setCommentContents?: (id: number, content: string) => void,
     preValue?: string
 }
 const index = ({ commentInputRef, preValue,
     setCommentContents, id }: CommentInputPopupProps) => {
+    const dispatch = useDispatch()
     const user = useSelector(state => state.user.user)
     const [text, setText] = useState<string>(preValue || '')
+    const [commenting, setCommenting] = useState<boolean>(false)
+    const _loadingDeg = new Animated.Value(0)
+    const _onAnimatedLoading = () => {
+        Animated.timing(_loadingDeg, {
+            toValue: 5,
+            duration: 2000,
+            useNativeDriver: true
+        }).start()
+    }
     const _addEmoji = (icon: string) => {
         setText(`${text}${icon}`)
-        setCommentContents(id, `${text}${icon}`)
+        if (setCommentContents) setCommentContents(id, `${text}${icon}`)
+    }
+    const _postComment = async () => {
+        setCommenting(true)
+        await dispatch(PostCommentRequest(id, text))
+        setCommenting(false)
+        setText('')
+        Keyboard.dismiss()
+        if (setCommentContents) setCommentContents(id, '')
     }
     return (
         <View style={styles.commentInputWrapper}>
@@ -72,11 +94,14 @@ const index = ({ commentInputRef, preValue,
                     flexDirection: 'row',
                     alignItems: 'center'
                 }}>
-                    <Image style={styles.avatar} source={{ uri: user.userInfo?.avatarURL }} />
+                    <Image style={styles.avatar} source={{
+                        uri: user.userInfo?.avatarURL,
+                        cache: 'force-cache'
+                    }} />
                     <TextInput
                         value={text}
                         onChangeText={e => {
-                            setCommentContents(id, e)
+                            if (setCommentContents) setCommentContents(id, e)
                             setText(e)
                         }}
                         placeholder="Add a comment..."
@@ -84,11 +109,28 @@ const index = ({ commentInputRef, preValue,
                         ref={commentInputRef}
                         style={styles.commentInput} />
                 </View>
-                <TouchableOpacity style={styles.btnPost}>
-                    <Text style={{
+                <TouchableOpacity
+                    disabled={commenting || text.length === 0}
+                    onPress={_postComment}
+                    style={styles.btnPost}>
+                    {!commenting && <Text style={{
                         color: '#318bfb',
                         fontWeight: '600'
-                    }}>POST</Text>
+                    }}>POST</Text>}
+                    {commenting && <Animated.Image
+                        onLayout={_onAnimatedLoading}
+                        style={{
+                            height: 30,
+                            width: 30,
+                            transform: [{
+                                rotate: _loadingDeg.interpolate({
+                                    inputRange: [0, 5],
+                                    outputRange: ['0deg', '1800deg']
+                                })
+                            }]
+                        }}
+                        source={require('../../assets/icons/waiting.png')}
+                    />}
                 </TouchableOpacity>
             </View>
         </View >

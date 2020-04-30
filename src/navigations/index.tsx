@@ -1,55 +1,31 @@
+import { MaterialTopTabNavigationOptions } from '@react-navigation/material-top-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
-import {
-    createMaterialTopTabNavigator,
-    MaterialTopTabNavigationOptions,
-    MaterialTopTabBarOptions
-} from '@react-navigation/material-top-tabs'
 import React from 'react';
 import { useSelector } from '../reducers';
-import AuthStack, { AuthStackParamList } from './AuthStack';
-import HomeTab, { HomeTabParamList } from './HomeTab';
-import PhotoTaker from '../screens/Others/PhotoTaker'
-import Direct from '../screens/Others/Direct'
+import Comment from '../screens/Root/Comment';
 import { navigationRef } from './rootNavigation';
-export type rootStackParamList = {
-    AuthStack: undefined;
-    HomeTab: undefined,
-    PhotoTaker: undefined,
-    Direct: undefined,
-};
-export type commonParamList = AuthStackParamList & HomeTabParamList & rootStackParamList
-const RootTab = createMaterialTopTabNavigator<rootStackParamList>()
-const index = (): JSX.Element => {
-    const user = useSelector(state => state.user.user)
-    const navigationOptions: MaterialTopTabNavigationOptions = {
+import RootTab from './RootTab';
+export type SuperRootStackParamList = {
+    RootTab: undefined,
+    Comment: {
+        postId: number
     }
-    const tabBarOptions: MaterialTopTabBarOptions = {
-        indicatorContainerStyle: {
-            display: 'none'
-        },
-        tabStyle: {
-            display: 'none'
-        }
+};
+const RootStack = createStackNavigator<SuperRootStackParamList>()
+const index = (): JSX.Element => {
+    const navigationOptions: StackNavigationOptions = {
+        headerShown: false,
+        gestureEnabled: false
     }
     return (
         <NavigationContainer ref={navigationRef}>
-            <RootTab.Navigator
-                initialRouteName={user.logined ? 'HomeTab' : 'AuthStack'}
-                screenOptions={navigationOptions}
-                tabBarOptions={tabBarOptions}>
-                {!user.logined &&
-                    <RootTab.Screen name="AuthStack" component={AuthStack} />
-                }
-                {user.logined &&
-                    <>
-                        <RootTab.Screen name="PhotoTaker" component={PhotoTaker} />
-                        <RootTab.Screen name="HomeTab" component={HomeTab} />
-                        <RootTab.Screen name="Direct" component={Direct} />
-                    </>
-                }
-
-            </RootTab.Navigator>
+            <RootStack.Navigator
+                initialRouteName='RootTab'
+                screenOptions={navigationOptions}>
+                <RootStack.Screen name="RootTab" component={RootTab} />
+                <RootStack.Screen name="Comment" component={Comment} />
+            </RootStack.Navigator>
         </NavigationContainer>
     )
 }

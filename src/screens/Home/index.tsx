@@ -72,7 +72,7 @@ const index = () => {
         await dispatch(FetchPostListRequest())
         setRefreshing(false)
     }
-    const _showCommentInput = (id: number, prefix?: string) => {
+    const _showCommentInput = React.useCallback((id: number, prefix?: string) => {
         if (id !== 0) {
             const check = ref.current.commentContents.every((x, index) => {
                 if (x.id === id) {
@@ -92,7 +92,7 @@ const index = () => {
             ref.current.currentCommentId = id
             setShowCommentInput(true)
         }
-    }
+    }, [])
     const _setCommentContents = (id: number, content: string) => {
         ref.current.commentContents.filter(x => x.id === id)[0].content = content
     }
