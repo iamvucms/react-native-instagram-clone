@@ -15,6 +15,7 @@ import { useDispatch } from 'react-redux'
 import { useSelector } from '../../reducers'
 import { FetchCommentListRequest } from '../../actions/commentActions'
 import CommentItem from '../../components/CommentList/CommentItem'
+import CommentList from '../../components/CommentList'
 import PostContentItem from '../../components/CommentList/PostContentItem'
 type CommentRouteProp = RouteProp<SuperRootStackParamList, 'Comment'>
 
@@ -31,9 +32,7 @@ const index = ({ navigation, route }: CommentProps) => {
     const [refreshing, setRefreshing] = useState<boolean>(false)
     const postId = route.params.postId
     const commentInputRef = useRef<TextInput>(null)
-    useEffect(() => {
-        dispatch(FetchCommentListRequest(postId))
-    }, [])
+
     const _onGoBack = () => {
         navigation.goBack()
     }
@@ -71,17 +70,7 @@ const index = ({ navigation, route }: CommentProps) => {
                         </TouchableOpacity>
                     </TouchableOpacity>
                 </View>
-                <FlatList style={{
-                    height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44,
-                }}
-                    refreshing={refreshing}
-                    onRefresh={_onRefresh}
-                    ListHeaderComponent={() => <PostContentItem item={comment.post} />}
-                    renderItem={({ item }) => <CommentItem />}
-                    keyExtractor={(item, index) => `${index}`}
-                    data={comment.comments}
-                >
-                </FlatList>
+                <CommentList postId={postId} />
                 <CommentInputPopup
                     commentInputRef={commentInputRef}
                     id={postId} />

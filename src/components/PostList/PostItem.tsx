@@ -8,6 +8,7 @@ import CirclePagination from '../CirclePagination'
 import { useDispatch } from 'react-redux'
 import { ToggleLikePostRequest } from '../../actions/postActions'
 import { navigation } from '../../navigations/rootNavigation'
+import { timestampToString } from '../../utils'
 
 export interface PostItemProps {
     item: ExtraPost,
@@ -28,21 +29,7 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
     const _toggleLikePost = () => {
         dispatch(ToggleLikePostRequest(item.uid || 0))
     }
-    let diffTime: string | number = (new Date().getTime() - (item.create_at?.toMillis() || 0)) / 1000
-    if (diffTime < 60) diffTime = 'Just now'
-    else if (diffTime > 60 && diffTime < 3600) {
-        diffTime = Math.floor(diffTime / 60)
-            + (Math.floor(diffTime / 60) > 1 ? ' minutes' : ' minute') + ' ago'
-    } else if (diffTime > 3600 && diffTime / 3600 < 24) {
-        diffTime = Math.floor(diffTime / 3600)
-            + (Math.floor(diffTime / 3600) > 1 ? ' hours' : ' hour') + ' ago'
-    }
-    else if (diffTime > 86400 && diffTime / 86400 < 30) {
-        diffTime = Math.floor(diffTime / 86400)
-            + (Math.floor(diffTime / 86400) > 1 ? ' days' : ' day') + ' ago'
-    } else {
-        diffTime = new Date(item.create_at?.toMillis() || 0).toDateString()
-    }
+    let diffTime: string = timestampToString(item.create_at?.toMillis() || 0, true)
     const _onViewAllComments = () => {
         navigation.navigate('Comment', {
             postId: item.uid
@@ -265,7 +252,7 @@ const styles = StyleSheet.create({
         borderRadius: 24
     },
 })
-function createFilterContent(content: string): JSX.Element[] {
+export function createFilterContent(content: string): JSX.Element[] {
     const matchedGroups: {
         match: string,
         index: number

@@ -14,6 +14,16 @@ const firebaseConfig = {
     messagingSenderId: "62284682844",
     appId: "1:62284682844:web:ef8af00934e5fa64dbf899"
 };
+// const firebaseConfig = {
+//     apiKey: "AIzaSyATgIePHiOXnqlzUN4rRyyaPw4CTWH7yWA",
+//     authDomain: "vucms-7f6fa.firebaseapp.com",
+//     databaseURL: "https://vucms-7f6fa.firebaseio.com",
+//     projectId: "vucms-7f6fa",
+//     storageBucket: "vucms-7f6fa.appspot.com",
+//     messagingSenderId: "62284682844",
+//     appId: "1:62284682844:web:ef8af00934e5fa64dbf899"
+// };
+
 firebase.initializeApp(firebaseConfig)
 // firebase.firestore().collectionGroup('comments')
 //     .where('userId', '==', 'vucms').get().then(x => console.warn(x.docs[0].data()))
@@ -27,7 +37,8 @@ export const STATUS_BAR_HEIGHT: number = getStatusBarHeight()
 export const SCREEN_HEIGHT: number = Math.round(Dimensions.get('window').height)
 export const SCREEN_WIDTH: number = Math.round(Dimensions.get('window').width)
 
-export const LIMIT_PER_LOADING = 2
+export const LIMIT_POSTS_PER_LOADING = 2
+export const LIMIT_COMMENTS_PER_LOADING = Math.floor((SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44 - 80 - 60) / 44) - 1
 export const seenTypes = {
     NOTSEEN: 0,
     SEEN: 1,
@@ -63,4 +74,7 @@ export const commentActionTypes = {
     FETCH_COMMENTS_REQUEST: 'FETCH_COMMENTS_REQUEST',
     FETCH_COMMENTS_SUCCESS: 'FETCH_COMMENTS_SUCCESS',
     FETCH_COMMENTS_FAILURE: 'FETCH_COMMENTS_FAILURE',
+    LOAD_MORE_COMMENTS_REQUEST: 'LOAD_MORE_COMMENTS_REQUEST',
+    LOAD_MORE_COMMENTS_SUCCESS: 'LOAD_MORE_COMMENTS_SUCCESS',
+    LOAD_MORE_COMMENTS_FAILURE: 'LOAD_MORE_COMMENTS_FAILURE',
 }

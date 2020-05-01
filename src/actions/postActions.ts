@@ -1,6 +1,6 @@
 import { firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
-import { postActionTypes, LIMIT_PER_LOADING } from "../constants";
+import { postActionTypes, LIMIT_POSTS_PER_LOADING } from "../constants";
 import {
     ExtraPost, Post, PostAction,
     PostErrorAction, PostList, PostSuccessAction
@@ -8,6 +8,8 @@ import {
 import { store } from "../store";
 import { UserInfo } from '../reducers/userReducer';
 import { SetStateAction } from 'react';
+import { LoadMoreCommentListSuccess } from './commentActions';
+import { ExtraComment } from '../reducers/commentReducer';
 
 export const FetchPostListRequest = ():
     ThunkAction<Promise<void>, {}, {}, PostAction> => {
@@ -24,11 +26,11 @@ export const FetchPostListRequest = ():
                 const userIds: string[] = []
                 let collection: Post[] = []
                 while (follwingList.length > 0
-                    && collection.length < LIMIT_PER_LOADING) {
+                    && collection.length < LIMIT_POSTS_PER_LOADING) {
                     const rs = await firestore().collection('posts')
                         .where('userId', 'in', follwingList.splice(0, 10))
                         .orderBy('create_at', 'desc')
-                        .limit(LIMIT_PER_LOADING - collection.length)
+                        .limit(LIMIT_POSTS_PER_LOADING - collection.length)
                         .get()
                     const temp = rs.docs.map(doc => {
                         if (userIds.indexOf(doc.data().userId) < 0) userIds.push(doc.data().userId)
@@ -101,22 +103,23 @@ export const LoadMorePostListRequest = ():
                 const userIds: string[] = []
                 let collection: Post[] = []
                 while (follwingList.length > 0
-                    && collection.length < LIMIT_PER_LOADING) {
+                    && collection.length < LIMIT_POSTS_PER_LOADING) {
                     const rs = await firestore().collection('posts')
                         .where('userId', 'in', follwingList.splice(0, 10))
                         .orderBy('create_at', 'desc')
                         .get()
-                    const temp = rs.docs.map(doc => {
-                        if (userIds.indexOf(doc.data().userId) < 0) userIds.push(doc.data().userId)
-                        let post = { ...doc.data() }
-                        const rqCmt = doc.ref.collection('comments')
-                            .orderBy('create_at', 'desc').get()
-                        rqCmt.then(rsx => {
-                            post.comments = rsx.docs.map(docx => docx.data())
-                        })
-                        return post
-                    }).filter(post => loadedUids.indexOf(post.uid) < 0)
-                    collection = collection.concat(temp)
+                    rs.docs.map(async doc => {
+                        if (loadedUids.indexOf(doc.data().uid) < 0
+                            && collection.length < LIMIT_POSTS_PER_LOADING) {
+                            if (userIds.indexOf(doc.data().userId) < 0)
+                                userIds.push(doc.data().userId)
+                            let post = { ...doc.data() }
+                            const rqCmt = await doc.ref.collection('comments')
+                                .orderBy('create_at', 'desc').get()
+                            post.comments = rqCmt.docs.map(docx => docx.data())
+                            collection.push(post)
+                        }
+                    })
                 }
                 let ownInfos: UserInfo[] = []
                 while (userIds.length > 0) {
@@ -186,6 +189,13 @@ export const PostCommentRequest = (postId: number, content: string):
                     }
                     return post
                 })
+                const comment: ExtraComment = rq2.docs[0].data()
+                comment.ownUser = me.userInfo
+                const payload = {
+                    comments: [comment],
+                    scrollDown: true
+                }
+                dispatch(LoadMoreCommentListSuccess(payload))
                 dispatch(PostCommentSuccess(postList))
             } else {
                 dispatch(PostCommentFailure())
