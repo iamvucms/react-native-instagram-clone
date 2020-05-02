@@ -1,9 +1,9 @@
-import { userActionTypes } from "../constants";
-import { userAction, SuccessAction, ErrorAction, userPayload } from '../reducers/userReducer'
-import { WelcomePropsRouteParams } from "src/screens/Auth/Welcome";
-import { auth, firestore } from 'firebase'
+import { auth, firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
+import { WelcomePropsRouteParams } from "src/screens/Auth/Welcome";
+import { userActionTypes } from "../constants";
 import { navigate } from "../navigations/rootNavigation";
+import { ErrorAction, SuccessAction, userAction, userPayload } from '../reducers/userReducer';
 export interface userLoginWithEmail {
     email: string,
     password: string

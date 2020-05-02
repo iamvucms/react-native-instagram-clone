@@ -1,13 +1,9 @@
 import { firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
-import { commentActionTypes, seenTypes, LIMIT_COMMENTS_PER_LOADING } from "../constants";
-import {
-    ExtraComment, Comment, CommentAction,
-    CommentErrorAction, CommentList, CommentSuccessAction, CommentExtraList, CommentListWithScroll
-} from '../reducers/commentReducer';
-import { store } from "../store";
+import { commentActionTypes, LIMIT_COMMENTS_PER_LOADING } from "../constants";
+import { CommentAction, CommentErrorAction, CommentExtraList, CommentList, CommentListWithScroll, CommentSuccessAction, ExtraComment } from '../reducers/commentReducer';
 import { UserInfo } from '../reducers/userReducer';
-import { SetStateAction } from 'react';
+import { store } from "../store";
 
 export const FetchCommentListRequest = (postId: number):
     ThunkAction<Promise<void>, {}, {}, CommentAction> => {
@@ -185,6 +181,144 @@ export const LoadMoreCommentListSuccess = (payload: CommentListWithScroll):
     CommentSuccessAction<CommentListWithScroll> => {
     return {
         type: commentActionTypes.LOAD_MORE_COMMENTS_SUCCESS,
+        payload: payload
+    }
+}
+/**
+ * TOGGLE LIKE REPLY ACTION
+ */
+export const ToggleLikeCommentRequest = (commentId: number):
+    ThunkAction<Promise<void>, {}, {}, CommentAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, CommentAction>) => {
+        try {
+            const me = store.getState().user.user.userInfo
+            let commentList = [...store.getState().comment.comments]
+            const ref = firestore()
+            if (me?.username) {
+                const username = me.username
+                const rq = await ref.collectionGroup('comments')
+                    .where('uid', '==', commentId).limit(1).get()
+                if (rq.size > 0) {
+                    const destinationComment = rq.docs[0]
+                    const comment: ExtraComment = destinationComment.data()
+                    if (comment.likes) {
+                        if (comment.likes?.indexOf(me.username) < 0) {
+                            comment.likes.push(username)
+                        } else comment.likes.splice(
+                            comment.likes.indexOf(username), 1)
+                        await destinationComment.ref.update({
+                            likes: comment.likes
+                        })
+                        commentList = commentList.map(xComment => {
+                            if (xComment.uid === comment.uid) {
+                                const newComment = { ...xComment }
+                                newComment.likes = comment.likes
+                                return newComment
+                            }
+                            return xComment
+                        })
+
+                        const payload: CommentListWithScroll = {
+                            comments: commentList,
+                            scrollDown: false
+                        }
+                        dispatch(ToggleLikeCommentSuccess(payload))
+                    }
+
+                } else dispatch(ToggleLikeCommentFailure())
+
+
+            } else dispatch(ToggleLikeCommentFailure())
+        } catch (e) {
+            console.warn(e)
+            dispatch(ToggleLikeCommentFailure())
+        }
+    }
+}
+export const ToggleLikeCommentFailure = (): CommentErrorAction => {
+    return {
+        type: commentActionTypes.TOGGLE_LIKE_COMMENT_FAILURE,
+        payload: {
+            message: 'Get Comments Failed!'
+        }
+    }
+}
+export const ToggleLikeCommentSuccess = (payload: CommentListWithScroll):
+    CommentSuccessAction<CommentListWithScroll> => {
+    return {
+        type: commentActionTypes.TOGGLE_LIKE_COMMENT_SUCCESS,
+        payload: payload
+    }
+}
+/**
+ * TOGGLE LIKE COMMMENT ACTION
+ */
+export const ToggleLikeReplyRequest = (replyId: number, commentId: number):
+    ThunkAction<Promise<void>, {}, {}, CommentAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, CommentAction>) => {
+        try {
+            const me = store.getState().user.user.userInfo
+            let commentList = [...store.getState().comment.comments]
+            const ref = firestore()
+            if (me?.username) {
+                const username = me.username
+                const rq = await ref.collectionGroup('replies')
+                    .where('uid', '==', replyId).limit(1).get()
+                if (rq.size > 0) {
+                    const destinationReply = rq.docs[0]
+                    const reply: ExtraComment = destinationReply.data()
+                    if (reply.likes) {
+                        if (reply.likes?.indexOf(me.username) < 0) {
+                            reply.likes.push(username)
+                        } else reply.likes.splice(
+                            reply.likes.indexOf(username), 1)
+                        await destinationReply.ref.update({
+                            likes: reply.likes
+                        })
+                        commentList = commentList.map(xComment => {
+                            if (xComment.uid === commentId) {
+                                const newComment = { ...xComment }
+                                newComment.replies = xComment.replies?.map(xReply => {
+                                    xReply = { ...xReply }
+                                    if (xReply.uid === reply.uid) {
+                                        xReply.likes = reply.likes
+                                    }
+                                    return xReply
+                                }) || []
+                                return newComment
+                            }
+                            return xComment
+                        })
+
+                        const payload: CommentListWithScroll = {
+                            comments: commentList,
+                            scrollDown: false
+                        }
+                        dispatch(ToggleLikeReplySuccess(payload))
+                    }
+
+                } else dispatch(ToggleLikeReplyFailure())
+
+
+            } else dispatch(ToggleLikeReplyFailure())
+        } catch (e) {
+            console.warn(e)
+            dispatch(ToggleLikeReplyFailure())
+        }
+    }
+}
+export const ToggleLikeReplyFailure = (): CommentErrorAction => {
+    return {
+        type: commentActionTypes.TOGGLE_LIKE_COMMENT_FAILURE,
+        payload: {
+            message: 'Get Comments Failed!'
+        }
+    }
+}
+export const ToggleLikeReplySuccess = (payload: CommentListWithScroll):
+    CommentSuccessAction<CommentListWithScroll> => {
+    return {
+        type: commentActionTypes.TOGGLE_LIKE_COMMENT_SUCCESS,
         payload: payload
     }
 }

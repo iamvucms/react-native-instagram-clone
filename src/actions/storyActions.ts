@@ -1,10 +1,9 @@
 import { firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
-import { storyActionTypes, seenTypes } from "../constants";
+import { seenTypes, storyActionTypes } from "../constants";
 import { ExtraStory, Story, StoryAction, StoryErrorAction, StoryList, StorySuccessAction } from '../reducers/storyReducer';
-import { store } from "../store";
 import { UserInfo } from '../reducers/userReducer';
-import { SetStateAction } from 'react';
+import { store } from "../store";
 
 export const FetchStoryListRequest = ():
     ThunkAction<Promise<void>, {}, {}, StoryAction> => {

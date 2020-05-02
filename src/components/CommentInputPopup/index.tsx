@@ -1,4 +1,4 @@
-import React, { RefObject, useState, useRef } from 'react'
+import React, { RefObject, useState, useRef, useEffect } from 'react'
 import {
     StyleSheet, Text, View,
     TouchableOpacity, TextInput, ScrollView,
@@ -15,15 +15,20 @@ export interface CommentInputPopupProps {
     commentInputRef: RefObject<TextInput>,
     id: number,
     setCommentContents?: (id: number, content: string) => void,
-    preValue?: string
+    preValue?: string,
+    replyToCommentId?: number,
+    replyToCommentUsername?: string,
 }
 const index = ({ commentInputRef, preValue,
+    replyToCommentId, replyToCommentUsername,
     setCommentContents, id }: CommentInputPopupProps) => {
     const dispatch = useDispatch()
     const user = useSelector(state => state.user.user)
+    const ref = useRef<{ isReplying: boolean }>({ isReplying: false })
     const [text, setText] = useState<string>(preValue || '')
     const [commenting, setCommenting] = useState<boolean>(false)
     const _loadingDeg = new Animated.Value(0)
+    const _topOffsetReplyLabel = new Animated.Value(0)
     const _onAnimatedLoading = () => {
         Animated.timing(_loadingDeg, {
             toValue: 5,
@@ -31,6 +36,21 @@ const index = ({ commentInputRef, preValue,
             useNativeDriver: true
         }).start()
     }
+    useEffect(() => {
+        if (replyToCommentId && replyToCommentId !== 0) {
+            ref.current.isReplying = true
+            Animated.timing(_topOffsetReplyLabel, {
+                useNativeDriver: false,
+                toValue: -36,
+                duration: 500
+            }).start()
+        }
+    }, [replyToCommentId])
+    useEffect(() => {
+        if (preValue !== undefined) {
+            setText(preValue)
+        }
+    }, [preValue])
     const _addEmoji = (icon: string) => {
         setText(`${text}${icon}`)
         if (setCommentContents) setCommentContents(id, `${text}${icon}`)
@@ -43,14 +63,43 @@ const index = ({ commentInputRef, preValue,
         Keyboard.dismiss()
         if (setCommentContents) setCommentContents(id, '')
     }
+    const _onHideReplyLabel = () => {
+        ref.current.isReplying = false
+        Animated.timing(_topOffsetReplyLabel, {
+            useNativeDriver: false,
+            toValue: 0,
+            duration: 200
+        }).start()
+    }
     return (
         <View style={styles.commentInputWrapper}>
+            <Animated.View style={{
+                ...styles.replyLabelWrapper,
+                top: _topOffsetReplyLabel
+            }}>
+                <Text style={{
+                    color: "#666"
+                }}>
+                    Replying to {replyToCommentUsername}
+                </Text>
+                <TouchableOpacity
+                    onPress={_onHideReplyLabel}
+                    style={styles.btnHideReplyLabel}>
+                    <Text style={{
+                        color: "#666",
+                        fontSize: 20
+                    }}>×</Text>
+                </TouchableOpacity>
+            </Animated.View>
             <ScrollView
                 keyboardShouldPersistTaps="handled"
                 style={{
                     height: 36,
                     borderBottomColor: "#ddd",
-                    borderBottomWidth: 1
+                    borderBottomWidth: 1,
+                    borderTopColor: "#ddd",
+                    borderTopWidth: 1,
+                    backgroundColor: '#fff'
                 }}
                 bounces={false}
                 horizontal={true}
@@ -175,5 +224,18 @@ const styles = StyleSheet.create({
     },
     btnPost: {
         width: 40
+    },
+    replyLabelWrapper: {
+        height: 36,
+        width: '100%',
+        flexDirection: 'row',
+        paddingHorizontal: 15,
+        position: 'absolute',
+        zIndex: -1,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#ddd'
+    },
+    btnHideReplyLabel: {
     }
 })

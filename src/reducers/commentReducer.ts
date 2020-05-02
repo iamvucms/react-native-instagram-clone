@@ -71,6 +71,34 @@ const reducer = (state: CommentExtraList = defaultState, action: CommentAction):
             const message2 = action.payload.message
             Alert.alert('Error', message2)
             return state
+        case commentActionTypes.TOGGLE_LIKE_COMMENT_REQUEST:
+            state = state
+            return state
+        case commentActionTypes.TOGGLE_LIKE_COMMENT_SUCCESS:
+            action = <CommentSuccessAction<CommentListWithScroll>>action
+            state = {
+                ...state, comments: [...action.payload.comments]
+            }
+            return state
+        case commentActionTypes.TOGGLE_LIKE_COMMENT_FAILURE:
+            action = <CommentErrorAction>action
+            const message3 = action.payload.message
+            Alert.alert('Error', message3)
+            return state
+        case commentActionTypes.TOGGLE_LIKE_REPLY_REQUEST:
+            state = state
+            return state
+        case commentActionTypes.TOGGLE_LIKE_REPLY_SUCCESS:
+            action = <CommentSuccessAction<CommentListWithScroll>>action
+            state = {
+                ...state, comments: [...action.payload.comments]
+            }
+            return state
+        case commentActionTypes.TOGGLE_LIKE_REPLY_FAILURE:
+            action = <CommentErrorAction>action
+            const message4 = action.payload.message
+            Alert.alert('Error', message4)
+            return state
         default:
             return state
     }

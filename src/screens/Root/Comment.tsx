@@ -1,22 +1,11 @@
-import React, { useRef, useEffect, useState } from 'react'
-import {
-    StyleSheet, Text, View,
-    KeyboardAvoidingView, TextInput,
-    SafeAreaView, TouchableOpacity, ScrollView,
-    FlatList
-} from 'react-native'
 import { RouteProp } from '@react-navigation/native'
-import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
-import { SuperRootStackParamList } from '../../navigations'
 import { StackNavigationProp } from '@react-navigation/stack'
+import React, { useRef, useState } from 'react'
+import { KeyboardAvoidingView, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
 import CommentInputPopup from '../../components/CommentInputPopup'
-import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../constants'
-import { useDispatch } from 'react-redux'
-import { useSelector } from '../../reducers'
-import { FetchCommentListRequest } from '../../actions/commentActions'
-import CommentItem from '../../components/CommentList/CommentItem'
 import CommentList from '../../components/CommentList'
-import PostContentItem from '../../components/CommentList/PostContentItem'
+import { SuperRootStackParamList } from '../../navigations'
 type CommentRouteProp = RouteProp<SuperRootStackParamList, 'Comment'>
 
 type CommentNavigationProp = StackNavigationProp<SuperRootStackParamList, 'Comment'>
@@ -27,20 +16,20 @@ type CommentProps = {
 }
 
 const index = ({ navigation, route }: CommentProps) => {
-    const dispatch = useDispatch()
-    const comment = useSelector(state => state.comment)
-    const [refreshing, setRefreshing] = useState<boolean>(false)
     const postId = route.params.postId
     const commentInputRef = useRef<TextInput>(null)
-
+    const [currentReplyCommentId, setCurrentReplyCommentId] = useState<number>(0)
+    const [currentReplyUsername, setCurrentReplyUsername] = useState<string>('')
     const _onGoBack = () => {
         navigation.goBack()
     }
     const _onShareToDirect = () => {
 
     }
-    const _onRefresh = () => {
-        setRefreshing(true)
+    const _onReply = (commentId: number, targetUsername: string) => {
+        commentInputRef.current?.focus()
+        setCurrentReplyCommentId(commentId)
+        setCurrentReplyUsername(targetUsername)
     }
     return (
         <SafeAreaView style={styles.container}>
@@ -70,8 +59,11 @@ const index = ({ navigation, route }: CommentProps) => {
                         </TouchableOpacity>
                     </TouchableOpacity>
                 </View>
-                <CommentList postId={postId} />
+                <CommentList onReply={_onReply} postId={postId} />
                 <CommentInputPopup
+                    replyToCommentUsername={currentReplyUsername}
+                    replyToCommentId={currentReplyCommentId}
+                    preValue={currentReplyUsername ? `@${currentReplyUsername} ` : ''}
                     commentInputRef={commentInputRef}
                     id={postId} />
             </KeyboardAvoidingView>

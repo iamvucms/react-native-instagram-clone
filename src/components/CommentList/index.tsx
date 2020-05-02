@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { StyleSheet, Animated, FlatList, View } from 'react-native'
+import { StyleSheet, Animated, FlatList, View, NativeScrollEvent, NativeSyntheticEvent } from 'react-native'
 import CommentItem from './CommentItem'
 import PostContentItem from './PostContentItem'
 import { useSelector } from '../../reducers'
@@ -11,25 +11,24 @@ import {
     LoadMoreCommentListRequest
 } from '../../actions/commentActions'
 export interface CommentListProps {
-    postId: number
+    postId: number,
+    onReply: (a: number, b: string) => void
 }
-const index = ({ postId }: CommentListProps) => {
+const index = ({ postId, onReply }: CommentListProps) => {
     const dispatch = useDispatch()
     const comment = useSelector(state => state.comment)
     const [refreshing, setRefreshing] = useState<boolean>(false)
     const [loadingMore, setLoadingMore] = useState<boolean>(false)
     const ref = useRef<{
-        allowLoadMore: boolean
-    }>({ allowLoadMore: false })
+        preOffsetY: number
+    }>({ preOffsetY: 0 })
     const scrollRef = useRef<FlatList>(null)
     useEffect(() => {
         (async () => {
-            ref.current.allowLoadMore = false
             setRefreshing(true)
             await dispatch(ResetCommentList())
             await dispatch(FetchCommentListRequest(postId))
             setRefreshing(false)
-            ref.current.allowLoadMore = true
         })()
 
         return () => {
@@ -37,33 +36,35 @@ const index = ({ postId }: CommentListProps) => {
     }, [])
     useEffect(() => {
         if (comment.scrollDown) {
-            ref.current.allowLoadMore = false
             scrollRef.current?.scrollToEnd()
-            setTimeout(() => {
-                ref.current.allowLoadMore = true
-            }, 1000);
         }
     }, [comment])
     const _onRefresh = async () => {
         if (!refreshing) {
-            ref.current.allowLoadMore = false
             setRefreshing(true)
             await dispatch(FetchCommentListRequest(postId))
             setRefreshing(false)
-            ref.current.allowLoadMore = true
         }
     }
     const _onLoadMore = async () => {
-        if (!loadingMore && ref.current.allowLoadMore) {
+        if (!loadingMore) {
             setLoadingMore(true)
             await dispatch(LoadMoreCommentListRequest(postId))
             setLoadingMore(false)
         }
     }
+    const _onScrollHandler = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const offsetPercent = (nativeEvent.contentSize.height
+            - nativeEvent.contentOffset.y) / nativeEvent.contentSize.height
+        const isScrollDown = nativeEvent.contentOffset.y - ref.current.preOffsetY > 0
+        if (offsetPercent < 0.81 && isScrollDown) {
+            _onLoadMore()
+        }
+        ref.current.preOffsetY = nativeEvent.contentOffset.y
+    }
     const FooterComponent = ({ loading }: { loading: boolean }) => {
         const _loadingDeg = new Animated.Value(0)
         const _onAnimateLoading = () => {
-
             Animated.timing(_loadingDeg, {
                 toValue: 5,
                 duration: 400 * 5,
@@ -105,11 +106,11 @@ const index = ({ postId }: CommentListProps) => {
             onRefresh={_onRefresh}
             ListHeaderComponent={() => <PostContentItem item={comment.post} />}
             ListFooterComponent={() => <FooterComponent loading={loadingMore} />}
-            renderItem={({ item, index }) => <CommentItem item={item} />}
+            renderItem={({ item, index }) => <CommentItem onReply={onReply} item={item} />}
             keyExtractor={(item, index) => `${index}`}
             data={comment.comments}
-            onEndReached={_onLoadMore}
-            onEndReachedThreshold={0.5}
+            onScroll={_onScrollHandler}
+            scrollEventThrottle={30}
         >
         </FlatList>
     )

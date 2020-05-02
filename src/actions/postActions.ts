@@ -1,15 +1,11 @@
 import { firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
-import { postActionTypes, LIMIT_POSTS_PER_LOADING } from "../constants";
-import {
-    ExtraPost, Post, PostAction,
-    PostErrorAction, PostList, PostSuccessAction
-} from '../reducers/postReducer';
-import { store } from "../store";
-import { UserInfo } from '../reducers/userReducer';
-import { SetStateAction } from 'react';
-import { LoadMoreCommentListSuccess } from './commentActions';
+import { LIMIT_POSTS_PER_LOADING, postActionTypes } from "../constants";
 import { ExtraComment } from '../reducers/commentReducer';
+import { ExtraPost, Post, PostAction, PostErrorAction, PostList, PostSuccessAction } from '../reducers/postReducer';
+import { UserInfo } from '../reducers/userReducer';
+import { store } from "../store";
+import { LoadMoreCommentListSuccess } from './commentActions';
 
 export const FetchPostListRequest = ():
     ThunkAction<Promise<void>, {}, {}, PostAction> => {
