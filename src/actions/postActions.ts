@@ -167,16 +167,16 @@ export const PostCommentRequest = (postId: number, content: string):
             const ref = firestore()
             const rq = await ref.collection('posts').where('uid', '==', postId).get()
             if (rq.docs.length > 0) {
-                const destinationPost = rq.docs[0]
+                const targetPost = rq.docs[0]
                 const uid = new Date().getTime()
-                await destinationPost.ref.collection('comments').doc(`${uid}`).set({
+                await targetPost.ref.collection('comments').doc(`${uid}`).set({
                     uid: uid,
                     content,
                     likes: [],
                     userId: me.userInfo?.username,
                     create_at: new Date()
                 })
-                const rq2 = await destinationPost.ref.collection('comments')
+                const rq2 = await targetPost.ref.collection('comments')
                     .orderBy('create_at', 'desc').get()
                 postList = postList.map((post) => {
                     if (post.uid === postId) {
@@ -215,6 +215,7 @@ export const PostCommentSuccess = (payload: PostList): PostSuccessAction<PostLis
         payload: payload
     }
 }
+
 /**
  * TOGGLE LIKE POST ACTIONS
  */
@@ -229,16 +230,16 @@ export const ToggleLikePostRequest = (postId: number):
             if (rq.docs.length > 0) {
                 postList = postList.map((post) => {
                     if (post.uid === postId) {
-                        const destinationPost: Post = rq.docs[0].data()
-                        const index = destinationPost.likes?.indexOf(
+                        const targetPost: Post = rq.docs[0].data()
+                        const index = targetPost.likes?.indexOf(
                             me.userInfo?.username || '')
                         if (index !== undefined && index > -1) {
-                            destinationPost.likes?.splice(index, 1)
-                        } else destinationPost.likes?.push(me.userInfo?.username || '')
+                            targetPost.likes?.splice(index, 1)
+                        } else targetPost.likes?.push(me.userInfo?.username || '')
                         rq.docs[0].ref.update({
-                            likes: destinationPost.likes
+                            likes: targetPost.likes
                         })
-                        post = { ...post, likes: destinationPost.likes }
+                        post = { ...post, likes: targetPost.likes }
                     }
                     return post
                 })

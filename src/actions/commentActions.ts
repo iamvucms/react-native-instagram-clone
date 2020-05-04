@@ -13,14 +13,14 @@ export const FetchCommentListRequest = (postId: number):
             const rq = await ref.collection('posts')
                 .where('uid', '==', postId).limit(1).get()
             if (rq.docs.length > 0) {
-                const destinationPost = rq.docs[0]
+                const targetPost = rq.docs[0]
                 const ownIds: string[] = []
                 let collection: CommentList = []
-                const rqAll = await destinationPost.ref.collection('comments').get()
+                const rqAll = await targetPost.ref.collection('comments').get()
                 let i = 0
                 while (collection.length < LIMIT_COMMENTS_PER_LOADING
                     && collection.length < rqAll.size) {
-                    const rq2 = await destinationPost.ref.collection('comments')
+                    const rq2 = await targetPost.ref.collection('comments')
                         .orderBy('create_at', 'asc')
                         .limit(LIMIT_COMMENTS_PER_LOADING - collection.length)
                         .get()
@@ -60,9 +60,9 @@ export const FetchCommentListRequest = (postId: number):
                     return comment
                 })
                 const post = {
-                    ...destinationPost.data(), ownUser: store.getState()
+                    ...targetPost.data(), ownUser: store.getState()
                         .postList.filter(x => x.uid
-                            === destinationPost.data().uid)[0].ownUser
+                            === targetPost.data().uid)[0].ownUser
                 }
                 const payload: CommentExtraList = {
                     post,
@@ -105,13 +105,13 @@ export const LoadMoreCommentListRequest = (postId: number):
                 .where('uid', '==', postId).limit(1).get()
             if (rq.docs.length > 0) {
 
-                const destinationPost = rq.docs[0]
+                const targetPost = rq.docs[0]
                 const ownIds: string[] = []
                 let collection: CommentList = []
-                const rqAll = await destinationPost.ref.collection('comments').get()
+                const rqAll = await targetPost.ref.collection('comments').get()
                 while (collection.length < LIMIT_COMMENTS_PER_LOADING
                     && loadedCommentIds.length + collection.length < rqAll.size) {
-                    const rq2 = await destinationPost.ref.collection('comments')
+                    const rq2 = await targetPost.ref.collection('comments')
                         .orderBy('create_at', 'asc')
                         .limit(LIMIT_COMMENTS_PER_LOADING + loadedCommentIds.length)
                         .get()
@@ -199,14 +199,14 @@ export const ToggleLikeCommentRequest = (commentId: number):
                 const rq = await ref.collectionGroup('comments')
                     .where('uid', '==', commentId).limit(1).get()
                 if (rq.size > 0) {
-                    const destinationComment = rq.docs[0]
-                    const comment: ExtraComment = destinationComment.data()
+                    const targetComment = rq.docs[0]
+                    const comment: ExtraComment = targetComment.data()
                     if (comment.likes) {
                         if (comment.likes?.indexOf(me.username) < 0) {
                             comment.likes.push(username)
                         } else comment.likes.splice(
                             comment.likes.indexOf(username), 1)
-                        await destinationComment.ref.update({
+                        await targetComment.ref.update({
                             likes: comment.likes
                         })
                         commentList = commentList.map(xComment => {
@@ -265,14 +265,14 @@ export const ToggleLikeReplyRequest = (replyId: number, commentId: number):
                 const rq = await ref.collectionGroup('replies')
                     .where('uid', '==', replyId).limit(1).get()
                 if (rq.size > 0) {
-                    const destinationReply = rq.docs[0]
-                    const reply: ExtraComment = destinationReply.data()
+                    const targetReply = rq.docs[0]
+                    const reply: ExtraComment = targetReply.data()
                     if (reply.likes) {
                         if (reply.likes?.indexOf(me.username) < 0) {
                             reply.likes.push(username)
                         } else reply.likes.splice(
                             reply.likes.indexOf(username), 1)
-                        await destinationReply.ref.update({
+                        await targetReply.ref.update({
                             likes: reply.likes
                         })
                         commentList = commentList.map(xComment => {
@@ -319,6 +319,68 @@ export const ToggleLikeReplySuccess = (payload: CommentListWithScroll):
     CommentSuccessAction<CommentListWithScroll> => {
     return {
         type: commentActionTypes.TOGGLE_LIKE_COMMENT_SUCCESS,
+        payload: payload
+    }
+}
+/**
+ * POST REPLY ACTIONS
+ */
+export const PostReplyRequest = (commentId: number, content: string):
+    ThunkAction<Promise<void>, {}, {}, CommentAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, CommentAction>) => {
+        try {
+            const me = store.getState().user.user
+            let comments = [...store.getState().comment.comments]
+            const ref = firestore()
+            const rq = await ref.collectionGroup('comments')
+                .where('uid', '==', commentId).limit(1).get()
+            if (rq.size > 0) {
+                const targetComment = rq.docs[0]
+                const replyUid = new Date().getTime()
+                await targetComment.ref.collection('replies').doc(`${replyUid}`)
+                    .set({
+                        content,
+                        create_at: new Date(),
+                        likes: [],
+                        uid: replyUid,
+                        userId: me.userInfo?.username
+                    })
+                const rq2 = await ref.collectionGroup('replies')
+                    .where('uid', '==', replyUid).limit(1).get()
+                comments = comments.map(comment => {
+                    if (comment.uid === commentId) {
+                        comment = { ...comment }
+                        const reply: ExtraComment = rq2.docs[0].data()
+                        reply.ownUser = me.userInfo
+                        if (comment?.replies === undefined) {
+                            comment.replies = []
+                        }
+                        comment.replies?.push(reply)
+
+                    }
+                    return comment
+                })
+                dispatch(PostReplySuccess({
+                    comments: comments,
+                    scrollDown: false
+                }))
+            } else dispatch(PostReplyFailure())
+        } catch (e) {
+            dispatch(PostReplyFailure())
+        }
+    }
+}
+export const PostReplyFailure = (): CommentErrorAction => {
+    return {
+        type: commentActionTypes.REPLY_COMMENT_FAILURE,
+        payload: {
+            message: 'Can not load more posts!'
+        }
+    }
+}
+export const PostReplySuccess = (payload: CommentListWithScroll): CommentSuccessAction<CommentListWithScroll> => {
+    return {
+        type: commentActionTypes.REPLY_COMMENT_SUCCESS,
         payload: payload
     }
 }

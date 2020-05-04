@@ -10,6 +10,7 @@ import { useSelector } from '../../reducers'
 import { SCREEN_WIDTH } from '../../constants'
 import { useDispatch } from 'react-redux'
 import { PostCommentRequest } from '../../actions/postActions'
+import { PostReplyRequest } from '../../actions/commentActions'
 
 export interface CommentInputPopupProps {
     commentInputRef: RefObject<TextInput>,
@@ -28,7 +29,7 @@ const index = ({ commentInputRef, preValue,
     const [text, setText] = useState<string>(preValue || '')
     const [commenting, setCommenting] = useState<boolean>(false)
     const _loadingDeg = new Animated.Value(0)
-    const _topOffsetReplyLabel = new Animated.Value(0)
+    const [topOffset, setTopOffset] = useState<number>(0)
     const _onAnimatedLoading = () => {
         Animated.timing(_loadingDeg, {
             toValue: 5,
@@ -39,11 +40,7 @@ const index = ({ commentInputRef, preValue,
     useEffect(() => {
         if (replyToCommentId && replyToCommentId !== 0) {
             ref.current.isReplying = true
-            Animated.timing(_topOffsetReplyLabel, {
-                useNativeDriver: false,
-                toValue: -36,
-                duration: 500
-            }).start()
+            setTopOffset(-36)
         }
     }, [replyToCommentId])
     useEffect(() => {
@@ -55,27 +52,38 @@ const index = ({ commentInputRef, preValue,
         setText(`${text}${icon}`)
         if (setCommentContents) setCommentContents(id, `${text}${icon}`)
     }
-    const _postComment = async () => {
-        setCommenting(true)
-        await dispatch(PostCommentRequest(id, text))
-        setCommenting(false)
-        setText('')
-        Keyboard.dismiss()
-        if (setCommentContents) setCommentContents(id, '')
-    }
     const _onHideReplyLabel = () => {
         ref.current.isReplying = false
-        Animated.timing(_topOffsetReplyLabel, {
-            useNativeDriver: false,
-            toValue: 0,
-            duration: 200
-        }).start()
+        setTopOffset(0)
     }
+    const _postComment = () => {
+        setCommenting(true)
+        if (ref.current.isReplying && replyToCommentId) {
+            (async () => {
+                await dispatch(PostReplyRequest(replyToCommentId, text))
+            })().then(() => {
+                _onHideReplyLabel()
+                setCommenting(false)
+                setText('')
+                Keyboard.dismiss()
+            })
+
+        } else (async () => {
+            await dispatch(PostCommentRequest(id, text))
+        })().then(() => {
+            setCommenting(false)
+            setText('')
+            Keyboard.dismiss()
+            if (setCommentContents) setCommentContents(id, '')
+        })
+
+    }
+
     return (
         <View style={styles.commentInputWrapper}>
             <Animated.View style={{
                 ...styles.replyLabelWrapper,
-                top: _topOffsetReplyLabel
+                top: topOffset
             }}>
                 <Text style={{
                     color: "#666"

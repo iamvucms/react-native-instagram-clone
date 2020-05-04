@@ -99,6 +99,20 @@ const reducer = (state: CommentExtraList = defaultState, action: CommentAction):
             const message4 = action.payload.message
             Alert.alert('Error', message4)
             return state
+        case commentActionTypes.REPLY_COMMENT_REQUEST:
+            state = state
+            return state
+        case commentActionTypes.REPLY_COMMENT_SUCCESS:
+            action = <CommentSuccessAction<CommentListWithScroll>>action
+            state = {
+                ...state, comments: [...action.payload.comments]
+            }
+            return state
+        case commentActionTypes.REPLY_COMMENT_FAILURE:
+            action = <CommentErrorAction>action
+            const message5 = action.payload.message
+            Alert.alert('Error', message5)
+            return state
         default:
             return state
     }
