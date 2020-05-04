@@ -3,7 +3,8 @@ import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { WelcomePropsRouteParams } from "src/screens/Auth/Welcome";
 import { userActionTypes } from "../constants";
 import { navigate } from "../navigations/rootNavigation";
-import { ErrorAction, SuccessAction, userAction, userPayload } from '../reducers/userReducer';
+import { ErrorAction, SuccessAction, userAction, userPayload, UserInfo } from '../reducers/userReducer';
+import { store } from '../store';
 export interface userLoginWithEmail {
     email: string,
     password: string
@@ -45,7 +46,7 @@ export const LoginFailure = (): ErrorAction => {
         }
     }
 }
-export const LoginSuccess = (payload: userPayload): SuccessAction => {
+export const LoginSuccess = (payload: userPayload): SuccessAction<userPayload> => {
     return {
         type: userActionTypes.LOGIN_SUCCESS,
         payload: payload
@@ -85,5 +86,52 @@ export const RegisterFailure = (e: string): ErrorAction => {
             message: e
         },
         type: userActionTypes.REGISTER_FAILURE
+    }
+}
+export const UnfollowRequest = (username: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            let me: UserInfo = { ...store.getState().user.user.userInfo }
+            const ref = firestore()
+            const rq = await ref.collection('users')
+                .where('username', '==', me.username).get()
+            if (rq.size > 0) {
+                const targetUser = rq.docs[0]
+                const user: UserInfo = targetUser.data() || {}
+                if (user.followings !== undefined &&
+                    user.followings.indexOf(username) > -1) {
+                    user.followings
+                        .splice(user.followings.indexOf(username), 1)
+                    const followings = [...user.followings]
+                    targetUser.ref.update({
+                        followings
+                    })
+                }
+                const rq2 = await targetUser.ref.get()
+                me = rq2.data() || {}
+                dispatch(UnfollowSuccess(me))
+            } else {
+                console.warn("xx")
+            }
+
+        } catch (e) {
+            console.warn(e)
+            dispatch(UnfollowFailure())
+        }
+    }
+}
+export const UnfollowFailure = (): ErrorAction => {
+    return {
+        type: userActionTypes.UNFOLLOW_FAILURE,
+        payload: {
+            message: `Can't unfollow this people!`
+        }
+    }
+}
+export const UnfollowSuccess = (user: UserInfo): SuccessAction<UserInfo> => {
+    return {
+        type: userActionTypes.UNFOLLOW_SUCCESS,
+        payload: user
     }
 }

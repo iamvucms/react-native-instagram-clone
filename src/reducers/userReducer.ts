@@ -11,6 +11,7 @@ export type UserInfo = {
         month: number,
         year: number
     },
+    followings?: string[],
     fullname?: string,
     phone?: string,
     username?: string,
@@ -26,16 +27,17 @@ export interface userPayload {
     photos?: [] | Photo[]
 }
 export interface ErrorAction {
-    type: typeof userActionTypes.LOGIN_FAILURE,
+    type: string,
     payload: {
         message: string
     }
 }
-export interface SuccessAction {
-    type: typeof userActionTypes.LOGIN_SUCCESS,
-    payload: userPayload
+export interface SuccessAction<T> {
+    type: string,
+    payload: T
 }
-export type userAction = SuccessAction | ErrorAction
+export type userAction = SuccessAction<userPayload> | ErrorAction
+    | SuccessAction<UserInfo>
 const defaultState: userPayload = {
     user: {},
     photos: []
@@ -46,7 +48,7 @@ const reducer = (state: userPayload = defaultState, action: userAction): userPay
             state = { ...state, user: {} }
             return state
         case userActionTypes.LOGIN_SUCCESS:
-            action = <SuccessAction>action
+            action = <SuccessAction<userPayload>>action
             state = { ...state, user: { ...action.payload.user } }
             return state
         case userActionTypes.LOGIN_FAILURE:
@@ -58,13 +60,25 @@ const reducer = (state: userPayload = defaultState, action: userAction): userPay
             state = { ...state, user: {} }
             return state
         case userActionTypes.REGISTER_SUCCESS:
-            action = <SuccessAction>action
+            action = <SuccessAction<userPayload>>action
             state = { ...state, user: { ...action.payload.user } }
             return state
         case userActionTypes.REGISTER_FAILURE:
             action = <ErrorAction>action
             const message2 = action.payload.message
             Alert.alert('Error', message2)
+            return state
+        case userActionTypes.UNFOLLOW_REQUEST:
+            state = { ...state, user: {} }
+            return state
+        case userActionTypes.UNFOLLOW_SUCCESS:
+            action = <SuccessAction<UserInfo>>action
+            state = { ...state, user: { userInfo: { ...action.payload }, ...state.user } }
+            return state
+        case userActionTypes.UNFOLLOW_FAILURE:
+            action = <ErrorAction>action
+            const message3 = action.payload.message
+            Alert.alert('Error', message3)
             return state
         default:
             return state

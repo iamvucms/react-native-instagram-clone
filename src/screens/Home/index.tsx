@@ -18,6 +18,7 @@ import { useSelector } from '../../reducers'
 const index = () => {
     const dispatch = useDispatch()
     const postList = useSelector(state => state.postList)
+    const user = useSelector(state => state.user.user)
     const _loadingDeg = new Animated.Value(0)
     const _scrollRef = useRef<ScrollView>(null)
     const [loadingMore, setLoadingMore] = useState<boolean>(false)
@@ -61,10 +62,18 @@ const index = () => {
         ref.current.preOffsetY = y
     }
     useEffect(() => {
+        (async () => {
+            setRefreshing(true)
+            await dispatch(FetchStoryListRequest())
+            await dispatch(FetchPostListRequest())
+            setRefreshing(false)
+        })()
+    }, [user.userInfo?.followings])
+    useEffect(() => {
         Keyboard.addListener('keyboardDidHide', () => {
             setShowCommentInput(false)
         })
-        dispatch(FetchPostListRequest())
+        // dispatch(FetchPostListRequest())
     }, [])
     const _onRefresh = async () => {
         setRefreshing(true)

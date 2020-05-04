@@ -48,7 +48,9 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                         fontWeight: '600'
                     }}>{item.ownUser?.username}</Text>
                 </View>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.push('PostOptions', {
+                    item
+                })}>
                     <Icons name="dots-vertical" size={24} />
                 </TouchableOpacity>
             </View>
@@ -68,7 +70,7 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                                     isLiked ? 'red' : '#000'
                                 } />
                         </TouchableOpacity>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={_onViewAllComments}>
                             <Icons name="comment-outline" size={24} />
                         </TouchableOpacity>
                         <TouchableOpacity>
