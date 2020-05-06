@@ -16,9 +16,10 @@ export const FetchPostListRequest = ():
                 .collection('users')
                 .doc(me.userInfo?.username)
                 .get()
-            const result = request.data()
+
+            const result: UserInfo = request.data() || {}
             if (result) {
-                const follwingList: string[] = result.followings
+                const follwingList: string[] = result.followings || []
                 const userIds: string[] = []
                 let collection: Post[] = []
                 while (follwingList.length > 0
@@ -103,20 +104,24 @@ export const LoadMorePostListRequest = ():
                     const rs = await firestore().collection('posts')
                         .where('userId', 'in', follwingList.splice(0, 10))
                         .orderBy('create_at', 'desc')
+                        .limit(LIMIT_POSTS_PER_LOADING + loadedUids.length)
                         .get()
-                    rs.docs.map(async doc => {
+                    rs.docs.map(doc => {
                         if (loadedUids.indexOf(doc.data().uid) < 0
                             && collection.length < LIMIT_POSTS_PER_LOADING) {
                             if (userIds.indexOf(doc.data().userId) < 0)
                                 userIds.push(doc.data().userId)
                             let post = { ...doc.data() }
-                            const rqCmt = await doc.ref.collection('comments')
-                                .orderBy('create_at', 'desc').get()
-                            post.comments = rqCmt.docs.map(docx => docx.data())
-                            collection.push(post)
+                            doc.ref.collection('comments')
+                                .orderBy('create_at', 'desc').get().then(rqCmt => {
+                                    post.comments = rqCmt.docs.map(docx => docx.data())
+                                    if (collection.length < LIMIT_POSTS_PER_LOADING)
+                                        collection.push(post)
+                                })
                         }
                     })
                 }
+
                 let ownInfos: UserInfo[] = []
                 while (userIds.length > 0) {
                     const rs = await firestore().collection('users')
@@ -136,7 +141,6 @@ export const LoadMorePostListRequest = ():
                 dispatch(LoadMorePostListSuccess(extraPostList))
             } else dispatch(LoadMorePostListFailure())
         } catch (e) {
-            console.warn(e)
             dispatch(LoadMorePostListFailure())
         }
     }

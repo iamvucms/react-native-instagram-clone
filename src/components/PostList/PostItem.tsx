@@ -1,5 +1,5 @@
 import React, { useState, useEffect, SetStateAction } from 'react'
-import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, Image, TouchableOpacity, Platform } from 'react-native'
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
 import PhotoShower from './PhotoShower'
 import { ExtraPost } from '../../reducers/postReducer'
@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux'
 import { ToggleLikePostRequest } from '../../actions/postActions'
 import { navigation } from '../../navigations/rootNavigation'
 import { timestampToString } from '../../utils'
-
+import Share from 'react-native-share'
 export interface PostItemProps {
     item: ExtraPost,
     showCommentInput: (id: number, prefix?: string) => void
@@ -34,6 +34,56 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
         navigation.navigate('Comment', {
             postId: item.uid
         })
+    }
+    const _onSharePost = () => {
+        const options = {
+            activityItemSources: [
+                { // For sharing url with custom title.
+                    placeholderItem: {
+                        type: 'url',
+                        content: 'https://www.facebook.com/photo.php?fbid=619895371910790'
+                    },
+                    item: {
+                        default: { type: 'url', content: 'https://www.facebook.com/photo.php?fbid=619895371910790' },
+                    },
+                    subject: {
+                        default: item.content,
+                    },
+                    linkMetadata: {
+                        originalUrl: 'https://www.facebook.com/photo.php?fbid=619895371910790',
+                        url: 'https://www.facebook.com/photo.php?fbid=619895371910790',
+                        // title: item.content
+                    },
+                },
+                { // For sharing text.
+                    placeholderItem: { type: 'text', content: item.content },
+                    item: {
+                        default: { type: 'text', content: 'Hello....' },
+                        message: item.content, // Specify no text to share via Messages app.
+                    },
+                    linkMetadata: { // For showing app icon on share preview.
+                        title: `https://img.favpng.com/9/25/24/computer-icons-instagram-logo-sticker-png-favpng-LZmXr3KPyVbr8LkxNML458QV3.jpg`
+                    },
+                },
+                { // For using custom icon instead of default text icon at share preview when sharing with message.
+                    placeholderItem: {
+                        type: 'url',
+                        content: 'a'
+                    },
+                    item: {
+                        default: {
+                            type: 'text',
+                            content: `${item.ownUser?.username} has been posted a image`
+                        },
+                    },
+                    linkMetadata: {
+                        title: `${item.ownUser?.username} has been posted a image`,
+                        icon: `https://img.favpng.com/9/25/24/computer-icons-instagram-logo-sticker-png-favpng-LZmXr3KPyVbr8LkxNML458QV3.jpg`
+                    }
+                },
+            ],
+        }
+        Share.open(options)
     }
     return (
         <View style={styles.container}>
@@ -73,7 +123,7 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                         <TouchableOpacity onPress={_onViewAllComments}>
                             <Icons name="comment-outline" size={24} />
                         </TouchableOpacity>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={_onSharePost}>
                             <Icons name="share-variant" size={24} />
                         </TouchableOpacity>
                     </View>

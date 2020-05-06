@@ -69,7 +69,9 @@ export const RegisterRequest = (userData: RegisterParams):
                             date: userData.date,
                             month: userData.month,
                             year: userData.year
-                        }
+                        },
+                        followings: [],
+                        avatarURL: 'https://www.pavilionweb.com/wp-content/uploads/2017/03/man-300x300.png'
                     })
                 dispatch(LoginRequest({
                     email: userData.email,
@@ -112,7 +114,7 @@ export const UnfollowRequest = (username: string):
                 me = rq2.data() || {}
                 dispatch(UnfollowSuccess(me))
             } else {
-                console.warn("xx")
+                
             }
 
         } catch (e) {

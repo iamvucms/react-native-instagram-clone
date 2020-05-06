@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { StyleSheet, Text, View, Image, ImageProps } from 'react-native'
+import { SCREEN_WIDTH } from '../../constants'
 export interface ScaleImageProps extends ImageProps {
     width?: number,
     height?: number,
@@ -23,10 +24,9 @@ const index = (props: ScaleImageProps) => {
     return (
         <Image {...filteredProps} source={{
             uri: filteredProps.source.uri,
-            cache: 'only-if-cached'
         }} style={[filteredProps.style, {
-            width: rwidth,
-            height: rheight
+            width: rwidth > 0 ? rwidth : (props.width || SCREEN_WIDTH),
+            height: rheight,
         }]} />
     )
 }

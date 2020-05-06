@@ -49,9 +49,9 @@ const index = () => {
     const _onScroll = ({ nativeEvent: {
         contentOffset: { y }, contentSize: { height }
     } }: NativeSyntheticEvent<NativeScrollEvent>) => {
-        if (y > height - 1000
+        if (y / height > 0.45
             && y > ref.current.preOffsetY
-            && !loadingMore
+            && !loadingMore && !refreshing
         ) {
             (async () => {
                 setLoadingMore(true)
@@ -68,7 +68,7 @@ const index = () => {
             await dispatch(FetchPostListRequest())
             setRefreshing(false)
         })()
-    }, [user.userInfo?.followings])
+    }, [user])
     useEffect(() => {
         Keyboard.addListener('keyboardDidHide', () => {
             setShowCommentInput(false)
