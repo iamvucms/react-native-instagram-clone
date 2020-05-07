@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux'
 import { ToggleLikePostRequest } from '../../actions/postActions'
 import { navigation } from '../../navigations/rootNavigation'
 import { timestampToString } from '../../utils'
-import Share from 'react-native-share'
+import Share, { Options } from 'react-native-share'
 export interface PostItemProps {
     item: ExtraPost,
     showCommentInput: (id: number, prefix?: string) => void
@@ -36,7 +36,7 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
         })
     }
     const _onSharePost = () => {
-        const options = {
+        const options: Options = {
             activityItemSources: [
                 { // For sharing url with custom title.
                     placeholderItem: {
@@ -47,7 +47,7 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                         default: { type: 'url', content: 'https://www.facebook.com/photo.php?fbid=619895371910790' },
                     },
                     subject: {
-                        default: item.content,
+                        default: item.content || '',
                     },
                     linkMetadata: {
                         originalUrl: 'https://www.facebook.com/photo.php?fbid=619895371910790',
@@ -56,10 +56,10 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                     },
                 },
                 { // For sharing text.
-                    placeholderItem: { type: 'text', content: item.content },
+                    placeholderItem: { type: 'text', content: item.content || "" },
                     item: {
                         default: { type: 'text', content: 'Hello....' },
-                        message: item.content, // Specify no text to share via Messages app.
+                        message: null, // Specify no text to share via Messages app.
                     },
                     linkMetadata: { // For showing app icon on share preview.
                         title: `https://img.favpng.com/9/25/24/computer-icons-instagram-logo-sticker-png-favpng-LZmXr3KPyVbr8LkxNML458QV3.jpg`

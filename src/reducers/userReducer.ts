@@ -1,9 +1,7 @@
 import { userActionTypes } from '../constants'
 import { Alert } from 'react-native'
-type Photo = {
-    id: number,
-    src: string
-}
+import { Story } from './storyReducer'
+import { Post } from './postReducer'
 export type UserInfo = {
     email?: string,
     birthday?: {
@@ -15,7 +13,13 @@ export type UserInfo = {
     fullname?: string,
     phone?: string,
     username?: string,
-    avatarURL?: string
+    avatarURL?: string,
+    bio?: string
+}
+export type ExtraInfo = {
+    posts: number,
+    followers: string[],
+    followings: string[],
 }
 export interface userPayload {
     user: {
@@ -24,7 +28,9 @@ export interface userPayload {
         firebaseUser?: firebase.UserInfo,
         userInfo?: UserInfo
     },
-    photos?: [] | Photo[]
+    photos?: Post[],
+    currentStory?: Story[],
+    extraInfo?: ExtraInfo
 }
 export interface ErrorAction {
     type: string,
@@ -36,11 +42,22 @@ export interface SuccessAction<T> {
     type: string,
     payload: T
 }
+export type ExtraInfoPayload = {
+    photos: Post[],
+    currentStory: Story[],
+    extraInfo: ExtraInfo
+}
 export type userAction = SuccessAction<userPayload> | ErrorAction
-    | SuccessAction<UserInfo>
+    | SuccessAction<UserInfo> | SuccessAction<ExtraInfoPayload>
 const defaultState: userPayload = {
     user: {},
-    photos: []
+    photos: [],
+    extraInfo: {
+        posts: 0,
+        followers: [],
+        followings: []
+    },
+    currentStory: []
 }
 const reducer = (state: userPayload = defaultState, action: userAction): userPayload => {
     switch (action.type) {
@@ -79,6 +96,22 @@ const reducer = (state: userPayload = defaultState, action: userAction): userPay
             action = <ErrorAction>action
             const message3 = action.payload.message
             Alert.alert('Error', message3)
+            return state
+        case userActionTypes.FETCH_EXTRA_INFO_REQUEST:
+            state = { ...state }
+            return state
+        case userActionTypes.FETCH_EXTRA_INFO_SUCCESS:
+            action = <SuccessAction<ExtraInfoPayload>>action
+            state = {
+                ...state, currentStory: [...action.payload.currentStory],
+                extraInfo: { ...action.payload.extraInfo },
+                photos: [...action.payload.photos]
+            }
+            return state
+        case userActionTypes.FETCH_EXTRA_INFO_FAILURE:
+            action = <ErrorAction>action
+            const message4 = action.payload.message
+            Alert.alert('Error', message4)
             return state
         default:
             return state

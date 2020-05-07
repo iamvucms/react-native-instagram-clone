@@ -3,7 +3,7 @@ import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { WelcomePropsRouteParams } from "src/screens/Auth/Welcome";
 import { userActionTypes } from "../constants";
 import { navigate } from "../navigations/rootNavigation";
-import { ErrorAction, SuccessAction, userAction, userPayload, UserInfo } from '../reducers/userReducer';
+import { ErrorAction, SuccessAction, userAction, userPayload, UserInfo, ExtraInfoPayload, ExtraInfo } from '../reducers/userReducer';
 import { store } from '../store';
 export interface userLoginWithEmail {
     email: string,
@@ -70,6 +70,7 @@ export const RegisterRequest = (userData: RegisterParams):
                             month: userData.month,
                             year: userData.year
                         },
+                        bio: '',
                         followings: [],
                         avatarURL: 'https://www.pavilionweb.com/wp-content/uploads/2017/03/man-300x300.png'
                     })
@@ -114,7 +115,7 @@ export const UnfollowRequest = (username: string):
                 me = rq2.data() || {}
                 dispatch(UnfollowSuccess(me))
             } else {
-                
+
             }
 
         } catch (e) {
@@ -137,3 +138,61 @@ export const UnfollowSuccess = (user: UserInfo): SuccessAction<UserInfo> => {
         payload: user
     }
 }
+/**
+ * FETCH EXTRA INFO ACTION
+ */
+export const FetchExtraInfoRequest = ():
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            let me: UserInfo = { ...store.getState().user.user.userInfo }
+            const ref = firestore()
+            const rq = await ref.collection('posts')
+                .where('userId', '==', me.username).get()
+            const payload: ExtraInfoPayload = {
+                currentStory: [],
+                extraInfo: {
+                    followers: [],
+                    followings: [],
+                    posts: rq.size || 0
+                },
+                photos: rq.docs.map(x => x.data())
+            }
+            const rq2 = await ref.collection('users')
+                .where('username', '==', me.username).limit(1).get()
+            if (rq2.size > 0) {
+                payload.extraInfo.followings = rq2.docs[0].data().followings
+                const rq3 = await ref.collection('users')
+                    .where('followings', 'array-contains', me.username).get()
+                payload.extraInfo.followers = rq3.docs.map(x => x.data().username)
+                const rq4 = await ref.collection('stories')
+                    .where('userId', '==', me.username)
+                    .where('create_at', '>=',
+                        new Date(new Date().getTime() - 24 * 3600 * 1000))
+                    .orderBy('create_at', 'asc').get()
+                payload.currentStory = rq4.docs.map(x => x.data())
+                dispatch(FetchExtraInfoSuccess(payload))
+
+            } else dispatch(FetchExtraInfoFailure())
+        } catch (e) {
+            console.warn(e)
+            dispatch(FetchExtraInfoFailure())
+        }
+    }
+}
+export const FetchExtraInfoFailure = (): ErrorAction => {
+    return {
+        type: userActionTypes.FETCH_EXTRA_INFO_FAILURE,
+        payload: {
+            message: `Can't get information`
+        }
+    }
+}
+export const FetchExtraInfoSuccess = (extraInfo: ExtraInfoPayload):
+    SuccessAction<ExtraInfoPayload> => {
+    return {
+        type: userActionTypes.FETCH_EXTRA_INFO_SUCCESS,
+        payload: extraInfo
+    }
+}
+
