@@ -10,6 +10,9 @@ import Creator from '../screens/Home/Creator'
 import Activity from '../screens/Home/Activity'
 import Account from '../screens/Home/Account'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { TabBarComponent } from '../components/BottomTabBar'
+import { createStackNavigator } from '@react-navigation/stack'
+import Setting from '../screens/Home/Account/Setting'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -17,9 +20,25 @@ export type HomeTabParamList = {
     Activity: undefined,
     Account: undefined
 };
+export type AccountStackParamList = {
+    AccountIndex: undefined,
+    Setting: undefined
+}
+const Stack = createStackNavigator<AccountStackParamList>()
+const AccountStack = () => {
+    return (
+        <Stack.Navigator screenOptions={{
+            headerShown: false,
+            gestureEnabled: false
+        }}>
+            <Stack.Screen component={Account} name="AccountIndex" />
+            <Stack.Screen component={Setting} name="Setting" />
+        </Stack.Navigator>
+    )
+}
 const Tab = createBottomTabNavigator<HomeTabParamList>()
 const HomeTab = () => {
-    
+
     const tabBarOptions: BottomTabBarOptions = {
         showLabel: false
     }
@@ -27,7 +46,7 @@ const HomeTab = () => {
 
     }
     return (
-        <Tab.Navigator tabBarOptions={tabBarOptions} screenOptions={navigationOptions}>
+        <Tab.Navigator tabBar={TabBarComponent} tabBarOptions={tabBarOptions} screenOptions={navigationOptions}>
             <Tab.Screen
                 options={{
                     tabBarIcon: ({ focused }) => <Icon name="home"
@@ -48,7 +67,7 @@ const HomeTab = () => {
             <Tab.Screen options={{
                 tabBarIcon: ({ focused }) => <Icon name="account"
                     size={30} color={focused ? '#000' : '#ddd'} />
-            }} component={Account} name="Account" />
+            }} component={AccountStack} name="Account" />
         </Tab.Navigator>
     )
 }

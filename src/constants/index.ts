@@ -33,6 +33,34 @@ firebase.initializeApp(firebaseConfig)
 //         create_at: new Date()
 //     }))
 // })
+const sources = [
+    'https://www.statnews.com/wp-content/uploads/2019/05/GettyImages-484960237-645x645.jpg',
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSAFHzgUiwqYL_SoXWfUYVC8iDOEKyvNSQZHZMXIM81SuH64_3E&usqp=CAU',
+    'https://r-cf.bstatic.com/images/hotel/max1024x768/206/206081932.jpg',
+    'https://media-cdn.tripadvisor.com/media/photo-s/0a/67/34/d3/peaceful-place-in-phan.jpg',
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcT3nz_ua7NkXgQBbfNE4okGZJgf_WZ79pRozAWra0LJ76r3VSxx&usqp=CAU',
+    'https://www.baodanang.vn/dataimages/201904/original/images1508152_Hinh_1.jpg',
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcQt_QacIEhOwHXBKrETxPYVP796OZyZPKgdVWlplbxz29BRB6OG&usqp=CAU',
+    'https://cdn.tinybuddha.com/wp-content/uploads/2010/03/Peaceful.png',
+    'https://pix10.agoda.net/hotelImages/545437/-1/3e3de077901fd04bcbf4ba1435bb9e37.jpg?s=1024x768',
+    'https://images.pexels.com/photos/1666021/pexels-photo-1666021.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
+]
+// setInterval(() => {
+//     const uid = new Date().getTime()
+//     const ref = firebase.firestore()
+//     ref.collection('posts').doc(`${uid}`).set({
+//         uid,
+//         userId: 'vucms',
+//         source: [
+//             sources[Math.floor(Math.random() * sources.length)]
+//         ],
+//         content: "Hi, I'm @vucms, a react native developer",
+//         create_at: new Date(),
+//         likes: ['vucms', 'vucms0202'],
+//         isVideo: false,
+//         permission: 1
+//     })
+// }, 1000)
 export const STATUS_BAR_HEIGHT: number = getStatusBarHeight()
 export const SCREEN_HEIGHT: number = Math.round(Dimensions.get('window').height)
 export const SCREEN_WIDTH: number = Math.round(Dimensions.get('window').width)

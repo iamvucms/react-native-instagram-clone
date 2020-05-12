@@ -28,6 +28,7 @@ export default index
 
 const styles = StyleSheet.create({
     navigationBar: {
+        backgroundColor: '#fff',
         flexDirection: 'row',
         height: 44,
         width: '100%',

@@ -6,18 +6,27 @@ import {
     RefreshControl,
     Animated,
     NativeSyntheticEvent,
-    NativeScrollEvent
+    NativeScrollEvent,
+    StatusBar,
+    GestureResponderEvent,
+    ImageBackground,
+    LayoutChangeEvent
 } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useSelector } from '../../../reducers'
-import { SCREEN_WIDTH } from '../../../constants'
+import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../constants'
 import { useDispatch } from 'react-redux'
 import { FetchExtraInfoRequest } from '../../../actions/userActions'
 import { useIsFocused } from '@react-navigation/native'
+import { getTabBarHeight } from '../../../components/BottomTabBar'
+import { navigate } from '../../../navigations/rootNavigation'
+import GalleryImageItem from '../../../components/GalleryImageItem'
+import { Post } from '../../../reducers/postReducer'
+import ScaleImage from '../../../components/ScaleImage'
 
 const index = () => {
-    const isFocused = useIsFocused()
     const dispatch = useDispatch()
+    const [selectedPhoto, setSelectedPhoto] = useState<Post>({})
     const [refreshing, setRefreshing] = useState<boolean>(false)
     const user = useSelector(state => state.user.user)
     const extraInfo = useSelector(state => state.user.extraInfo)
@@ -27,9 +36,16 @@ const index = () => {
     const ref = useRef<{
         currentTab: number,
         currentGalleryTab: number,
+        prePopupImage: {
+            pX: number,
+            pY: number,
+            w: number,
+            h: number
+        }
     }>({
         currentTab: 1,
         currentGalleryTab: 1,
+        prePopupImage: { pX: 0, pY: 0, w: 0, h: 0 }
     })
     const _tabLineOffsetX = new Animated.Value(0)
     const recommendTasks = [
@@ -95,6 +111,13 @@ const index = () => {
                 animated: true
             })
             ref.current.currentTab = 2
+        } else {
+            scrollHRef.current?.scrollTo({
+                x: 0,
+                y: 0,
+                animated: true
+            })
+            ref.current.currentTab = 1
         }
     }
     const _onBackToMainScreen = () => {
@@ -169,8 +192,169 @@ const index = () => {
             })
         }
     }
+    const _onScrollEndDragGalleryTabScroll = ({ nativeEvent: {
+        contentOffset: { x }
+    } }: NativeSyntheticEvent<NativeScrollEvent>) => {
+        _onBackToMainScreen()
+        if (x > SCREEN_WIDTH / 2 && ref.current.currentGalleryTab === 1) {
+            ref.current.currentGalleryTab = 2
+            scrollTabRef.current?.scrollTo({
+                x: SCREEN_WIDTH,
+                y: 0,
+                animated: true
+            })
+            Animated.timing(_tabLineOffsetX, {
+                toValue: SCREEN_WIDTH / 2,
+                duration: 200,
+                useNativeDriver: false
+            }).start()
+        } else if (x < SCREEN_WIDTH / 2 && ref.current.currentGalleryTab === 2) {
+            ref.current.currentGalleryTab = 1
+            scrollTabRef.current?.scrollTo({
+                x: 0,
+                y: 0,
+                animated: true
+            })
+            Animated.timing(_tabLineOffsetX, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: false
+            }).start()
+        } else if (x < SCREEN_WIDTH / 2 && ref.current.currentGalleryTab === 1) {
+            scrollTabRef.current?.scrollTo({
+                x: 0,
+                y: 0,
+                animated: true
+            })
+            Animated.timing(_tabLineOffsetX, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: false
+            }).start()
+        } else if (x > SCREEN_WIDTH / 2 && ref.current.currentGalleryTab === 2) {
+            scrollTabRef.current?.scrollTo({
+                x: SCREEN_WIDTH,
+                y: 0,
+                animated: true
+            })
+            Animated.timing(_tabLineOffsetX, {
+                toValue: SCREEN_WIDTH / 2,
+                duration: 200,
+                useNativeDriver: false
+            }).start()
+        }
+    }
+    const _showPopupImage = (e: { pX: number, pY: number, w: number, h: number }, photo: Post) => {
+        ref.current.prePopupImage = e
+        setSelectedPhoto(photo)
+    }
+    const _hidePopupImage = () => {
+        Animated.timing(_popupImageTop, {
+            toValue: ref.current.prePopupImage.pY - 44 - 40,
+            duration: 150,
+            useNativeDriver: false
+        }).start()
+        Animated.timing(_popupImageLeft, {
+            toValue: ref.current.prePopupImage.pX,
+            duration: 150,
+            useNativeDriver: false
+        }).start()
+        Animated.timing(_popupImageWidth, {
+            toValue: ref.current.prePopupImage.w,
+            duration: 150,
+            useNativeDriver: false
+        }).start()
+        Animated.timing(_popupImageHeight, {
+            toValue: ref.current.prePopupImage.h,
+            duration: 150,
+            useNativeDriver: false
+        }).start(() => setSelectedPhoto({}))
+
+    }
+    const _popupImageTop = new Animated.Value(0)
+    const _popupImageLeft = new Animated.Value(0)
+    const _popupImageWidth = new Animated.Value(0)
+    const _popupImageHeight = new Animated.Value(0)
+    const _onAnimatePopup = ({ nativeEvent }: LayoutChangeEvent) => {
+        if (selectedPhoto.source) {
+            Image.getSize(selectedPhoto.source[0], (xwidth: number, xheight: number) => {
+                const nextHeight = xheight * 0.9 * SCREEN_WIDTH / xwidth
+                _popupImageTop.setValue(ref.current.prePopupImage.pY - 44)
+                _popupImageLeft.setValue(ref.current.prePopupImage.pX)
+                _popupImageWidth.setValue(ref.current.prePopupImage.w)
+                _popupImageHeight.setValue(ref.current.prePopupImage.h)
+                Animated.spring(_popupImageTop, {
+                    toValue: (nativeEvent.layout.height - nextHeight) / 2,
+                    useNativeDriver: false
+                }).start()
+                Animated.spring(_popupImageLeft, {
+                    toValue: (nativeEvent.layout.width - 0.9 * SCREEN_WIDTH) / 2,
+                    useNativeDriver: false
+                }).start()
+                Animated.spring(_popupImageWidth, {
+                    toValue: 0.9 * SCREEN_WIDTH,
+                    useNativeDriver: false
+                }).start()
+                Animated.spring(_popupImageHeight, {
+                    toValue: nextHeight,
+                    useNativeDriver: false
+                }).start()
+
+            }, Function)
+        }
+
+
+
+    }
     return (
         <SafeAreaView style={styles.container}>
+            {selectedPhoto.source && <View
+                style={{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '100%',
+                    left: 0,
+                    top: STATUS_BAR_HEIGHT,
+                    zIndex: 99
+                }}>
+                <ImageBackground
+                    onLayout={_onAnimatePopup}
+                    blurRadius={20} style={{
+                        position: 'relative',
+                        width: '100%',
+                        height: '100%',
+                    }} source={{ uri: selectedPhoto.source[0] }} >
+                    <Animated.View style={{
+                        width: _popupImageWidth,
+                        position: 'absolute',
+                        top: _popupImageTop,
+                        left: _popupImageLeft,
+                        borderRadius: 20,
+                        overflow: 'hidden'
+                    }}>
+                        <View style={{
+                            backgroundColor: '#fff',
+                            height: 40,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            width: '100%'
+                        }}>
+                            <Image
+                                style={{
+                                    width: 30,
+                                    height: 30,
+                                    borderRadius: 30,
+                                    marginLeft: 15,
+                                    marginRight: 10,
+                                }}
+                                source={{ uri: user.userInfo?.avatarURL }} />
+                            <Text style={{ fontWeight: '500' }}>{user.userInfo?.username}</Text>
+                        </View>
+                        <Animated.Image source={{ uri: selectedPhoto.source[0] }}
+                            height={_popupImageHeight} width={_popupImageWidth} />
+                    </Animated.View>
+                </ImageBackground>
+            </View>}
             <ScrollView
                 onScrollEndDrag={_onScrollEndDragContainerScroll}
                 ref={scrollHRef}
@@ -282,27 +466,32 @@ const index = () => {
                                     }} />
                                 </View>
                                 <ScrollView
+                                    onScrollEndDrag={_onScrollEndDragGalleryTabScroll}
                                     bounces={false}
                                     ref={scrollTabRef}
                                     horizontal={true}
                                     showsHorizontalScrollIndicator={false}
                                 >
                                     <TouchableOpacity
+                                        style={{
+                                            flexDirection: 'row'
+                                        }}
                                         activeOpacity={1}
-                                        style={styles.imageWrapper}>
-                                        {photos && photos.map((photo, index) => (
-                                            <TouchableOpacity
-                                                activeOpacity={0.8}
-                                                style={styles.photoWrapper} key={index}>
-                                                <Image source={{
-                                                    uri: photo.source && photo.source[0]
-                                                }} style={styles.photo} />
-                                            </TouchableOpacity>
-                                        ))}
-                                    </TouchableOpacity>
-                                    <View style={styles.imageWrapper}>
+                                    >
+                                        <View style={styles.imageWrapper}>
+                                            {photos && photos.map((photo, index) => (
+                                                <GalleryImageItem
+                                                    _hidePopupImage={_hidePopupImage}
+                                                    _showPopupImage={_showPopupImage}
+                                                    key={index}
+                                                    index={index}
+                                                    photo={photo} />
+                                            ))}
+                                        </View>
+                                        <View style={styles.imageWrapper}>
 
-                                    </View>
+                                        </View>
+                                    </TouchableOpacity>
                                 </ScrollView>
                             </View>
                             <View style={styles.recommend}>
@@ -394,7 +583,88 @@ const index = () => {
                     </ScrollView>
                 </View>
                 <View style={styles.profileOptions}>
+                    <View style={styles.profileOptionsHeader}>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: '500'
+                        }}>{user.userInfo?.username}</Text>
+                    </View>
+                    <View style={styles.optionsWrapper}>
+                        <TouchableOpacity activeOpacity={0.8} style={styles.optionItem}>
+                            <Icon name="history" size={30} color="#333" />
+                            <Text style={{
+                                fontSize: 16,
+                                marginLeft: 5,
+                            }}>Archive</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity activeOpacity={0.8} style={styles.optionItem}>
+                            <Icon name="camera-timer" size={30} color="#333" />
+                            <Text style={{
+                                fontSize: 16,
+                                marginLeft: 5,
+                            }}>Your Activity</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity activeOpacity={0.8} style={styles.optionItem}>
+                            <Icon name="qrcode-scan" size={30} color="#333" />
+                            <Text style={{
+                                fontSize: 16,
+                                marginLeft: 5,
+                            }}>Nametag</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity activeOpacity={0.8} style={styles.optionItem}>
+                            <Icon name="bookmark-outline" size={30} color="#333" />
+                            <Text style={{
+                                fontSize: 16,
+                                marginLeft: 5,
+                            }}>Saved</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity activeOpacity={0.8} style={styles.optionItem}>
+                            <Icon name="playlist-star" size={30} color="#333" />
+                            <Text style={{
+                                fontSize: 16,
+                                marginLeft: 5,
+                            }}>Close Friends</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity activeOpacity={0.8} style={styles.optionItem}>
+                            <Icon name="account-plus-outline" size={30} color="#333" />
+                            <Text style={{
+                                fontSize: 16,
+                                marginLeft: 5,
+                            }}>Discover People</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={_onBackToMainScreen}
+                            activeOpacity={0.8} style={styles.optionItem}>
+                            <Icon name="arrow-left" size={30} color="#333" />
+                            <Text style={{
+                                fontSize: 16,
+                                marginLeft: 5,
+                            }}>Back</Text>
+                        </TouchableOpacity>
 
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => {
+                            navigate('Setting')
+                            setTimeout(() => {
+                                _onBackToMainScreen()
+                            }, 1000);
+                        }}
+                        activeOpacity={0.8}
+                        style={{
+                            ...styles.optionItem,
+                            position: 'absolute',
+                            left: 0,
+                            borderTopColor: '#ddd',
+                            borderTopWidth: 0.3,
+                            bottom: getTabBarHeight() + STATUS_BAR_HEIGHT
+                        }}>
+                        <Icon name="cogs" size={30} color="#333" />
+                        <Text style={{
+                            fontSize: 16,
+                            marginLeft: 5,
+                        }}>Setting</Text>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
         </SafeAreaView >
@@ -491,21 +761,15 @@ const styles = StyleSheet.create({
         width: SCREEN_WIDTH / 2
     },
     imageWrapper: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
         width: SCREEN_WIDTH,
         backgroundColor: '#fff',
         paddingVertical: 5,
         borderBottomWidth: 1,
         borderBottomColor: '#ddd'
     },
-    photoWrapper: {
-        position: 'relative',
-        width: SCREEN_WIDTH * 0.33,
-        height: SCREEN_WIDTH * 0.33
-    },
-    photo: {
-        width: SCREEN_WIDTH * 0.33,
-        height: SCREEN_WIDTH * 0.33
-    },
+
     recommend: {
         marginVertical: 20
     },
@@ -543,7 +807,33 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     profileOptions: {
-        width: SCREEN_WIDTH / 2
+        width: SCREEN_WIDTH / 2,
+        height: SCREEN_HEIGHT,
+        backgroundColor: '#fff',
+        borderLeftColor: '#ddd',
+        borderLeftWidth: 0.3,
+        borderTopColor: '#ddd',
+        borderTopWidth: 0.3,
+    },
+    profileOptionsHeader: {
+        height: 44,
+        width: '100%',
+        justifyContent: 'center',
+        paddingHorizontal: 15,
+        borderBottomColor: '#ddd',
+        borderBottomWidth: 0.3,
+    },
+    optionsWrapper: {
+        backgroundColor: "#000",
+        width: '100%',
+    },
+    optionItem: {
+        paddingHorizontal: 15,
+        flexDirection: 'row',
+        height: 44,
+        width: '100%',
+        alignItems: 'center',
+        backgroundColor: '#fff'
     },
     btnOptions: {
         height: 44,
