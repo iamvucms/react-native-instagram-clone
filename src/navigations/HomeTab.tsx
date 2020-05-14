@@ -12,7 +12,7 @@ import Account from '../screens/Home/Account'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { TabBarComponent } from '../components/BottomTabBar'
 import { createStackNavigator } from '@react-navigation/stack'
-import Setting from '../screens/Home/Account/Setting'
+import Setting, { settingNavigationMap } from '../screens/Home/Account/Setting'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -20,11 +20,7 @@ export type HomeTabParamList = {
     Activity: undefined,
     Account: undefined
 };
-export type AccountStackParamList = {
-    AccountIndex: undefined,
-    Setting: undefined
-}
-const Stack = createStackNavigator<AccountStackParamList>()
+const Stack = createStackNavigator()
 const AccountStack = () => {
     return (
         <Stack.Navigator screenOptions={{
@@ -33,6 +29,14 @@ const AccountStack = () => {
         }}>
             <Stack.Screen component={Account} name="AccountIndex" />
             <Stack.Screen component={Setting} name="Setting" />
+            {settingNavigationMap.map((settingNavigation, index) => (
+                <>
+                    <Stack.Screen key={index} component={settingNavigation.component} name={settingNavigation.navigationName} />
+                    {settingNavigation.child && settingNavigation.child.map((childSettingNavigation, index) => (
+                        <Stack.Screen key={index} component={childSettingNavigation.component} name={childSettingNavigation.navigationName} />
+                    ))}
+                </>
+            ))}
         </Stack.Navigator>
     )
 }

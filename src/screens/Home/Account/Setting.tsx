@@ -1,18 +1,16 @@
 import React, { useState } from 'react'
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
 import NavigationBar from '../../../components/NavigationBar'
-import { goBack } from '../../../navigations/rootNavigation'
+import { goBack, navigation } from '../../../navigations/rootNavigation'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../constants'
 import { TextInput } from 'react-native-gesture-handler'
 import { getTabBarHeight } from '../../../components/BottomTabBar'
-export type settingNavigation = {
-    name: string,
-    navigationName: string
-}
+import SettingComponents from './Setting/index'
 export type SettingNavigation = {
     icon: string,
     name: string,
+    component: JSX.Element,
     navigationName: string,
     child?: SettingNavigation[]
 }
@@ -21,11 +19,13 @@ export const settingNavigationMap: SettingNavigation[] = [
         icon: 'account-plus-outline',
         name: 'Follow and Invite Friends',
         navigationName: 'FollowFriendSetting',
+        component: <SettingComponents.FollowFriends />,
         child: [
             {
                 icon: 'account-plus-outline',
                 name: 'Follow Contact',
-                navigationName: 'FollowFriendSetting',
+                component: <SettingComponents.FollowContacts />,
+                navigationName: 'f',
             }
         ]
     },
@@ -33,66 +33,65 @@ export const settingNavigationMap: SettingNavigation[] = [
         icon: 'bell-outline',
         name: 'Notifications',
         navigationName: 'NotificationsSetting',
+        component: <SettingComponents.Notifications />,
         child: [
             {
                 icon: 'account-plus-outline',
                 name: 'Follow Contact',
-                navigationName: 'FollowFriendSetting',
+                component: <SettingComponents.FollowContacts />,
+                navigationName: 'h',
             }
         ]
     }, {
         icon: 'lock-outline',
         name: 'Privacy',
         navigationName: 'PrivacySetting',
+        component: <SettingComponents.Privacy />,
         child: [
             {
                 icon: 'account-plus-outline',
                 name: 'Follow Contact',
-                navigationName: 'FollowFriendSetting',
+                component: <SettingComponents.FollowContacts />,
+                navigationName: 'g',
             }
         ]
     }, {
         icon: 'shield-check-outline',
         name: 'Security',
         navigationName: 'SecuritySetting',
+        component: <SettingComponents.Security />,
         child: [
             {
                 icon: 'account-plus-outline',
                 name: 'Follow Contact',
-                navigationName: 'FollowFriendSetting',
-            }
-        ]
-    }, {
-        icon: 'account-plus-outline',
-        name: 'Follow and Invite Friends',
-        navigationName: 'FollowFriendSetting',
-        child: [
-            {
-                icon: 'account-plus-outline',
-                name: 'Follow Contact',
-                navigationName: 'FollowFriendSetting',
+                component: <SettingComponents.FollowContacts />,
+                navigationName: 'e',
             }
         ]
     }, {
         icon: 'bullhorn-outline',
         name: 'Ads',
         navigationName: 'AdsSetting',
+        component: <SettingComponents.Ads />,
         child: [
             {
                 icon: 'account-plus-outline',
                 name: 'Follow Contact',
-                navigationName: 'FollowFriendSetting',
+                component: <SettingComponents.FollowContacts />,
+                navigationName: 'd',
             }
         ]
     }, {
         icon: 'account-circle-outline',
         name: 'Account',
         navigationName: 'AccountSetting',
+        component: <SettingComponents.Account />,
         child: [
             {
                 icon: 'account-plus-outline',
                 name: 'Follow Contact',
-                navigationName: 'FollowFriendSetting',
+                component: <SettingComponents.FollowContacts />,
+                navigationName: 'c',
             }
         ]
     },
@@ -100,22 +99,26 @@ export const settingNavigationMap: SettingNavigation[] = [
         icon: 'help-circle-outline',
         name: 'Help',
         navigationName: 'HelpSetting',
+        component: <SettingComponents.Help />,
         child: [
             {
                 icon: 'account-plus-outline',
                 name: 'Follow Contact',
-                navigationName: 'FollowFriendSetting',
+                component: <SettingComponents.FollowContacts />,
+                navigationName: 'a',
             }
         ]
     }, {
         icon: 'alert-circle-outline',
         name: 'About',
-        navigationName: 'AccountSetting',
+        navigationName: 'AboutSetting',
+        component: <SettingComponents.About />,
         child: [
             {
                 icon: 'account-plus-outline',
                 name: 'Follow Contact',
-                navigationName: 'FollowFriendSetting',
+                component: <SettingComponents.FollowContacts />,
+                navigationName: 'b',
             }
         ]
     }
@@ -125,7 +128,7 @@ const Setting = () => {
     const [isSearching, setIsSearching] = useState<boolean>(false)
     const _onSearch = (q: string) => {
         if (q.length === 0) return (() => { setResult([]); setIsSearching(false) })()
-       
+
         const temp: SettingNavigation[] = []
         q = q.toLocaleLowerCase()
         settingNavigationMap.map(settingNavigation => {
@@ -205,6 +208,9 @@ const Setting = () => {
                             backgroundColor: '#000'
                         }}>
                             <TouchableOpacity
+                                onPress={() => {
+                                    navigation.navigate(settingNavigation.navigationName)
+                                }}
                                 key={index}
                                 activeOpacity={0.9}
                                 style={styles.settingItem}>
