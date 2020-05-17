@@ -9,6 +9,7 @@ import Explore from '../screens/Home/Explore'
 import Creator from '../screens/Home/Creator'
 import Activity from '../screens/Home/Activity'
 import Account from '../screens/Home/Account'
+import SettingNavigation from '../screens/Home/Account/Setting/index'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { TabBarComponent } from '../components/BottomTabBar'
 import { createStackNavigator } from '@react-navigation/stack'
@@ -29,6 +30,8 @@ const AccountStack = () => {
         }}>
             <Stack.Screen component={Account} name="AccountIndex" />
             <Stack.Screen component={Setting} name="Setting" />
+            <Stack.Screen component={SettingNavigation.Logout} name="Logout" />
+            <Stack.Screen component={SettingNavigation.AddAccount} name="AddAccount" />
             {settingNavigationMap.map((settingNavigation, index) => (
                 <>
                     <Stack.Screen key={index} component={settingNavigation.component} name={settingNavigation.navigationName} />
