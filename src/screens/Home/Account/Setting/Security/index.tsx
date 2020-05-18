@@ -1,10 +1,11 @@
 import React from 'react'
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
 import { useRoute } from '@react-navigation/native'
-import { settingNavigationMap } from '../../Setting'
+// import { settingNavigationMap } from '../../SettingIndex'
 import NavigationBar from '../../../../../components/NavigationBar'
 import { navigation } from '../../../../../navigations/rootNavigation'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { settingNavigationMap } from '../../../../../constants'
 const index = (): JSX.Element => {
     const route = useRoute()
     const currNavigation = settingNavigationMap

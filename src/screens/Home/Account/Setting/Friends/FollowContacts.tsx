@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
 import { useRoute } from '@react-navigation/native'
-import { settingNavigationMap, SettingNavigation } from '../../Setting'
 import NavigationBar from '../../../../../components/NavigationBar'
 import { navigation } from '../../../../../navigations/rootNavigation'
+import { settingNavigationMap, SettingNavigation } from '../../../../../constants'
 const FollowContacts = (): JSX.Element => {
     const route = useRoute()
 

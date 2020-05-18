@@ -50,8 +50,7 @@ import TwoFactor from './Security/TwoFactor'
 import EmailFromInstagram from './Security/EmailFromInstagram'
 import AddAccount from './AddAccount'
 import Logout from './Logout'
-
-export default {
+const navigation = {
     Password,
     LoginActivity,
     SavedLoginInfo,
@@ -104,3 +103,4 @@ export default {
     LinkedAccounts,
     Language,
 }
+export default navigation

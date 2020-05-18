@@ -1,7 +1,7 @@
 import React from 'react'
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
 import { useRoute } from '@react-navigation/native'
-import { settingNavigationMap } from '../../Setting'
+import { settingNavigationMap } from '../../SettingIndex'
 import NavigationBar from '../../../../../components/NavigationBar'
 import { navigation } from '../../../../../navigations/rootNavigation'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -29,7 +29,8 @@ const index = (): JSX.Element => {
 
                             activeOpacity={0.9}
                             style={styles.settingItem}>
-                            <Icon name={settingNavigation.icon} size={24} />
+                            {settingNavigation.icon &&
+                                <Icon name={settingNavigation.icon} size={24} />}
                             <Text style={{
                                 fontSize: 16,
                                 fontWeight: '400',
