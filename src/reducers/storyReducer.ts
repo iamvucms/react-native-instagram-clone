@@ -1,7 +1,15 @@
-import { storyActionTypes } from '../constants'
 import { Alert } from 'react-native'
 import { firestore } from 'firebase'
 import { UserInfo } from './userReducer'
+export const seenTypes = {
+    NOTSEEN: 0,
+    SEEN: 1,
+}
+export const storyActionTypes = {
+    FETCH_STORY_LIST_REQUEST: 'FETCH_STORY_LIST_REQUEST',
+    FETCH_STORY_LIST_SUCCESS: 'FETCH_STORY_LIST_SUCCESS',
+    FETCH_STORY_LIST_FAILURE: 'FETCH_STORY_LIST_FAILURE',
+}
 export type Story = {
     userId?: string,
     uid?: number,

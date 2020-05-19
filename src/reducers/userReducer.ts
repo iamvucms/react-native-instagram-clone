@@ -1,7 +1,23 @@
-import { userActionTypes } from '../constants'
 import { Alert } from 'react-native'
 import { Story } from './storyReducer'
 import { Post } from './postReducer'
+export const userActionTypes = {
+    LOGIN_REQUEST: 'LOGIN_REQUEST',
+    LOGIN_SUCCESS: 'LOGIN_SUCCESS',
+    LOGIN_FAILURE: 'LOGIN_FAILURE',
+    REGISTER_REQUEST: 'REGISTER_REQUEST',
+    REGISTER_SUCCESS: 'REGISTER_SUCCESS',
+    REGISTER_FAILURE: 'REGISTER_FAILURE',
+    FETCH_EXTRA_INFO_REQUEST: 'FETCH_EXTRA_INFO_REQUEST',
+    FETCH_EXTRA_INFO_SUCCESS: 'FETCH_EXTRA_INFO_SUCCESS',
+    FETCH_EXTRA_INFO_FAILURE: 'FETCH_EXTRA_INFO_FAILURE',
+    UNFOLLOW_REQUEST: 'UNFOLLOW_REQUEST',
+    UNFOLLOW_SUCCESS: 'UNFOLLOW_SUCCESS',
+    UNFOLLOW_FAILURE: 'UNFOLLOW_FAILURE',
+    FOLLOW_REQUEST: 'FOLLOW_REQUEST',
+    FOLLOW_SUCCESS: 'FOLLOW_SUCCESS',
+    FOLLOW_FAILURE: 'FOLLOW_FAILURE'
+}
 export type UserInfo = {
     email?: string,
     birthday?: {
@@ -96,6 +112,17 @@ const reducer = (state: userPayload = defaultState, action: userAction): userPay
             action = <ErrorAction>action
             const message3 = action.payload.message
             Alert.alert('Error', message3)
+            return state
+        case userActionTypes.FOLLOW_REQUEST:
+            state = { ...state, user: {} }
+            return state
+        case userActionTypes.FOLLOW_SUCCESS:
+            action = <SuccessAction<UserInfo>>action
+            state = { ...state, user: { userInfo: { ...action.payload }, ...state.user } }
+            return state
+        case userActionTypes.FOLLOW_FAILURE:
+            action = <ErrorAction>action
+            Alert.alert('Error', action.payload.message)
             return state
         case userActionTypes.FETCH_EXTRA_INFO_REQUEST:
             state = { ...state }

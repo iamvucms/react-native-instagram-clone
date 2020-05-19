@@ -1,8 +1,22 @@
-import { postActionTypes } from '../constants'
 import { Alert } from 'react-native'
 import { firestore } from 'firebase'
 import { UserInfo } from './userReducer'
 import { Comment } from './commentReducer'
+export const LIMIT_POSTS_PER_LOADING = 2
+export const postActionTypes = {
+    FETCH_POST_LIST_REQUEST: 'FETCH_POST_LIST_REQUEST',
+    FETCH_POST_LIST_SUCCESS: 'FETCH_POST_LIST_SUCCESS',
+    FETCH_POST_LIST_FAILURE: 'FETCH_POST_LIST_FAILURE',
+    LOAD_MORE_POST_LIST_REQUEST: 'LOAD_MORE_POST_LIST_REQUEST',
+    LOAD_MORE_POST_LIST_SUCCESS: 'LOAD_MORE_POST_LIST_SUCCESS',
+    LOAD_MORE_POST_LIST_FAILURE: 'LOAD_MORE_POST_LIST_FAILURE',
+    COMMENT_POST_REQUEST: 'COMMENT_POST_REQUEST',
+    COMMENT_POST_SUCCESS: 'COMMENT_POST_SUCCESS',
+    COMMENT_POST_FAILURE: 'COMMENT_POST_FAILURE',
+    TOGGLE_LIKE_POST_REQUEST: 'TOGGLE_LIKE_POST_REQUEST',
+    TOGGLE_LIKE_POST_SUCCESS: 'TOGGLE_LIKE_POST_SUCCESS',
+    TOGGLE_LIKE_POST_FAILURE: 'TOGGLE_LIKE_POST_FAILURE',
+}
 export type Post = {
     userId?: string,
     content?: string,

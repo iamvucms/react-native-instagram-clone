@@ -1,7 +1,6 @@
 import { firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
-import { seenTypes, storyActionTypes } from "../constants";
-import { ExtraStory, Story, StoryAction, StoryErrorAction, StoryList, StorySuccessAction } from '../reducers/storyReducer';
+import { seenTypes, storyActionTypes, ExtraStory, Story, StoryAction, StoryErrorAction, StoryList, StorySuccessAction } from '../reducers/storyReducer';
 import { UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
 

@@ -1,7 +1,6 @@
 import { firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
-import { commentActionTypes, LIMIT_COMMENTS_PER_LOADING } from "../constants";
-import { CommentAction, CommentErrorAction, CommentExtraList, CommentList, CommentListWithScroll, CommentSuccessAction, ExtraComment } from '../reducers/commentReducer';
+import { LIMIT_COMMENTS_PER_LOADING, CommentAction, CommentErrorAction, commentActionTypes, CommentExtraList, CommentList, CommentListWithScroll, CommentSuccessAction, ExtraComment } from '../reducers/commentReducer';
 import { UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
 

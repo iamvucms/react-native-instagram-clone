@@ -1,7 +1,7 @@
 import React from 'react'
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
 import { useRoute } from '@react-navigation/native'
-import { settingNavigationMap } from '../../SettingIndex'
+import { settingNavigationMap } from '../../../../../constants'
 import NavigationBar from '../../../../../components/NavigationBar'
 import { navigation } from '../../../../../navigations/rootNavigation'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'

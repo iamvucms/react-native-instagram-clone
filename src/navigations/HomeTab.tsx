@@ -12,7 +12,7 @@ import Account from '../screens/Home/Account'
 import SettingNavigationx from '../screens/Home/Account/Setting/index'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { TabBarComponent } from '../components/BottomTabBar'
-import { createStackNavigator } from '@react-navigation/stack'
+import { createStackNavigator, TransitionPresets } from '@react-navigation/stack'
 import Setting from '../screens/Home/Account/SettingIndex'
 import { settingNavigationMap } from '../constants'
 export type HomeTabParamList = {
@@ -37,7 +37,17 @@ const AccountStack = () => {
                 <>
                     <Stack.Screen key={index} component={settingNavigation.component} name={settingNavigation.navigationName} />
                     {settingNavigation.child && settingNavigation.child.map((childSettingNavigation, index) => (
-                        <Stack.Screen key={index} component={childSettingNavigation.component} name={childSettingNavigation.navigationName} />
+                        <>
+                            {childSettingNavigation.navigationName === 'FollowContact' ? (
+                                <Stack.Screen options={{
+                                    cardStyle: { backgroundColor: 'transparent' },
+                                    ...TransitionPresets.ModalSlideFromBottomIOS,
+                                    animationEnabled: false
+                                }} component={childSettingNavigation.component} name={childSettingNavigation.navigationName} />
+                            ) : (
+                                    <Stack.Screen component={childSettingNavigation.component} name={childSettingNavigation.navigationName} />
+                                )}
+                        </>
                     ))}
                 </>
             ))}

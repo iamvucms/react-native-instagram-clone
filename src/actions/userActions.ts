@@ -1,9 +1,8 @@
 import { auth, firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { WelcomePropsRouteParams } from "src/screens/Auth/Welcome";
-import { userActionTypes } from "../constants";
 import { navigate } from "../navigations/rootNavigation";
-import { ErrorAction, SuccessAction, userAction, userPayload, UserInfo, ExtraInfoPayload, ExtraInfo } from '../reducers/userReducer';
+import { ErrorAction, SuccessAction, userAction, userPayload, UserInfo, ExtraInfoPayload, ExtraInfo, userActionTypes } from '../reducers/userReducer';
 import { store } from '../store';
 export interface userLoginWithEmail {
     email: string,
@@ -195,4 +194,71 @@ export const FetchExtraInfoSuccess = (extraInfo: ExtraInfoPayload):
         payload: extraInfo
     }
 }
+export const FollowUsersRequest = (phoneList: string[]):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            let me: UserInfo = { ...store.getState().user.user.userInfo }
+            const ref = firestore()
+            const rq = await ref.collection('users')
+                .where('username', '==', me.username).get()
+            if (rq.size > 0) {
+                const targetUser = rq.docs[0]
+                let userList: string[] = []
+                phoneList.map(async (phone, index) => {
+                    const rq2 = await ref.collection('users')
+                        .where('phone', '==', phone).get()
+                    if (rq2.docs.length > 0) {
+                        const user = rq2.docs[0].data()
+                        if (user.username) {
+                            userList.push(user.username)
+                        }
+                    }
+                    if (index === phoneList.length - 1) {
+                        userList.map(async (username, index2) => {
+                            const user: UserInfo = targetUser.data() || {}
+                            if (user.followings !== undefined &&
+                                user.followings.indexOf(username) < 0 &&
+                                username !== me.username) {
+                                user.followings
+                                    .push(username)
+                                const followings = [...user.followings]
+                                await targetUser.ref.update({
+                                    followings
+                                })
+                            }
+                            if (index2 === userList.length - 1) {
+                                const rq2 = await targetUser.ref.get()
+                                me = rq2.data() || {}
+                                dispatch(FollowUserSuccess(me))
+                            }
+                        })
 
+                    }
+                })
+            } else {
+
+            }
+
+        } catch (e) {
+            console.warn(e)
+            dispatch(UnfollowFailure())
+        }
+    }
+}
+export const FollowUserSuccess = (payload: UserInfo):
+    SuccessAction<UserInfo> => {
+    return {
+        type: userActionTypes.FOLLOW_SUCCESS,
+        payload,
+    }
+}
+export const FollowUserFailure = ():
+    ErrorAction => {
+    return {
+        type: userActionTypes.FOLLOW_FAILURE,
+        payload: {
+            message: `Error! Can't send following request`
+        }
+    }
+}
