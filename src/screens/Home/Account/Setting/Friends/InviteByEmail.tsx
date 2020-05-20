@@ -3,7 +3,7 @@ import { StyleSheet, Linking, View, SafeAreaView, ScrollView, TouchableOpacity, 
 import { useRoute } from '@react-navigation/native'
 import NavigationBar from '../../../../../components/NavigationBar'
 import { navigation } from '../../../../../navigations/rootNavigation'
-import { settingNavigationMap, SettingNavigation, SCREEN_WIDTH } from '../../../../../constants'
+import { settingNavigationMap, SettingNavigation } from '../../../../../constants'
 import { useSelector } from '../../../../../reducers'
 const InviteByEmail = (): JSX.Element => {
     const route = useRoute()
@@ -46,7 +46,7 @@ const InviteByEmail = (): JSX.Element => {
                 }}>Invite To Join Instagram</Text>
                 <Text
                     style={{
-                        width: SCREEN_WIDTH * 0.9,
+                        width: '90%',
                         textAlign: 'center',
                         color: '#666'
                     }}>Send Email to your friends to invite them join Instagram, discover Instagram content and create your network.</Text>
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     },
     btnSendSMS: {
         height: 44,
-        width: SCREEN_WIDTH * 0.9,
+        width: '90%',
         backgroundColor: "#318bfb",
         borderRadius: 5,
         justifyContent: 'center',

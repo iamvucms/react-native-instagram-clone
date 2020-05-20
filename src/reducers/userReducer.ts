@@ -1,6 +1,7 @@
 import { Alert } from 'react-native'
 import { Story } from './storyReducer'
 import { Post } from './postReducer'
+import { firestore } from 'firebase'
 export const userActionTypes = {
     LOGIN_REQUEST: 'LOGIN_REQUEST',
     LOGIN_SUCCESS: 'LOGIN_SUCCESS',
@@ -16,7 +17,10 @@ export const userActionTypes = {
     UNFOLLOW_FAILURE: 'UNFOLLOW_FAILURE',
     FOLLOW_REQUEST: 'FOLLOW_REQUEST',
     FOLLOW_SUCCESS: 'FOLLOW_SUCCESS',
-    FOLLOW_FAILURE: 'FOLLOW_FAILURE'
+    FOLLOW_FAILURE: 'FOLLOW_FAILURE',
+    UPDATE_NOTIFICATION_SETTING_REQUEST: 'UPDATE_NOTIFICATION_SETTING_REQUEST',
+    UPDATE_NOTIFICATION_SETTING_SUCCESS: 'UPDATE_NOTIFICATION_SETTING_SUCCESS',
+    UPDATE_NOTIFICATION_SETTING_FAILURE: 'UPDATE_NOTIFICATION_SETTING_FAILURE'
 }
 export type UserInfo = {
     email?: string,
@@ -37,6 +41,16 @@ export type ExtraInfo = {
     followers: string[],
     followings: string[],
 }
+export type NotificationSetting = {
+    pauseAll?: {
+        active: boolean,
+        from?: firestore.Timestamp,
+        duration?: number
+    }
+}
+export type UserSetting = {
+    notification?: NotificationSetting
+}
 export interface userPayload {
     user: {
         email?: string | null,
@@ -44,6 +58,7 @@ export interface userPayload {
         firebaseUser?: firebase.UserInfo,
         userInfo?: UserInfo
     },
+    setting?: UserSetting,
     photos?: Post[],
     currentStory?: Story[],
     extraInfo?: ExtraInfo
@@ -65,9 +80,17 @@ export type ExtraInfoPayload = {
 }
 export type userAction = SuccessAction<userPayload> | ErrorAction
     | SuccessAction<UserInfo> | SuccessAction<ExtraInfoPayload>
+    | SuccessAction<NotificationSetting>
 const defaultState: userPayload = {
     user: {},
     photos: [],
+    setting: {
+        notification: {
+            pauseAll: {
+                active: false,
+            }
+        }
+    },
     extraInfo: {
         posts: 0,
         followers: [],
@@ -139,6 +162,26 @@ const reducer = (state: userPayload = defaultState, action: userAction): userPay
             action = <ErrorAction>action
             const message4 = action.payload.message
             Alert.alert('Error', message4)
+            return state
+        case userActionTypes.UPDATE_NOTIFICATION_SETTING_REQUEST:
+            state = { ...state }
+            return state
+        case userActionTypes.UPDATE_NOTIFICATION_SETTING_SUCCESS:
+            action = <SuccessAction<NotificationSetting>>action
+            state = {
+                ...state,
+                setting: {
+                    ...state.setting,
+                    notification: {
+                        ...state.setting?.notification,
+                        ...action.payload
+                    }
+                }
+            }
+            return state
+        case userActionTypes.UPDATE_NOTIFICATION_SETTING_FAILURE:
+            action = <ErrorAction>action
+            Alert.alert('Error', action.payload.message)
             return state
         default:
             return state

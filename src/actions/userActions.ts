@@ -2,7 +2,7 @@ import { auth, firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { WelcomePropsRouteParams } from "src/screens/Auth/Welcome";
 import { navigate } from "../navigations/rootNavigation";
-import { ErrorAction, SuccessAction, userAction, userPayload, UserInfo, ExtraInfoPayload, ExtraInfo, userActionTypes } from '../reducers/userReducer';
+import { ErrorAction, SuccessAction, userAction, userPayload, UserInfo, ExtraInfoPayload, ExtraInfo, userActionTypes, NotificationSetting } from '../reducers/userReducer';
 import { store } from '../store';
 export interface userLoginWithEmail {
     email: string,
@@ -230,7 +230,7 @@ export const FollowUsersRequest = (phoneList: string[]):
                             if (index2 === userList.length - 1) {
                                 const rq2 = await targetUser.ref.get()
                                 me = rq2.data() || {}
-                                dispatch(FollowUserSuccess(me))
+                                dispatch(FollowUsersSuccess(me))
                             }
                         })
 
@@ -242,21 +242,65 @@ export const FollowUsersRequest = (phoneList: string[]):
 
         } catch (e) {
             console.warn(e)
-            dispatch(UnfollowFailure())
+            dispatch(FollowUsersFailure())
         }
     }
 }
-export const FollowUserSuccess = (payload: UserInfo):
+export const FollowUsersSuccess = (payload: UserInfo):
     SuccessAction<UserInfo> => {
     return {
         type: userActionTypes.FOLLOW_SUCCESS,
         payload,
     }
 }
-export const FollowUserFailure = ():
+export const FollowUsersFailure = ():
     ErrorAction => {
     return {
         type: userActionTypes.FOLLOW_FAILURE,
+        payload: {
+            message: `Error! Can't send following request`
+        }
+    }
+}
+//UPDATE NOTIFICATION ACTIONS
+export const UpdateNotificationSettingsRequest = (setting: NotificationSetting):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            let me: UserInfo = { ...store.getState().user.user.userInfo }
+            const ref = firestore()
+            const rq = await ref.collection('users').doc(me.username).get()
+            const targetUser = rq.ref
+            type TempIntersection = UserInfo & { notificationSetting?: NotificationSetting }
+            const user: TempIntersection = rq.data() || {}
+            await targetUser.update({
+                notificationSetting: {
+                    ...(user.notificationSetting || {}),
+                    ...setting
+                }
+            })
+            const rq2 = await targetUser.get()
+            const result: TempIntersection = rq.data() || {}
+            dispatch(UpdateNotificationSettingSuccess({
+                ...(user.notificationSetting || {}),
+                ...setting
+            }))
+        } catch (e) {
+            dispatch(UpdateNotificationSettingFailure())
+        }
+    }
+}
+export const UpdateNotificationSettingSuccess = (payload: NotificationSetting):
+    SuccessAction<NotificationSetting> => {
+    return {
+        type: userActionTypes.UPDATE_NOTIFICATION_SETTING_SUCCESS,
+        payload,
+    }
+}
+export const UpdateNotificationSettingFailure = ():
+    ErrorAction => {
+    return {
+        type: userActionTypes.UPDATE_NOTIFICATION_SETTING_FAILURE,
         payload: {
             message: `Error! Can't send following request`
         }
