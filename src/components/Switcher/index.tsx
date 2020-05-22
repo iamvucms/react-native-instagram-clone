@@ -1,12 +1,12 @@
 import React, { useRef, useState, RefObject, MutableRefObject, useEffect } from 'react'
 import { StyleSheet, Animated, View, TouchableOpacity } from 'react-native'
-import { Easing } from 'react-native-reanimated'
 export interface SwitcherOptions {
     onTurnOn: () => void,
     onTurnOff: () => void,
     on: boolean
 }
 const index = ({ on, onTurnOn, onTurnOff }: SwitcherOptions) => {
+    const _circleOffsetx = React.useMemo(() => new Animated.Value(0), [])
     const _onToggle = () => {
         if (on) {
             onTurnOff()
@@ -14,6 +14,13 @@ const index = ({ on, onTurnOn, onTurnOff }: SwitcherOptions) => {
             onTurnOn()
         }
     }
+    useEffect(() => {
+        Animated.timing(_circleOffsetx, {
+            toValue: on ? 11 : 0,
+            duration: 200,
+            useNativeDriver: false
+        }).start()
+    }, [on])
     return (
         <TouchableOpacity
             onPress={_onToggle}
@@ -25,7 +32,7 @@ const index = ({ on, onTurnOn, onTurnOff }: SwitcherOptions) => {
             <Animated.View style={{
                 ...styles.circle,
                 backgroundColor: on ? '#318bfb' : '#ddd',
-                left: on ? 35 - 24 : 0,
+                left: _circleOffsetx
             }} />
         </TouchableOpacity>
     )
