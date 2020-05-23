@@ -9,6 +9,7 @@ import { getTabBarHeight } from '../../../../../components/BottomTabBar'
 import { useDispatch } from 'react-redux'
 import { UpdateNotificationSettingsRequest } from '../../../../../actions/userActions'
 import { useSelector } from '../../../../../reducers'
+import { NotificationLevel } from '../../../../../reducers/userReducer'
 const PostStoryComment = (): JSX.Element => {
     const route = useRoute()
     const dispatch = useDispatch()
@@ -29,42 +30,42 @@ const PostStoryComment = (): JSX.Element => {
             return true;
         })
     }, [])
-    const _onChangeLikes = React.useCallback((value: 0 | 1 | 2) => {
+    const _onChangeLikes = React.useCallback((value: NotificationLevel) => {
         dispatch(UpdateNotificationSettingsRequest({
             postStoryComment: {
                 likes: value
             }
         }))
     }, [])
-    const _onChangeLikesandCommentonMyPhoto = React.useCallback((value: 0 | 1 | 2) => {
+    const _onChangeLikesandCommentonMyPhoto = React.useCallback((value: NotificationLevel) => {
         dispatch(UpdateNotificationSettingsRequest({
             postStoryComment: {
                 likesAndCommentOnPhotoOfYou: value
             }
         }))
     }, [])
-    const _onChangePhotoofYou = React.useCallback((value: 0 | 1 | 2) => {
+    const _onChangePhotoofYou = React.useCallback((value: NotificationLevel) => {
         dispatch(UpdateNotificationSettingsRequest({
             postStoryComment: {
                 photosOfYou: value
             }
         }))
     }, [])
-    const _onChangeComments = React.useCallback((value: 0 | 1 | 2) => {
+    const _onChangeComments = React.useCallback((value: NotificationLevel) => {
         dispatch(UpdateNotificationSettingsRequest({
             postStoryComment: {
                 comments: value
             }
         }))
     }, [])
-    const _onChangeCommentLikesandPins = React.useCallback((value: 0 | 1 | 2) => {
+    const _onChangeCommentLikesandPins = React.useCallback((value: NotificationLevel) => {
         dispatch(UpdateNotificationSettingsRequest({
             postStoryComment: {
                 commentsAndPins: value
             }
         }))
     }, [])
-    const _onChangeFirstPostsandStories = React.useCallback((value: 0 | 1 | 2) => {
+    const _onChangeFirstPostsandStories = React.useCallback((value: NotificationLevel) => {
         dispatch(UpdateNotificationSettingsRequest({
             postStoryComment: {
                 firstPostsAndStories: value

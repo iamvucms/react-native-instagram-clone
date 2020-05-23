@@ -41,20 +41,40 @@ export type ExtraInfo = {
     followers: string[],
     followings: string[],
 }
+export type NotificationProperties = 'directMessages'
+    | 'postStoryComment' | 'followingFollowers'
+export type NotificationLevel = 0 | 1 | 2
+export type PostStoryCommentOptions = {
+    likes?: NotificationLevel,
+    likesAndCommentOnPhotoOfYou?: NotificationLevel,
+    photosOfYou?: NotificationLevel,
+    comments?: NotificationLevel,
+    commentsAndPins?: NotificationLevel,
+    firstPostsAndStories?: NotificationLevel,
+}
+export type DirectMessagesOptions = {
+    messageRequests?: NotificationLevel,
+    messages?: NotificationLevel,
+    groupRequest?: NotificationLevel,
+    videoChats?: NotificationLevel,
+}
+export type FollowingFollower = {
+    followerRequest?: NotificationLevel,
+    acceptedFollowRequest?: NotificationLevel,
+    friendsOnInstagram?: NotificationLevel,
+    mentionsInBio?: NotificationLevel,
+    recommendationsForOthers?: NotificationLevel,
+    recommendationsFromOthers?: NotificationLevel,
+}
 export type NotificationSetting = {
     pauseAll?: {
         active: boolean,
         from?: firestore.Timestamp,
         duration?: number
     },
-    postStoryComment?: {
-        likes?: 0 | 1 | 2,
-        likesAndCommentOnPhotoOfYou?: 0 | 1 | 2,
-        photosOfYou?: 0 | 1 | 2,
-        comments?: 0 | 1 | 2,
-        commentsAndPins?: 0 | 1 | 2,
-        firstPostsAndStories?: 0 | 1 | 2,
-    }
+    postStoryComment?: PostStoryCommentOptions,
+    followingFollowers?: FollowingFollower,
+    directMessages?: DirectMessagesOptions
 }
 export type UserSetting = {
     notification?: NotificationSetting
@@ -104,6 +124,20 @@ const defaultState: userPayload = {
                 comments: 2,
                 commentsAndPins: 1,
                 firstPostsAndStories: 1
+            },
+            followingFollowers: {
+                followerRequest: 1,
+                acceptedFollowRequest: 1,
+                friendsOnInstagram: 1,
+                mentionsInBio: 1,
+                recommendationsForOthers: 1,
+                recommendationsFromOthers: 1
+            },
+            directMessages: {
+                messageRequests: 1,
+                messages: 1,
+                groupRequest: 1,
+                videoChats: 2
             }
         }
     },

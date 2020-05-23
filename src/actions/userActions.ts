@@ -2,7 +2,7 @@ import { auth, firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { WelcomePropsRouteParams } from "src/screens/Auth/Welcome";
 import { navigate } from "../navigations/rootNavigation";
-import { ErrorAction, SuccessAction, userAction, userPayload, UserInfo, ExtraInfoPayload, ExtraInfo, userActionTypes, NotificationSetting } from '../reducers/userReducer';
+import { ErrorAction, ExtraInfoPayload, NotificationSetting, PostStoryCommentOptions, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, NotificationProperties } from '../reducers/userReducer';
 import { store } from '../store';
 export interface userLoginWithEmail {
     email: string,
@@ -276,18 +276,11 @@ export const UpdateNotificationSettingsRequest = (setting: NotificationSetting):
             type TempIntersection = UserInfo & { notificationSetting?: NotificationSetting }
 
             const user: TempIntersection = rq.data() || {}
-            if (user.notificationSetting && targetSetting === 'postStoryComment') {
+            if (user.notificationSetting) {
                 for (let [key, value] of Object.entries(user.notificationSetting)) {
-                    if (key === targetSetting) {
-                        value = <{
-                            likes?: 0 | 1 | 2,
-                            likesAndCommentOnPhotoOfYou?: 0 | 1 | 2,
-                            photosOfYou?: 0 | 1 | 2,
-                            comments?: 0 | 1 | 2,
-                            commentsAndPins?: 0 | 1,
-                            firstPostsAndStories?: 0 | 1 | 2,
-                        }>value
-                        setting.postStoryComment = {
+                    if (setting.hasOwnProperty(key)) {
+                        value = <PostStoryCommentOptions>value
+                        setting[<NotificationProperties>key] = {
                             ...value,
                             ...Object.values(setting)[0]
                         }
@@ -324,7 +317,7 @@ export const UpdateNotificationSettingFailure = ():
     return {
         type: userActionTypes.UPDATE_NOTIFICATION_SETTING_FAILURE,
         payload: {
-            message: `Error! Can't send following request`
+            message: `Error! Can't update setting`
         }
     }
 }
