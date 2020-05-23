@@ -46,6 +46,14 @@ export type NotificationSetting = {
         active: boolean,
         from?: firestore.Timestamp,
         duration?: number
+    },
+    postStoryComment?: {
+        likes?: 0 | 1 | 2,
+        likesAndCommentOnPhotoOfYou?: 0 | 1 | 2,
+        photosOfYou?: 0 | 1 | 2,
+        comments?: 0 | 1 | 2,
+        commentsAndPins?: 0 | 1 | 2,
+        firstPostsAndStories?: 0 | 1 | 2,
     }
 }
 export type UserSetting = {
@@ -88,6 +96,14 @@ const defaultState: userPayload = {
         notification: {
             pauseAll: {
                 active: false,
+            },
+            postStoryComment: {
+                likes: 2,
+                likesAndCommentOnPhotoOfYou: 2,
+                photosOfYou: 1,
+                comments: 2,
+                commentsAndPins: 1,
+                firstPostsAndStories: 1
             }
         }
     },

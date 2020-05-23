@@ -267,12 +267,34 @@ export const UpdateNotificationSettingsRequest = (setting: NotificationSetting):
     ThunkAction<Promise<void>, {}, {}, userAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
         try {
+            if (Object.keys(setting).length === 0) throw new Error;
+            const targetSetting = Object.keys(setting)[0]
             let me: UserInfo = { ...store.getState().user.user.userInfo }
             const ref = firestore()
             const rq = await ref.collection('users').doc(me.username).get()
             const targetUser = rq.ref
             type TempIntersection = UserInfo & { notificationSetting?: NotificationSetting }
+
             const user: TempIntersection = rq.data() || {}
+            if (user.notificationSetting && targetSetting === 'postStoryComment') {
+                for (let [key, value] of Object.entries(user.notificationSetting)) {
+                    if (key === targetSetting) {
+                        value = <{
+                            likes?: 0 | 1 | 2,
+                            likesAndCommentOnPhotoOfYou?: 0 | 1 | 2,
+                            photosOfYou?: 0 | 1 | 2,
+                            comments?: 0 | 1 | 2,
+                            commentsAndPins?: 0 | 1,
+                            firstPostsAndStories?: 0 | 1 | 2,
+                        }>value
+                        setting.postStoryComment = {
+                            ...value,
+                            ...Object.values(setting)[0]
+                        }
+                        break;
+                    }
+                }
+            }
             await targetUser.update({
                 notificationSetting: {
                     ...(user.notificationSetting || {}),

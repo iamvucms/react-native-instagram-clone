@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
 import { useRoute } from '@react-navigation/native'
 import NavigationBar from '../../../../../components/NavigationBar'
@@ -6,9 +6,13 @@ import { navigation } from '../../../../../navigations/rootNavigation'
 import { settingNavigationMap, SettingNavigation, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../../../constants'
 import Radio from '../../../../../components/Radio'
 import { getTabBarHeight } from '../../../../../components/BottomTabBar'
+import { useDispatch } from 'react-redux'
+import { UpdateNotificationSettingsRequest } from '../../../../../actions/userActions'
+import { useSelector } from '../../../../../reducers'
 const PostStoryComment = (): JSX.Element => {
     const route = useRoute()
-
+    const dispatch = useDispatch()
+    const postStoryComment = useSelector(state => state.user.setting?.notification?.postStoryComment)
     const [currNavigation, setCurrNavigation] =
         useState<SettingNavigation | { name: string }>({ name: '' })
     useEffect(() => {
@@ -25,23 +29,47 @@ const PostStoryComment = (): JSX.Element => {
             return true;
         })
     }, [])
-    const _onChangeLikes = React.useCallback((value: string) => {
-
+    const _onChangeLikes = React.useCallback((value: 0 | 1 | 2) => {
+        dispatch(UpdateNotificationSettingsRequest({
+            postStoryComment: {
+                likes: value
+            }
+        }))
     }, [])
-    const _onChangeLikesandCommentonMyPhoto = React.useCallback((value: string) => {
-
+    const _onChangeLikesandCommentonMyPhoto = React.useCallback((value: 0 | 1 | 2) => {
+        dispatch(UpdateNotificationSettingsRequest({
+            postStoryComment: {
+                likesAndCommentOnPhotoOfYou: value
+            }
+        }))
     }, [])
-    const _onChangePhotoofYou = React.useCallback((value: string) => {
-
+    const _onChangePhotoofYou = React.useCallback((value: 0 | 1 | 2) => {
+        dispatch(UpdateNotificationSettingsRequest({
+            postStoryComment: {
+                photosOfYou: value
+            }
+        }))
     }, [])
-    const _onChangeComments = React.useCallback((value: string) => {
-
+    const _onChangeComments = React.useCallback((value: 0 | 1 | 2) => {
+        dispatch(UpdateNotificationSettingsRequest({
+            postStoryComment: {
+                comments: value
+            }
+        }))
     }, [])
-    const _onChangeCommentLikesandPins = React.useCallback((value: string) => {
-
+    const _onChangeCommentLikesandPins = React.useCallback((value: 0 | 1 | 2) => {
+        dispatch(UpdateNotificationSettingsRequest({
+            postStoryComment: {
+                commentsAndPins: value
+            }
+        }))
     }, [])
-    const _onChangeFirstPostsandStories = React.useCallback((value: string) => {
-
+    const _onChangeFirstPostsandStories = React.useCallback((value: 0 | 1 | 2) => {
+        dispatch(UpdateNotificationSettingsRequest({
+            postStoryComment: {
+                firstPostsAndStories: value
+            }
+        }))
     }, [])
     return (
         <SafeAreaView style={styles.container}>
@@ -61,8 +89,8 @@ const PostStoryComment = (): JSX.Element => {
                     </View>
                     <Radio
                         labels={["Off", "From People I Follow", 'From Everyone']}
-                        values={["0", "1", "2"]}
-                        defaultSelected="0"
+                        values={[0, 1, 2]}
+                        defaultSelected={postStoryComment?.likes || 0}
                         onChange={_onChangeLikes}
                     />
                     <Text style={{ fontSize: 12, color: '#666', paddingHorizontal: 15 }}>vucms liked your photo.</Text>
@@ -73,8 +101,8 @@ const PostStoryComment = (): JSX.Element => {
                     </View>
                     <Radio
                         labels={["Off", "From People I Follow", 'From Everyone']}
-                        values={["0", "1", "2"]}
-                        defaultSelected="2"
+                        values={[0, 1, 2]}
+                        defaultSelected={postStoryComment?.likesAndCommentOnPhotoOfYou || 0}
                         onChange={_onChangeLikesandCommentonMyPhoto}
                     />
                     <Text style={{ fontSize: 12, color: '#666', paddingHorizontal: 15 }}>vucms liked your photo.</Text>
@@ -85,8 +113,8 @@ const PostStoryComment = (): JSX.Element => {
                     </View>
                     <Radio
                         labels={["Off", "From People I Follow", 'From Everyone']}
-                        values={["0", "1", "2"]}
-                        defaultSelected="0"
+                        values={[0, 1, 2]}
+                        defaultSelected={postStoryComment?.photosOfYou || 0}
                         onChange={_onChangePhotoofYou}
                     />
                     <Text style={{ fontSize: 12, color: '#666', paddingHorizontal: 15 }}>vucms tagged you in a photo.</Text>
@@ -97,8 +125,8 @@ const PostStoryComment = (): JSX.Element => {
                     </View>
                     <Radio
                         labels={["Off", "From People I Follow", 'From Everyone']}
-                        values={["0", "1", "2"]}
-                        defaultSelected="0"
+                        values={[0, 1, 2]}
+                        defaultSelected={postStoryComment?.comments || 0}
                         onChange={_onChangeComments}
                     />
                     <Text style={{ fontSize: 12, color: '#666', paddingHorizontal: 15 }}>vucms commented: "Nice shot!".</Text>
@@ -109,8 +137,8 @@ const PostStoryComment = (): JSX.Element => {
                     </View>
                     <Radio
                         labels={["Off", "On"]}
-                        values={["0", "1"]}
-                        defaultSelected="0"
+                        values={[0, 1]}
+                        defaultSelected={postStoryComment?.commentsAndPins || 0}
                         onChange={_onChangeCommentLikesandPins}
                     />
                     <Text style={{ fontSize: 12, color: '#666', maxWidth: '80%', paddingHorizontal: 15 }}>vucms commented: "Nice shot!" and other similar notifications</Text>
@@ -121,11 +149,11 @@ const PostStoryComment = (): JSX.Element => {
                     </View>
                     <Radio
                         labels={["Off", "From People I Follow", 'From Everyone']}
-                        values={["0", "1", "2"]}
-                        defaultSelected="2"
+                        values={[0, 1, 2]}
+                        defaultSelected={postStoryComment?.firstPostsAndStories || 0}
                         onChange={_onChangeFirstPostsandStories}
                     />
-                    <Text style={{ fontSize: 12, color: '#666', paddingHorizontal: 15 }}>vucms liked your photo.</Text>
+                    <Text style={{ fontSize: 12, color: '#666', maxWidth: '80%', paddingHorizontal: 15 }}>vucms's first story on Instagram and other similar notifications.</Text>
                 </View>
             </ScrollView>
         </SafeAreaView>

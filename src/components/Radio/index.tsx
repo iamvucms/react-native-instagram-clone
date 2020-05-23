@@ -2,15 +2,15 @@ import React, { useState } from 'react'
 import { StyleSheet, Text, View, StyleProp, ViewStyle, TextStyle, TouchableOpacity } from 'react-native'
 export interface RadioProps {
     labels: string[],
-    values: string[],
+    values: (0 | 1 | 2)[],
     itemStyle?: StyleProp<ViewStyle>,
     labelStyle?: StyleProp<TextStyle>,
-    defaultSelected: string,
-    onChange?: (selectedValue: string) => void
+    defaultSelected: 0 | 1 | 2,
+    onChange?: (selectedValue: 0 | 1 | 2) => void
 }
 const Radio = ({ onChange, defaultSelected, labels, values, itemStyle, labelStyle }: RadioProps) => {
-    const [selected, setSelected] = useState<string>(defaultSelected)
-    const _onChangeSelection = (value: string) => {
+    const [selected, setSelected] = useState<number>(defaultSelected)
+    const _onChangeSelection = (value: 0 | 1 | 2) => {
         if (value === selected) return;
         if (onChange) onChange(value)
         setSelected(value)
