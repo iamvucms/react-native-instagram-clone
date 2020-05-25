@@ -1,16 +1,15 @@
-import React, { useRef, useState, useEffect } from 'react'
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
 import { useRoute } from '@react-navigation/native'
-import { settingNavigationMap } from '../../../../../constants'
-import NavigationBar from '../../../../../components/NavigationBar'
-import { navigation, dispatch } from '../../../../../navigations/rootNavigation'
+import React, { useState } from 'react'
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import Switcher from '../../../../../components/Switcher'
-import { UpdateNotificationSettingsRequest } from '../../../../../actions/userActions'
-import { firestore } from 'firebase'
 import { useDispatch } from 'react-redux'
-import { convertDateToTimeStampFireBase } from '../../../../../utils'
+import { UpdateNotificationSettingsRequest } from '../../../../../actions/userActions'
+import NavigationBar from '../../../../../components/NavigationBar'
+import Switcher from '../../../../../components/Switcher'
+import { settingNavigationMap } from '../../../../../constants'
+import { navigation } from '../../../../../navigations/rootNavigation'
 import { useSelector } from '../../../../../reducers'
+import { convertDateToTimeStampFireBase } from '../../../../../utils'
 const index = (): JSX.Element => {
     const dispatch = useDispatch()
     const notificationSetting = useSelector(state => state.user.setting?.notification)
@@ -144,6 +143,19 @@ const index = (): JSX.Element => {
                         <View key={index} style={{
                             backgroundColor: '#000'
                         }}>
+                            {settingNavigation.navigationName === 'EmailAndSMS' &&
+                                <View style={{
+                                    backgroundColor: '#fff',
+                                    height: 44,
+                                    paddingHorizontal: 25,
+                                    justifyContent: 'center'
+                                }}>
+                                    <Text style={{
+                                        fontWeight: '600',
+                                        fontSize: 16
+                                    }}>Other Notifications</Text>
+                                </View>
+                            }
                             <TouchableOpacity
                                 onPress={() => {
                                     navigation.navigate(settingNavigation.navigationName)

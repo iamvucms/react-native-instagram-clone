@@ -41,8 +41,13 @@ export type ExtraInfo = {
     followers: string[],
     followings: string[],
 }
-export type NotificationProperties = 'directMessages'
-    | 'postStoryComment' | 'followingFollowers'
+export type NotificationProperties =
+    'directMessages'
+    | 'postStoryComment'
+    | 'followingFollowers'
+    | 'liveIGTV'
+    | 'fromInstagram'
+    | 'emailAndSMSNotifications'
 export type NotificationLevel = 0 | 1 | 2
 export type PostStoryCommentOptions = {
     likes?: NotificationLevel,
@@ -57,6 +62,23 @@ export type DirectMessagesOptions = {
     messages?: NotificationLevel,
     groupRequest?: NotificationLevel,
     videoChats?: NotificationLevel,
+}
+export type LiveIGTVOptions = {
+    liveVideos?: NotificationLevel,
+    igtvVideoUploads?: NotificationLevel,
+    igtvViewCounts?: NotificationLevel,
+}
+export type FromInstagramOptions = {
+    reminders?: NotificationLevel,
+    productAnnoucements?: NotificationLevel,
+    supportRequests?: NotificationLevel,
+}
+export type EmailandSMSNotificationsOptions = {
+    feedbackEmails?: boolean,
+    reminderEmails?: boolean,
+    productEmail?: boolean,
+    newsEmails?: boolean,
+    textSMSMessages?: boolean,
 }
 export type FollowingFollower = {
     followerRequest?: NotificationLevel,
@@ -74,7 +96,10 @@ export type NotificationSetting = {
     },
     postStoryComment?: PostStoryCommentOptions,
     followingFollowers?: FollowingFollower,
-    directMessages?: DirectMessagesOptions
+    directMessages?: DirectMessagesOptions,
+    liveIGTV?: LiveIGTVOptions,
+    fromInstagram?: FromInstagramOptions,
+    emailAndSMSNotifications?: EmailandSMSNotificationsOptions
 }
 export type UserSetting = {
     notification?: NotificationSetting
@@ -138,6 +163,23 @@ const defaultState: userPayload = {
                 messages: 1,
                 groupRequest: 1,
                 videoChats: 2
+            },
+            liveIGTV: {
+                liveVideos: 1,
+                igtvVideoUploads: 1,
+                igtvViewCounts: 1
+            },
+            fromInstagram: {
+                reminders: 1,
+                productAnnoucements: 1,
+                supportRequests: 1
+            },
+            emailAndSMSNotifications: {
+                feedbackEmails: true,
+                reminderEmails: true,
+                productEmail: true,
+                newsEmails: true,
+                textSMSMessages: true
             }
         }
     },

@@ -143,3 +143,4 @@ const styles = StyleSheet.create({
         borderBottomWidth: 0.5
     }
 })
+    

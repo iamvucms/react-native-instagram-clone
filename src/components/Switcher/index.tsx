@@ -1,17 +1,17 @@
 import React, { useRef, useState, RefObject, MutableRefObject, useEffect } from 'react'
 import { StyleSheet, Animated, View, TouchableOpacity } from 'react-native'
 export interface SwitcherOptions {
-    onTurnOn: () => void,
-    onTurnOff: () => void,
+    onTurnOn?: () => void,
+    onTurnOff?: () => void,
     on: boolean
 }
 const index = ({ on, onTurnOn, onTurnOff }: SwitcherOptions) => {
     const _circleOffsetx = React.useMemo(() => new Animated.Value(0), [])
     const _onToggle = () => {
         if (on) {
-            onTurnOff()
+            if (onTurnOff) onTurnOff()
         } else {
-            onTurnOn()
+            if (onTurnOn) onTurnOn()
         }
     }
     useEffect(() => {
