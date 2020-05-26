@@ -35,7 +35,6 @@ const CommentSetting = (): JSX.Element => {
             }
             return true;
         })
-        return () => clearTimeout(ref.current.timeout)
     }, [])
     useEffect(() => {
         dispatch(UpdatePrivacySettingsRequest({

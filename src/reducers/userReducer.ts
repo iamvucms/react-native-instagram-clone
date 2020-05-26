@@ -107,7 +107,7 @@ export type NotificationSetting = {
     emailAndSMSNotifications?: EmailandSMSNotificationsOptions
 }
 export type PrivacyCommentOptions = {
-    blockUsers?: UserInfo[],
+    blockUsers?: string[],
     hideOffensive?: boolean,
     manualFilter?: boolean,
     specificWord?: string,

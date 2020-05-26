@@ -5,6 +5,7 @@ import SettingComponents from '../screens/Home/Account/Setting'
 import * as firebase from 'firebase'
 import '@firebase/firestore'
 import '@firebase/auth'
+import { generateUsernameKeywords } from '../utils';
 const firebaseConfig = {
     apiKey: "AIzaSyATgIePHiOXnqlzUN4rRyyaPw4CTWH7yWA",
     authDomain: "vucms-7f6fa.firebaseapp.com",
@@ -22,6 +23,14 @@ firebase.initializeApp(firebaseConfig)
 //     docs.forEach(doc => doc.ref.update({
 //         create_at: new Date()
 //     }))
+// })
+//Add Keyword
+// firebase.firestore().collection('users').get().then(x => {
+//     x.docs.map(d => {
+//         d.ref.update({
+//             keyword: generateUsernameKeywords(d.data().username)
+//         })
+//     })
 // })
 const sources = [
     'https://www.statnews.com/wp-content/uploads/2019/05/GettyImages-484960237-645x645.jpg',

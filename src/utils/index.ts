@@ -21,3 +21,12 @@ export const timestampToString = (create_at: number, suffix?: boolean): string =
 export const convertDateToTimeStampFireBase = (date: Date): firestore.Timestamp => {
     return new firestore.Timestamp(Math.floor(date.getTime() / 1000), date.getTime() - Math.floor(date.getTime() / 1000) * 1000)
 }
+export const generateUsernameKeywords = (fullText: string): string[] => {
+    const keywords: string[] = []
+    const splitedText = fullText.split('')
+    splitedText.map((s, index) => {
+        const temp = splitedText.slice(0, index + 1).join('')
+        keywords.push(temp)
+    })
+    return Array.from(new Set(keywords))
+}
