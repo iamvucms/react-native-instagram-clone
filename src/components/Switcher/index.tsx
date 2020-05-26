@@ -5,7 +5,7 @@ export interface SwitcherOptions {
     onTurnOff?: () => void,
     on: boolean
 }
-const index = ({ on, onTurnOn, onTurnOff }: SwitcherOptions) => {
+const Switcher = ({ on, onTurnOn, onTurnOff }: SwitcherOptions) => {
     const _circleOffsetx = React.useMemo(() => new Animated.Value(0), [])
     const _onToggle = () => {
         if (on) {
@@ -38,7 +38,7 @@ const index = ({ on, onTurnOn, onTurnOff }: SwitcherOptions) => {
     )
 }
 
-export default index
+export default Switcher
 
 const styles = StyleSheet.create({
     container: {

@@ -53,6 +53,8 @@ export type NotificationProperties =
     | 'emailAndSMSNotifications'
 export type PrivacyProperties =
     'comments'
+    | 'tags'
+    | 'activityStatus'
 export type NotificationLevel = 0 | 1 | 2
 export type PostStoryCommentOptions = {
     likes?: NotificationLevel,
@@ -113,8 +115,17 @@ export type PrivacyCommentOptions = {
     specificWord?: string,
     filterMostReported?: boolean
 }
+export type PrivacyTagsOptions = {
+    allowTagFrom?: 0 | 1 | 2,
+    manualApproveTags?: boolean,
+    pendingTags?: string[]
+}
 export type PrivacySetting = {
-    comments?: PrivacyCommentOptions
+    comments?: PrivacyCommentOptions,
+    tags?: PrivacyTagsOptions
+    activityStatus?: {
+        show?: boolean
+    }
 }
 export type UserSetting = {
     notification?: NotificationSetting,
@@ -206,6 +217,14 @@ const defaultState: userPayload = {
                 hideOffensive: true,
                 manualFilter: false,
                 specificWord: ''
+            },
+            tags: {
+                allowTagFrom: 0,
+                manualApproveTags: false,
+                pendingTags: []
+            },
+            activityStatus: {
+                show: true
             }
         }
     },
