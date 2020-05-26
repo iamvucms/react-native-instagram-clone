@@ -20,7 +20,8 @@ const BlockedComments = () => {
     const [focused, setFocused] = useState<boolean>(false)
     const [fetching, setFetching] = useState<boolean>(false)
     const [query, setQuery] = useState<string>('')
-    const [blockList, setBlockList] = useState<string[]>(blockedComments || ['vucms.user1'])
+    const [blockList, setBlockList] = useState<string[]>(blockedComments || [])
+    const [blockedUsers, setBlockedUsers] = useState<UserInfo[]>([])
     const [result, setResult] = useState<UserInfo[]>([])
     const ref = useRef<{
         timeout: NodeJS.Timeout
@@ -37,6 +38,18 @@ const BlockedComments = () => {
         }, 500);
 
     }, [query])
+    useEffect(() => {
+        const result: UserInfo[] = []
+        const ref = firestore()
+        if (blockList.length === 0) return setBlockedUsers(result)
+        blockList.map((username, index) => {
+            ref.collection('users').doc(username).get().then(rs => {
+                result.push(rs.data() || {})
+                if (index === blockList.length - 1) setBlockedUsers(result)
+            })
+        })
+
+    }, [blockList])
     const _onChangeText = (q: string) => {
         setQuery(q)
 
@@ -59,7 +72,6 @@ const BlockedComments = () => {
                 }
             }))
         }
-
     }
     const findUsersByName = async (q: string) => {
         let users: UserInfo[] = []
@@ -117,54 +129,20 @@ const BlockedComments = () => {
                 bounces={false}
             >
                 {result.map((userx, index) => (
-                    <View key={index} style={styles.peopleItem}>
-                        <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center'
-                        }}>
-                            <Image style={{
-                                height: 50,
-                                width: 50,
-                                borderColor: '#ddd',
-                                borderWidth: 0.5,
-                                borderRadius: 50
-                            }} source={{
-                                uri: userx.avatarURL
-                            }} />
-                            <View style={{
-                                marginHorizontal: 10
-                            }}>
-                                <Text style={{
-                                    fontWeight: '600',
-                                    fontSize: 16
-                                }}>{userx.username}</Text>
-                                <Text style={{
-                                    width: SCREEN_WIDTH - 30 - 50 - 20 - blockList.indexOf(userx.username || '')
-                                        > -1 ? 70 : 60
-                                }} numberOfLines={1}>{userx.bio}</Text>
-                            </View>
-                        </View>
-                        <TouchableOpacity
-                            onPress={_onToggleBlock.bind(null, userx.username || '')}
-                            activeOpacity={0.8}
-                            style={{
-                                ...styles.btnBlock,
-                                backgroundColor: blockList.indexOf(userx.username || '')
-                                    > -1 ? '#ddd' : '#318bfb',
-                                width: blockList.indexOf(userx.username || '')
-                                    > -1 ? 70 : 60,
-                            }}>
-                            <Text style={{
-                                fontWeight: 'bold',
-                                color: blockList.indexOf(userx.username || '')
-                                    > -1 ? '#000' : '#fff',
-
-                            }}>{blockList.indexOf(userx.username || '')
-                                > -1 ? 'Unblock' : 'Block'}</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <UserItem
+                        key={index}
+                        userx={userx}
+                        _onToggleBlock={_onToggleBlock}
+                        blockList={blockList} />
                 ))}
-                {result.length === 0 && (
+                {result.length === 0 && blockedUsers.map((userx, index) => (
+                    <UserItem
+                        key={index}
+                        userx={userx}
+                        _onToggleBlock={_onToggleBlock}
+                        blockList={blockList} />
+                ))}
+                {result.length === 0 && blockList.length === 0 && (
                     <View style={{
                         justifyContent: 'center',
                         alignItems: 'center',
@@ -218,3 +196,63 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     }
 })
+//USER ITEM
+export const UserItem = ({
+    userx,
+    blockList,
+    _onToggleBlock
+}: {
+    _onToggleBlock: (username: string) => void
+    blockList: string[]
+    userx: UserInfo
+}) => {
+    return (
+        <View style={styles.peopleItem}>
+            <View style={{
+                flexDirection: 'row',
+                alignItems: 'center'
+            }}>
+                <Image style={{
+                    height: 50,
+                    width: 50,
+                    borderColor: '#ddd',
+                    borderWidth: 0.5,
+                    borderRadius: 50
+                }} source={{
+                    uri: userx.avatarURL,
+                }} />
+                <View style={{
+                    marginHorizontal: 10
+                }}>
+                    <Text style={{
+                        fontWeight: '600',
+                        fontSize: 16
+                    }}>{userx.username}</Text>
+                    <Text style={{
+                        width: SCREEN_WIDTH - 30 - 50 - 20 - blockList.indexOf(userx.username || '')
+                            > -1 ? 70 : 60
+                    }} numberOfLines={1}>{userx.bio}</Text>
+                </View>
+            </View>
+            <TouchableOpacity
+                onPress={_onToggleBlock.bind(null, userx.username || '')}
+                activeOpacity={0.8}
+                style={{
+                    ...styles.btnBlock,
+                    backgroundColor: blockList.indexOf(userx.username || '')
+                        > -1 ? '#ddd' : '#318bfb',
+                    width: blockList.indexOf(userx.username || '')
+                        > -1 ? 70 : 60,
+                }}>
+                <Text style={{
+                    fontWeight: 'bold',
+                    color: blockList.indexOf(userx.username || '')
+                        > -1 ? '#000' : '#fff',
+
+                }}>{blockList.indexOf(userx.username || '')
+                    > -1 ? 'Unblock' : 'Block'}</Text>
+            </TouchableOpacity>
+        </View>
+
+    )
+}
