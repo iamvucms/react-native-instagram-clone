@@ -2,7 +2,7 @@ import { auth, firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { WelcomePropsRouteParams } from "src/screens/Auth/Welcome";
 import { navigate } from "../navigations/rootNavigation";
-import { ErrorAction, ExtraInfoPayload, NotificationSetting, PostStoryCommentOptions, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, NotificationProperties } from '../reducers/userReducer';
+import { ErrorAction, PrivacyProperties, ExtraInfoPayload, NotificationSetting, PostStoryCommentOptions, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, NotificationProperties, PrivacySetting, PrivacyCommentOptions } from '../reducers/userReducer';
 import { store } from '../store';
 export interface userLoginWithEmail {
     email: string,
@@ -316,6 +316,65 @@ export const UpdateNotificationSettingFailure = ():
     ErrorAction => {
     return {
         type: userActionTypes.UPDATE_NOTIFICATION_SETTING_FAILURE,
+        payload: {
+            message: `Error! Can't update setting`
+        }
+    }
+}
+//UPDATE PRIVACY SETTING ACTIONS
+export const UpdatePrivacySettingsRequest = (setting: PrivacySetting):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            if (Object.keys(setting).length === 0) throw new Error;
+            const targetSetting = Object.keys(setting)[0]
+            let me: UserInfo = { ...store.getState().user.user.userInfo }
+            const ref = firestore()
+            const rq = await ref.collection('users').doc(me.username).get()
+            const targetUser = rq.ref
+            type TempIntersection = UserInfo & { privacySetting?: PrivacySetting }
+
+            const user: TempIntersection = rq.data() || {}
+            if (user.privacySetting) {
+                for (let [key, value] of Object.entries(user.privacySetting)) {
+                    if (setting.hasOwnProperty(key)) {
+                        value = <PrivacyCommentOptions>value
+                        setting[<PrivacyProperties>key] = {
+                            ...value,
+                            ...Object.values(setting)[0]
+                        }
+                        break;
+                    }
+                }
+            }
+            await targetUser.update({
+                privacySetting: {
+                    ...(user.privacySetting || {}),
+                    ...setting
+                }
+            })
+            const rq2 = await targetUser.get()
+            const result: TempIntersection = rq.data() || {}
+            dispatch(UpdatePrivacySettingSuccess({
+                ...(user.privacySetting || {}),
+                ...setting
+            }))
+        } catch (e) {
+            dispatch(UpdatePrivacySettingFailure())
+        }
+    }
+}
+export const UpdatePrivacySettingSuccess = (payload: PrivacySetting):
+    SuccessAction<PrivacySetting> => {
+    return {
+        type: userActionTypes.UPDATE_PRIVACY_SETTING_SUCCESS,
+        payload,
+    }
+}
+export const UpdatePrivacySettingFailure = ():
+    ErrorAction => {
+    return {
+        type: userActionTypes.UPDATE_PRIVACY_SETTING_FAILURE,
         payload: {
             message: `Error! Can't update setting`
         }

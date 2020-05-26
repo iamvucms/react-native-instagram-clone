@@ -1,10 +1,10 @@
-import React from 'react'
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
 import { useRoute } from '@react-navigation/native'
-import { settingNavigationMap } from '../../../../../constants'
-import NavigationBar from '../../../../../components/NavigationBar'
-import { navigation } from '../../../../../navigations/rootNavigation'
+import React from 'react'
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import NavigationBar from '../../../../../components/NavigationBar'
+import { settingNavigationMap } from '../../../../../constants'
+import { navigation } from '../../../../../navigations/rootNavigation'
 const index = (): JSX.Element => {
     const route = useRoute()
     const currNavigation = settingNavigationMap
@@ -18,10 +18,34 @@ const index = (): JSX.Element => {
                 bounces={false}
                 showsVerticalScrollIndicator={false}
             >
+                <View style={{
+                    height: 44,
+                    justifyContent: 'center',
+                    paddingHorizontal: 15
+                }}>
+                    <Text style={{
+                        fontWeight: '600',
+                        fontSize: 16
+                    }}>Interactions</Text>
+                </View>
                 {currNavigation.child && currNavigation.child.map((settingNavigation, index) => (
                     <View key={index} style={{
                         backgroundColor: '#000'
                     }}>
+                        {settingNavigation.navigationName === 'AccountPrivacy' &&
+                            <View style={{
+                                borderTopColor: '#ddd',
+                                borderTopWidth: 0.5,
+                                height: 44,
+                                backgroundColor: "#fff",
+                                justifyContent: 'center',
+                                paddingHorizontal: 15
+                            }}>
+                                <Text style={{
+                                    fontWeight: '600',
+                                    fontSize: 16
+                                }}>Interactions</Text>
+                            </View>}
                         <TouchableOpacity
                             onPress={() => {
                                 navigation.navigate(settingNavigation.navigationName)

@@ -114,7 +114,7 @@ const EmailAndSMS = (): JSX.Element => {
                     <View style={styles.optionItem}>
                         <View style={styles.option}>
                             <Text style={{ fontWeight: '500', fontSize: 16 }}>Reminder Emails</Text>
-                            <Text style={{ fontSize: 12, color: '#666' }}>Give feedback on Instagram.</Text>
+                            <Text style={{ fontSize: 12, color: '#666' }}>Get notifications you my have missed.</Text>
                         </View>
                         <Switcher
                             onTurnOn={_onChangeReminderEmails.bind(null, true)}
@@ -124,7 +124,7 @@ const EmailAndSMS = (): JSX.Element => {
                     <View style={styles.optionItem}>
                         <View style={styles.option}>
                             <Text style={{ fontWeight: '500', fontSize: 16 }}>Product Emails</Text>
-                            <Text style={{ fontSize: 12, color: '#666' }}>Give feedback on Instagram.</Text>
+                            <Text style={{ fontSize: 12, color: '#666' }}>Get típ about Instagram's tools.</Text>
                         </View>
                         <Switcher
                             onTurnOn={_onChangeProductEmails.bind(null, true)}
@@ -134,7 +134,7 @@ const EmailAndSMS = (): JSX.Element => {
                     <View style={styles.optionItem}>
                         <View style={styles.option}>
                             <Text style={{ fontWeight: '500', fontSize: 16 }}>News Emails</Text>
-                            <Text style={{ fontSize: 12, color: '#666' }}>Give feedback on Instagram.</Text>
+                            <Text style={{ fontSize: 12, color: '#666' }}>Learn about new Instagram features.</Text>
                         </View>
                         <Switcher
                             onTurnOn={_onChangeNewsEmails.bind(null, true)}
@@ -144,7 +144,7 @@ const EmailAndSMS = (): JSX.Element => {
                     <View style={styles.optionItem}>
                         <View style={styles.option}>
                             <Text style={{ fontWeight: '500', fontSize: 16 }}>Text(SMS) Messages</Text>
-                            <Text style={{ fontSize: 12, color: '#666' }}>Give feedback on Instagram.</Text>
+                            <Text style={{ fontSize: 12, color: '#666' }}>Get notifications by text messages.</Text>
                         </View>
                         <Switcher
                             onTurnOn={_onChangeTextSMSMessages.bind(null, true)}

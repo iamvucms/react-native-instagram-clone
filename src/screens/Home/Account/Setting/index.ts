@@ -37,6 +37,7 @@ import AccountYouFollow from './Privacy/AccountYouFollow'
 import ActivityStatus from './Privacy/ActivityStatus'
 import BlockedAccounts from './Privacy/BlockedAccounts'
 import Comments from './Privacy/Comments'
+import BlockedComments from './Privacy/BlockedComments'
 import MutedAccounts from './Privacy/MutedAccounts'
 import RestrictedAccounts from './Privacy/RestrictedAccounts'
 import Story from './Privacy/Story'
@@ -51,6 +52,7 @@ import EmailFromInstagram from './Security/EmailFromInstagram'
 import AddAccount from './AddAccount'
 import Logout from './Logout'
 const navigation = {
+    BlockedComments,
     Password,
     LoginActivity,
     SavedLoginInfo,

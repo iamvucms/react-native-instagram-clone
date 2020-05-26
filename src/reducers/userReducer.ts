@@ -20,7 +20,10 @@ export const userActionTypes = {
     FOLLOW_FAILURE: 'FOLLOW_FAILURE',
     UPDATE_NOTIFICATION_SETTING_REQUEST: 'UPDATE_NOTIFICATION_SETTING_REQUEST',
     UPDATE_NOTIFICATION_SETTING_SUCCESS: 'UPDATE_NOTIFICATION_SETTING_SUCCESS',
-    UPDATE_NOTIFICATION_SETTING_FAILURE: 'UPDATE_NOTIFICATION_SETTING_FAILURE'
+    UPDATE_NOTIFICATION_SETTING_FAILURE: 'UPDATE_NOTIFICATION_SETTING_FAILURE',
+    UPDATE_PRIVACY_SETTING_REQUEST: 'UPDATE_PRIVACY_SETTING_REQUEST',
+    UPDATE_PRIVACY_SETTING_SUCCESS: 'UPDATE_PRIVACY_SETTING_SUCCESS',
+    UPDATE_PRIVACY_SETTING_FAILURE: 'UPDATE_PRIVACY_SETTING_FAILURE'
 }
 export type UserInfo = {
     email?: string,
@@ -48,6 +51,8 @@ export type NotificationProperties =
     | 'liveIGTV'
     | 'fromInstagram'
     | 'emailAndSMSNotifications'
+export type PrivacyProperties =
+    'comments'
 export type NotificationLevel = 0 | 1 | 2
 export type PostStoryCommentOptions = {
     likes?: NotificationLevel,
@@ -101,8 +106,19 @@ export type NotificationSetting = {
     fromInstagram?: FromInstagramOptions,
     emailAndSMSNotifications?: EmailandSMSNotificationsOptions
 }
+export type PrivacyCommentOptions = {
+    blockUsers?: UserInfo[],
+    hideOffensive?: boolean,
+    manualFilter?: boolean,
+    specificWord?: string,
+    filterMostReported?: boolean
+}
+export type PrivacySetting = {
+    comments?: PrivacyCommentOptions
+}
 export type UserSetting = {
-    notification?: NotificationSetting
+    notification?: NotificationSetting,
+    privacy?: PrivacySetting
 }
 export interface userPayload {
     user: {
@@ -134,6 +150,7 @@ export type ExtraInfoPayload = {
 export type userAction = SuccessAction<userPayload> | ErrorAction
     | SuccessAction<UserInfo> | SuccessAction<ExtraInfoPayload>
     | SuccessAction<NotificationSetting>
+    | SuccessAction<PrivacySetting>
 const defaultState: userPayload = {
     user: {},
     photos: [],
@@ -180,6 +197,15 @@ const defaultState: userPayload = {
                 productEmail: true,
                 newsEmails: true,
                 textSMSMessages: true
+            }
+        },
+        privacy: {
+            comments: {
+                blockUsers: [],
+                filterMostReported: false,
+                hideOffensive: true,
+                manualFilter: false,
+                specificWord: ''
             }
         }
     },
@@ -272,6 +298,26 @@ const reducer = (state: userPayload = defaultState, action: userAction): userPay
             }
             return state
         case userActionTypes.UPDATE_NOTIFICATION_SETTING_FAILURE:
+            action = <ErrorAction>action
+            Alert.alert('Error', action.payload.message)
+            return state
+        case userActionTypes.UPDATE_PRIVACY_SETTING_REQUEST:
+            state = { ...state }
+            return state
+        case userActionTypes.UPDATE_PRIVACY_SETTING_SUCCESS:
+            action = <SuccessAction<PrivacySetting>>action
+            state = {
+                ...state,
+                setting: {
+                    ...state.setting,
+                    privacy: {
+                        ...state.setting?.privacy,
+                        ...action.payload
+                    }
+                }
+            }
+            return state
+        case userActionTypes.UPDATE_PRIVACY_SETTING_FAILURE:
             action = <ErrorAction>action
             Alert.alert('Error', action.payload.message)
             return state

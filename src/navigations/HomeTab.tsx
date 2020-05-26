@@ -51,6 +51,7 @@ const AccountStack = () => {
                     ))}
                 </>
             ))}
+            <Stack.Screen component={SettingNavigationx.BlockedComments} name="BlockedComments" />
         </Stack.Navigator>
     )
 }
