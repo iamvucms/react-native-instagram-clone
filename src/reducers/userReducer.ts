@@ -56,6 +56,8 @@ export type PrivacyProperties =
     | 'tags'
     | 'activityStatus'
     | 'story'
+    | 'accountPrivacy'
+    | 'restrictedAccounts'
 export type NotificationLevel = 0 | 1 | 2
 export type PostStoryCommentOptions = {
     likes?: NotificationLevel,
@@ -137,6 +139,12 @@ export type PrivacySetting = {
     activityStatus?: {
         show?: boolean
     },
+    accountPrivacy?: {
+        private?: boolean
+    },
+    restrictedAccounts?: {
+        restrictedAccounts?: string[]
+    }
     story?: PrivacyStoryOptions
 }
 export type UserSetting = {
@@ -238,6 +246,9 @@ const defaultState: userPayload = {
             activityStatus: {
                 show: true
             },
+            accountPrivacy: {
+                private: false
+            },
             story: {
                 hideStoryFrom: [],
                 closeFriends: [],
@@ -247,6 +258,9 @@ const defaultState: userPayload = {
                 allowResharing: false,
                 allowSharing: true,
                 shareYourStoryToFacebook: false
+            },
+            restrictedAccounts: {
+                restrictedAccounts: []
             }
         }
     },
