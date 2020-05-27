@@ -52,6 +52,7 @@ const AccountStack = () => {
                 </>
             ))}
             <Stack.Screen component={SettingNavigationx.BlockedComments} name="BlockedComments" />
+            <Stack.Screen component={SettingNavigationx.HideStoryFrom} name="HideStoryFrom" />
         </Stack.Navigator>
     )
 }

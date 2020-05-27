@@ -1,9 +1,9 @@
 import { auth, firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
-import { WelcomePropsRouteParams } from "src/screens/Auth/Welcome";
 import { navigate } from "../navigations/rootNavigation";
 import { ErrorAction, PrivacyProperties, ExtraInfoPayload, NotificationSetting, PostStoryCommentOptions, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, NotificationProperties, PrivacySetting, PrivacyCommentOptions } from '../reducers/userReducer';
 import { store } from '../store';
+import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
 export interface userLoginWithEmail {
     email: string,
     password: string
@@ -360,6 +360,7 @@ export const UpdatePrivacySettingsRequest = (setting: PrivacySetting):
                 ...setting
             }))
         } catch (e) {
+            console.warn(e)
             dispatch(UpdatePrivacySettingFailure())
         }
     }

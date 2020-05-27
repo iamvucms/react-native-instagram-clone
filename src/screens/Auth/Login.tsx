@@ -3,12 +3,12 @@ import { Animated, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOp
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useDispatch } from 'react-redux'
 import { ThunkDispatch } from 'redux-thunk'
-import { userAction } from 'src/reducers/userReducer'
 import { LoginRequest, userLoginWithEmail } from '../../actions/userActions'
 import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../constants'
 import { navigation } from '../../navigations/rootNavigation'
 import * as yup from 'yup'
 import { firestore, auth } from 'firebase'
+import { userAction } from '../../reducers/userReducer'
 const Login = (): JSX.Element => {
     const dispatch = useDispatch()
     const [loading, setLoading] = useState<boolean>(false)

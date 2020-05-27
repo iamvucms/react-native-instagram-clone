@@ -55,6 +55,7 @@ export type PrivacyProperties =
     'comments'
     | 'tags'
     | 'activityStatus'
+    | 'story'
 export type NotificationLevel = 0 | 1 | 2
 export type PostStoryCommentOptions = {
     likes?: NotificationLevel,
@@ -120,12 +121,23 @@ export type PrivacyTagsOptions = {
     manualApproveTags?: boolean,
     pendingTags?: string[]
 }
+export type PrivacyStoryOptions = {
+    hideStoryFrom?: string[],
+    closeFriends?: string[],
+    allowMessageReplies?: 0 | 1 | 2,
+    saveToGallery?: boolean,
+    saveToArchive?: boolean,
+    allowResharing?: boolean,
+    allowSharing?: boolean,
+    shareYourStoryToFacebook?: boolean
+}
 export type PrivacySetting = {
     comments?: PrivacyCommentOptions,
     tags?: PrivacyTagsOptions
     activityStatus?: {
         show?: boolean
-    }
+    },
+    story?: PrivacyStoryOptions
 }
 export type UserSetting = {
     notification?: NotificationSetting,
@@ -225,6 +237,16 @@ const defaultState: userPayload = {
             },
             activityStatus: {
                 show: true
+            },
+            story: {
+                hideStoryFrom: [],
+                closeFriends: [],
+                allowMessageReplies: 0,
+                saveToGallery: true,
+                saveToArchive: true,
+                allowResharing: false,
+                allowSharing: true,
+                shareYourStoryToFacebook: false
             }
         }
     },

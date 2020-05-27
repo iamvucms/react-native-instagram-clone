@@ -28,7 +28,7 @@ const index = ({ commentInputRef, preValue,
     const ref = useRef<{ isReplying: boolean }>({ isReplying: false })
     const [text, setText] = useState<string>(preValue || '')
     const [commenting, setCommenting] = useState<boolean>(false)
-    const _loadingDeg = new Animated.Value(0)
+    const _loadingDeg = React.useMemo(() => new Animated.Value(0), [])
     const [topOffset, setTopOffset] = useState<number>(0)
     const _onAnimatedLoading = () => {
         Animated.timing(_loadingDeg, {

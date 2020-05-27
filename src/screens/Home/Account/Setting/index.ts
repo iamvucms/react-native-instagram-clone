@@ -42,6 +42,7 @@ import MutedAccounts from './Privacy/MutedAccounts'
 import RestrictedAccounts from './Privacy/RestrictedAccounts'
 import Story from './Privacy/Story'
 import Tags from './Privacy/Tags'
+import HideStoryFrom from './Privacy/HideStoryFrom'
 
 import Security from './Security'
 import Password from './Security/Password'
@@ -52,6 +53,7 @@ import EmailFromInstagram from './Security/EmailFromInstagram'
 import AddAccount from './AddAccount'
 import Logout from './Logout'
 const navigation = {
+    HideStoryFrom,
     BlockedComments,
     Password,
     LoginActivity,
