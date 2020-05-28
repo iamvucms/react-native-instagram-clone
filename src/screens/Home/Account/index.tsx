@@ -1,28 +1,14 @@
-import React, { useEffect, useState, useRef } from 'react'
-import {
-    StyleSheet, Text,
-    View, SafeAreaView, ScrollView, TouchableOpacity,
-    Image,
-    RefreshControl,
-    Animated,
-    NativeSyntheticEvent,
-    NativeScrollEvent,
-    StatusBar,
-    GestureResponderEvent,
-    ImageBackground,
-    LayoutChangeEvent
-} from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import { Animated, Image, ImageBackground, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { useSelector } from '../../../reducers'
-import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../constants'
 import { useDispatch } from 'react-redux'
 import { FetchExtraInfoRequest } from '../../../actions/userActions'
-import { useIsFocused } from '@react-navigation/native'
 import { getTabBarHeight } from '../../../components/BottomTabBar'
-import { navigate } from '../../../navigations/rootNavigation'
 import GalleryImageItem from '../../../components/GalleryImageItem'
+import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../../constants'
+import { navigate } from '../../../navigations/rootNavigation'
+import { useSelector } from '../../../reducers'
 import { Post } from '../../../reducers/postReducer'
-import ScaleImage from '../../../components/ScaleImage'
 
 const index = () => {
     const dispatch = useDispatch()
@@ -33,9 +19,12 @@ const index = () => {
     const photos = useSelector(state => state.user.photos)
     const scrollHRef = useRef<ScrollView>(null)
     const scrollTabRef = useRef<ScrollView>(null)
+    const _headerTabOpacity = React.useMemo(() => new Animated.Value(-1), [])
     const ref = useRef<{
         currentTab: number,
         currentGalleryTab: number,
+        headerHeight: number,
+        showHeaderTab: boolean,
         prePopupImage: {
             pX: number,
             pY: number,
@@ -43,6 +32,8 @@ const index = () => {
             h: number
         }
     }>({
+        showHeaderTab: false,
+        headerHeight: 0,
         currentTab: 1,
         currentGalleryTab: 1,
         prePopupImage: { pX: 0, pY: 0, w: 0, h: 0 }
@@ -306,6 +297,22 @@ const index = () => {
 
 
     }
+    const _onSetHeaderHeight = ({ nativeEvent: { layout: { height } } }: LayoutChangeEvent) => {
+        ref.current.headerHeight = height
+    }
+    const _onVerticalScrollViewScroll = ({ nativeEvent: { contentOffset: { y } } }: NativeSyntheticEvent<NativeScrollEvent>) => {
+        if (y > ref.current.headerHeight) {
+            if (!ref.current.showHeaderTab) {
+                _headerTabOpacity.setValue(1)
+                ref.current.showHeaderTab = true
+            }
+        } else {
+            if (ref.current.showHeaderTab) {
+                _headerTabOpacity.setValue(-1)
+                ref.current.showHeaderTab = false
+            }
+        }
+    }
     return (
         <SafeAreaView style={styles.container}>
             {selectedPhoto.source && <View
@@ -364,7 +371,10 @@ const index = () => {
             >
                 <View
                     style={styles.profileContainer}>
-                    <View style={styles.profileHeader}>
+                    <Animated.View style={{
+                        ...styles.profileHeader,
+                        zIndex: _headerTabOpacity
+                    }}>
                         <TouchableOpacity
                             style={styles.btnSwitchAccount}>
                             <Text style={{
@@ -378,8 +388,35 @@ const index = () => {
                             style={styles.btnOptions}>
                             <Icon name="menu" size={24} />
                         </TouchableOpacity>
-                    </View>
+                        <Animated.View style={{
+                            ...styles.galleryTabWrapper,
+                            position: 'absolute',
+                            left: 0,
+                            top: '100%',
+                            backgroundColor: 'rgb(247,248,252)',
+                            opacity: _headerTabOpacity,
+                        }}>
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={_onToggleGalleryTab.bind(null, 1)}
+                                style={styles.galleryTab}>
+                                <Icon name="grid" size={24} color="#333" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={_onToggleGalleryTab.bind(null, 2)}
+                                style={styles.galleryTab}>
+                                <Icon name="tooltip-image-outline" size={24} color="#333" />
+                            </TouchableOpacity>
+                            <Animated.View style={{
+                                ...styles.tabLine,
+                                left: _tabLineOffsetX
+                            }} />
+                        </Animated.View>
+                    </Animated.View>
                     <ScrollView
+                        onScroll={_onVerticalScrollViewScroll}
+                        scrollEventThrottle={20}
                         refreshControl={<RefreshControl
                             refreshing={refreshing}
                             onRefresh={_onRefreshing}
@@ -390,7 +427,7 @@ const index = () => {
                         <TouchableOpacity
                             activeOpacity={1}
                             onPress={_onBackToMainScreen}>
-                            <View>
+                            <View onLayout={_onSetHeaderHeight}>
                                 <View style={styles.infoWrapper}>
                                     <TouchableOpacity style={styles.avatarWrapper}>
                                         <Image style={styles.mainAvatar}
@@ -474,6 +511,7 @@ const index = () => {
                                 >
                                     <TouchableOpacity
                                         style={{
+                                            marginTop: 5,
                                             flexDirection: 'row'
                                         }}
                                         activeOpacity={1}
