@@ -1,4 +1,6 @@
 import { firestore } from "firebase"
+import { UserInfo } from "../reducers/userReducer"
+import { store } from "../store"
 
 export const timestampToString = (create_at: number, suffix?: boolean): string => {
     let diffTime: string | number = (new Date().getTime() - (create_at || 0)) / 1000
@@ -29,4 +31,17 @@ export const generateUsernameKeywords = (fullText: string): string[] => {
         keywords.push(temp)
     })
     return Array.from(new Set(keywords))
+}
+export const findUsersByName = async (q: string) => {
+    let users: UserInfo[] = []
+    const ref = firestore()
+    const rq = await ref.collection('users').where(
+        'keyword', 'array-contains', q
+    ).get()
+    rq.docs.map(x => {
+        const user: UserInfo = x.data()
+        users.push(user)
+    })
+    users = users.filter(u => u.username !== store.getState().user.user.userInfo?.username)
+    return users
 }

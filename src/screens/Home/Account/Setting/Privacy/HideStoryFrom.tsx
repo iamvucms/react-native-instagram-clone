@@ -12,6 +12,7 @@ import { useSelector } from '../../../../../reducers'
 import { UserInfo } from '../../../../../reducers/userReducer'
 import { firestore } from 'firebase'
 import { UpdatePrivacySettingsRequest } from '../../../../../actions/userActions'
+import { findUsersByName } from '../../../../../utils'
 const HideStoryFrom = (): JSX.Element => {
     const dispatch = useDispatch()
     const myUsername = store.getState().user.user.userInfo?.username
@@ -44,19 +45,6 @@ const HideStoryFrom = (): JSX.Element => {
         })
 
     }, [hideList])
-    const findUsersByName = async (q: string) => {
-        let users: UserInfo[] = []
-        const ref = firestore()
-        const rq = await ref.collection('users').where(
-            'keyword', 'array-contains', q
-        ).get()
-        rq.docs.map(x => {
-            const user: UserInfo = x.data()
-            users.push(user)
-        })
-        users = users.filter(u => u.username !== myUsername)
-        return users
-    }
     const _onToggleHide = (username: string) => {
         if (hideList.indexOf(username) === -1) {
             setHideList([...hideList, username])

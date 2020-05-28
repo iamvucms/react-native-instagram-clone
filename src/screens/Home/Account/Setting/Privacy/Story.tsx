@@ -108,7 +108,7 @@ const StoryPravicy = (): JSX.Element => {
                         style={{
                             marginVertical: 10,
                         }}>
-                        <Text style={{ fontSize: 16 }}>{story?.closeFriends?.length || 0} People</Text>
+                        <Text style={{ fontSize: 16 }}>{useSelector(state => state.user.setting?.privacy?.closeFriends?.closeFriends)?.length || 0} People</Text>
                     </TouchableOpacity>
                 </View>
                 <View style={{

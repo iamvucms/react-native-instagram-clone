@@ -58,6 +58,8 @@ export type PrivacyProperties =
     | 'story'
     | 'accountPrivacy'
     | 'restrictedAccounts'
+    | 'closeFriends'
+    | 'blockedAccounts'
 export type NotificationLevel = 0 | 1 | 2
 export type PostStoryCommentOptions = {
     likes?: NotificationLevel,
@@ -125,7 +127,6 @@ export type PrivacyTagsOptions = {
 }
 export type PrivacyStoryOptions = {
     hideStoryFrom?: string[],
-    closeFriends?: string[],
     allowMessageReplies?: 0 | 1 | 2,
     saveToGallery?: boolean,
     saveToArchive?: boolean,
@@ -142,9 +143,19 @@ export type PrivacySetting = {
     accountPrivacy?: {
         private?: boolean
     },
+    blockedAccounts?: {
+        blockedAccounts?: string[]
+    },
     restrictedAccounts?: {
         restrictedAccounts?: string[]
-    }
+    },
+    mutedAccouts?: {
+        posts?: string[],
+        story?: string[]
+    },
+    closeFriends?: {
+        closeFriends?: string[]
+    },
     story?: PrivacyStoryOptions
 }
 export type UserSetting = {
@@ -251,7 +262,6 @@ const defaultState: userPayload = {
             },
             story: {
                 hideStoryFrom: [],
-                closeFriends: [],
                 allowMessageReplies: 0,
                 saveToGallery: true,
                 saveToArchive: true,
@@ -261,6 +271,16 @@ const defaultState: userPayload = {
             },
             restrictedAccounts: {
                 restrictedAccounts: []
+            },
+            blockedAccounts: {
+                blockedAccounts: []
+            },
+            mutedAccouts: {
+                posts: [],
+                story: []
+            },
+            closeFriends: {
+                closeFriends: []
             }
         }
     },

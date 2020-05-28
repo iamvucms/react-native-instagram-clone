@@ -17,7 +17,8 @@ export type Story = {
     permission?: number,
     create_at?: firestore.Timestamp,
     source?: string,
-    seen?: number
+    seen?: number,
+    seenList?: string[]
 }
 export type ExtraStory = {
     storyList: Story[],

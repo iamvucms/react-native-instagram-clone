@@ -7,7 +7,7 @@ import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../../../c
 import { useDispatch } from 'react-redux'
 import { firestore, database } from 'firebase'
 import { UserInfo } from '../../../../../reducers/userReducer'
-import { generateUsernameKeywords } from '../../../../../utils'
+import { generateUsernameKeywords, findUsersByName } from '../../../../../utils'
 import { useSelector } from '../../../../../reducers'
 import { getTabBarHeight } from '../../../../../components/BottomTabBar'
 import { store } from '../../../../../store'
@@ -72,19 +72,6 @@ const BlockedComments = () => {
                 }
             }))
         }
-    }
-    const findUsersByName = async (q: string) => {
-        let users: UserInfo[] = []
-        const ref = firestore()
-        const rq = await ref.collection('users').where(
-            'keyword', 'array-contains', q
-        ).get()
-        rq.docs.map(x => {
-            const user: UserInfo = x.data()
-            users.push(user)
-        })
-        users = users.filter(u => u.username !== myUsername)
-        return users
     }
     return (
         <SafeAreaView style={styles.container}>

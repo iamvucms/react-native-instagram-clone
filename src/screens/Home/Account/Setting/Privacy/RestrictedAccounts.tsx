@@ -11,6 +11,7 @@ import { UpdatePrivacySettingsRequest } from '../../../../../actions/userActions
 import { store } from '../../../../../store'
 import { firestore } from 'firebase'
 import { getTabBarHeight } from '../../../../../components/BottomTabBar'
+import { findUsersByName } from '../../../../../utils'
 const RestrictedAccounts = (): JSX.Element => {
     const route = useRoute()
     const myUsername = store.getState().user.user.userInfo?.username
@@ -81,19 +82,7 @@ const RestrictedAccounts = (): JSX.Element => {
             }))
         }
     }
-    const findUsersByName = async (q: string) => {
-        let users: UserInfo[] = []
-        const ref = firestore()
-        const rq = await ref.collection('users').where(
-            'keyword', 'array-contains', q
-        ).get()
-        rq.docs.map(x => {
-            const user: UserInfo = x.data()
-            users.push(user)
-        })
-        users = users.filter(u => u.username !== myUsername)
-        return users
-    }
+    
     return (
         <SafeAreaView style={styles.container}>
             {searching && <View style={{
