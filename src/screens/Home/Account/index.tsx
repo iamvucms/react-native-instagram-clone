@@ -618,7 +618,9 @@ const index = () => {
                                 marginLeft: 5,
                             }}>Saved</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity activeOpacity={0.8} style={styles.optionItem}>
+                        <TouchableOpacity
+                            onPress={() => navigate('CloseFriends')}
+                            activeOpacity={0.8} style={styles.optionItem}>
                             <Icon name="playlist-star" size={30} color="#333" />
                             <Text style={{
                                 fontSize: 16,

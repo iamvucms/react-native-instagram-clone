@@ -59,8 +59,12 @@ const CloseFriends = (): JSX.Element => {
     useEffect(() => {
         const result: UserInfo[] = []
         const ref = firestore()
-        if (closeList.length === 0) return setCloseUsers(result)
         setRefreshing(true)
+        if (closeList.length === 0) {
+            setCloseUsers(result)
+            setRefreshing(false)
+            return;
+        }
         closeList.map(async (username, index) => {
             const rs = await ref.collection('users').doc(username).get()
             result.push(rs.data() || {})
@@ -74,7 +78,11 @@ const CloseFriends = (): JSX.Element => {
         const result: UserInfo[] = []
         const ref = firestore()
         setRefreshing(true)
-        if (suggestionsList.length === 0) return setSuggestionUsers(result)
+        if (suggestionsList.length === 0) {
+            setSuggestionUsers(result)
+            setRefreshing(false)
+            return;
+        }
         suggestionsList.map(async (username, index) => {
             const rs = await ref.collection('users').doc(username).get()
             result.push(rs.data() || {})
