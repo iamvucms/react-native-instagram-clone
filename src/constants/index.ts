@@ -1,11 +1,10 @@
-import { getStatusBarHeight } from 'react-native-status-bar-height';
-import { Dimensions } from 'react-native'
-import SettingComponents from '../screens/Home/Account/Setting'
+import '@firebase/auth';
+import '@firebase/firestore';
 // import firestore from '@react-native-firebase/firestore'
-import * as firebase from 'firebase'
-import '@firebase/firestore'
-import '@firebase/auth'
-import { generateUsernameKeywords } from '../utils';
+import * as firebase from 'firebase';
+import { Dimensions } from 'react-native';
+import { getStatusBarHeight } from 'react-native-status-bar-height';
+import SettingComponents from '../screens/Home/Account/Setting';
 const firebaseConfig = {
     apiKey: "AIzaSyATgIePHiOXnqlzUN4rRyyaPw4CTWH7yWA",
     authDomain: "vucms-7f6fa.firebaseapp.com",
@@ -44,6 +43,7 @@ const sources = [
     'https://pix10.agoda.net/hotelImages/545437/-1/3e3de077901fd04bcbf4ba1435bb9e37.jpg?s=1024x768',
     'https://images.pexels.com/photos/1666021/pexels-photo-1666021.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
 ]
+export const DEFAULT_PHOTO_URI = 'https://www.pavilionweb.com/wp-content/uploads/2017/03/man-300x300.png'
 // setInterval(() => {
 //     const uid = new Date().getTime()
 //     const ref = firebase.firestore()

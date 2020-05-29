@@ -1,24 +1,15 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
-import {
-    createMaterialTopTabNavigator,
-    MaterialTopTabNavigationOptions,
-    MaterialTopTabBarOptions
-} from '@react-navigation/material-top-tabs'
+import { createMaterialTopTabNavigator, MaterialTopTabBarOptions, MaterialTopTabNavigationOptions } from '@react-navigation/material-top-tabs';
 import React from 'react';
 import { useSelector } from '../reducers';
-import AuthStack, { AuthStackParamList } from './AuthStack'
-import HomeTab, { HomeTabParamList } from './HomeTab'
-import PhotoTaker from '../screens/Others/PhotoTaker'
-import Comment from '../screens/Root/Comment'
-import Direct from '../screens/Others/Direct'
-import { navigationRef } from './rootNavigation';
+import Direct from '../screens/Others/Direct';
+import PhotoTaker from '../screens/Others/PhotoTaker';
+import AuthStack, { AuthStackParamList } from './AuthStack';
+import HomeTab, { HomeTabParamList } from './HomeTab';
 export type rootStackParamList = {
     AuthStack: undefined;
     HomeTab: undefined,
     PhotoTaker: undefined,
     Direct: undefined,
-    Comment: undefined,
 };
 export type commonParamList = AuthStackParamList & HomeTabParamList & rootStackParamList
 const RootTab = createMaterialTopTabNavigator<rootStackParamList>()

@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, Image, GestureResponderEvent, } from 'react-native'
+import React, { useRef, useState } from 'react'
+import { Image, StyleSheet, TouchableOpacity } from 'react-native'
 import { SCREEN_WIDTH } from '../../constants'
 import { Post } from '../../reducers/postReducer'
 export interface GalleryImageItem {

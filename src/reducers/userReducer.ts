@@ -37,7 +37,9 @@ export type UserInfo = {
     phone?: string,
     username?: string,
     avatarURL?: string,
-    bio?: string
+    bio?: string,
+    website?: string,
+    gender?: 0 | 1 | 2
 }
 export type ExtraInfo = {
     posts: number,

@@ -476,6 +476,7 @@ const index = () => {
                                     <Text>{user.userInfo?.bio}</Text>
                                 </View>
                                 <TouchableOpacity
+                                    onPress={() => navigate('EditProfile')}
                                     activeOpacity={0.6}
                                     style={styles.btnEditProfile}>
                                     <Text style={{

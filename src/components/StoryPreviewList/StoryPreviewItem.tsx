@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react'
-import { StyleSheet, Text, View, Image, TouchableOpacity, Animated } from 'react-native'
-import { Story, ExtraStory, seenTypes } from '../../reducers/storyReducer'
+import React, { useEffect, useState } from 'react'
+import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
-import { Svg, Polygon } from 'react-native-svg'
+import { ExtraStory, seenTypes } from '../../reducers/storyReducer'
 export interface StoryPreviewItemProps {
     item: ExtraStory
 }

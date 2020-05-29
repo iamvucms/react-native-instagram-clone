@@ -4,6 +4,8 @@ import { navigate } from "../navigations/rootNavigation";
 import { ErrorAction, PrivacyProperties, ExtraInfoPayload, NotificationSetting, PostStoryCommentOptions, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, NotificationProperties, PrivacySetting, PrivacyCommentOptions } from '../reducers/userReducer';
 import { store } from '../store';
 import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
+import { generateUsernameKeywords } from '../utils';
+import { DEFAULT_PHOTO_URI } from '../constants';
 export interface userLoginWithEmail {
     email: string,
     password: string
@@ -62,6 +64,7 @@ export const RegisterRequest = (userData: RegisterParams):
                     .set({
                         email: userData.email,
                         fullname: userData.fullname,
+                        keyword: generateUsernameKeywords(userData.username),
                         phone: userData.phone,
                         username: userData.username,
                         birthday: {
@@ -70,8 +73,10 @@ export const RegisterRequest = (userData: RegisterParams):
                             year: userData.year
                         },
                         bio: '',
+                        gender: 2,
                         followings: [],
-                        avatarURL: 'https://www.pavilionweb.com/wp-content/uploads/2017/03/man-300x300.png'
+                        website: '',
+                        avatarURL: DEFAULT_PHOTO_URI
                     })
                 dispatch(LoginRequest({
                     email: userData.email,

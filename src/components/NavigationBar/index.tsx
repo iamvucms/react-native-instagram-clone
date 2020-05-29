@@ -5,7 +5,7 @@ export interface NavigationBarProps {
     title: string,
     callback?: () => any
 }
-const index = ({ callback, title }: NavigationBarProps) => {
+const NavigationBar = ({ callback, title }: NavigationBarProps) => {
     const _onCallBack = () => {
         if (callback) callback()
     }
@@ -24,7 +24,7 @@ const index = ({ callback, title }: NavigationBarProps) => {
     )
 }
 
-export default index
+export default NavigationBar
 
 const styles = StyleSheet.create({
     navigationBar: {

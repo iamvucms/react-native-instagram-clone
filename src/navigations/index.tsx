@@ -1,13 +1,12 @@
-import { MaterialTopTabNavigationOptions } from '@react-navigation/material-top-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, StackNavigationOptions, TransitionPresets } from '@react-navigation/stack';
 import React from 'react';
-import { useSelector } from '../reducers';
+import { ExtraPost } from '../reducers/postReducer';
+import PostOptions from '../screens/Others/PostOptions';
 import Comment from '../screens/Root/Comment';
 import { navigationRef } from './rootNavigation';
 import RootTab from './RootTab';
-import PostOptions from '../screens/Others/PostOptions';
-import { ExtraPost } from '../reducers/postReducer';
+import EditProfile from '../screens/Home/Account/EditProfile';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -15,7 +14,8 @@ export type SuperRootStackParamList = {
     },
     PostOptions: {
         item: ExtraPost
-    }
+    },
+    EditProfile: undefined
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
 const index = (): JSX.Element => {
@@ -34,6 +34,10 @@ const index = (): JSX.Element => {
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="PostOptions" component={PostOptions} />
+                <RootStack.Screen options={{
+                    animationEnabled: false,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="EditProfile" component={EditProfile} />
             </RootStack.Navigator>
         </NavigationContainer>
     )

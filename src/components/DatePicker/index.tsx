@@ -1,8 +1,6 @@
-import React, { useRef, useState } from 'react'
-import { StyleSheet, Text, View, StyleProp, ViewProps, ViewStyle, ScrollView, TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent } from 'react-native'
-import { SCREEN_WIDTH } from '../../constants'
-import { useEffect } from 'react';
-import { date } from 'yup';
+import React, { useRef, useState } from 'react';
+import { NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { SCREEN_WIDTH } from '../../constants';
 export const MONTH_ALIAS = ['Jan', 'Feb', 'Mar',
     'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep',

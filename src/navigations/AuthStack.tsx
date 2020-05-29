@@ -1,10 +1,10 @@
+import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack'
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet } from 'react-native'
+import ForgotPassword from '../screens/Auth/ForgotPassword'
 import Login from '../screens/Auth/Login'
 import Register from '../screens/Auth/Register'
-import ForgotPassword from '../screens/Auth/ForgotPassword'
 import Welcome, { WelcomePropsRouteParams } from '../screens/Auth/Welcome'
-import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack'
 export type AuthStackParamList = {
     Login: undefined;
     Register: undefined;

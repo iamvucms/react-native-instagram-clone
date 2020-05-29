@@ -1,16 +1,10 @@
-import React, { RefObject, useState, useRef, useEffect } from 'react'
-import {
-    StyleSheet, Text, View,
-    TouchableOpacity, TextInput, ScrollView,
-    Image,
-    Animated,
-    Keyboard
-} from 'react-native'
-import { useSelector } from '../../reducers'
-import { SCREEN_WIDTH } from '../../constants'
+import React, { RefObject, useEffect, useRef, useState } from 'react'
+import { Animated, Image, Keyboard, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useDispatch } from 'react-redux'
-import { PostCommentRequest } from '../../actions/postActions'
 import { PostReplyRequest } from '../../actions/commentActions'
+import { PostCommentRequest } from '../../actions/postActions'
+import { SCREEN_WIDTH } from '../../constants'
+import { useSelector } from '../../reducers'
 
 export interface CommentInputPopupProps {
     commentInputRef: RefObject<TextInput>,

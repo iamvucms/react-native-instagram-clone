@@ -1,5 +1,5 @@
-import React, { useRef, useState, RefObject, MutableRefObject, useEffect } from 'react'
-import { StyleSheet, Animated, View, TouchableOpacity } from 'react-native'
+import React, { useEffect } from 'react'
+import { Animated, StyleSheet, TouchableOpacity } from 'react-native'
 export interface SwitcherOptions {
     onTurnOn?: () => void,
     onTurnOff?: () => void,

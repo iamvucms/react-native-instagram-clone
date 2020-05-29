@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { StyleSheet, Text, View, LayoutChangeEvent } from 'react-native'
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native'
 import { SCREEN_WIDTH } from '../../constants'
 export interface CirclePaginationProps {
     maxPage: number,
