@@ -13,9 +13,10 @@ export interface CommentInputPopupProps {
     preValue?: string,
     replyToCommentId?: number,
     replyToCommentUsername?: string,
+    onDone?: () => void
 }
 const index = ({ commentInputRef, preValue,
-    replyToCommentId, replyToCommentUsername,
+    replyToCommentId, replyToCommentUsername, onDone,
     setCommentContents, id }: CommentInputPopupProps) => {
     const dispatch = useDispatch()
     const user = useSelector(state => state.user.user)
@@ -59,7 +60,7 @@ const index = ({ commentInputRef, preValue,
                 _onHideReplyLabel()
                 setCommenting(false)
                 setText('')
-                Keyboard.dismiss()
+                if (onDone) onDone()
             })
 
         } else (async () => {
@@ -67,7 +68,7 @@ const index = ({ commentInputRef, preValue,
         })().then(() => {
             setCommenting(false)
             setText('')
-            Keyboard.dismiss()
+            if (onDone) onDone()
             if (setCommentContents) setCommentContents(id, '')
         })
 

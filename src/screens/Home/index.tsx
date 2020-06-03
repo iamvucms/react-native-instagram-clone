@@ -152,6 +152,7 @@ const index = () => {
 
                 </ScrollView>
                 {showCommentInput && <CommentInputPopup
+                    onDone={setShowCommentInput.bind(null, false)}
                     setCommentContents={_setCommentContents}
                     id={ref.current.currentCommentId}
                     preValue={ref.current.commentContents
