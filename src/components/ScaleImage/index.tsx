@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { StyleSheet, Text, View, Image, ImageProps } from 'react-native'
+import { Image, StyleSheet } from 'react-native'
+import FastImage, { FastImageProps } from 'react-native-fast-image'
 import { SCREEN_WIDTH } from '../../constants'
-export interface ScaleImageProps extends ImageProps {
+export interface ScaleImageProps extends FastImageProps {
     width?: number,
     height?: number,
     source: {
@@ -22,8 +23,9 @@ const index = (props: ScaleImageProps) => {
         }
     }, Function)
     return (
-        <Image {...filteredProps} source={{
+        <FastImage {...filteredProps} source={{
             uri: filteredProps.source.uri,
+            priority: FastImage.priority.high
         }} style={[filteredProps.style, {
             width: rwidth > 0 ? rwidth : (props.width || SCREEN_WIDTH),
             height: rheight,

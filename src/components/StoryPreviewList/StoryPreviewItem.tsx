@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 import { ExtraStory, seenTypes } from '../../reducers/storyReducer'
+import FastImage from 'react-native-fast-image'
 export interface StoryPreviewItemProps {
     item: ExtraStory
 }
@@ -116,7 +117,7 @@ const StoryPreviewItem = ({ item: { ownUser, storyList } }: StoryPreviewItemProp
                         onPress={_onShowStory}
                         activeOpacity={0.8}
                         style={styles.imageWrapper}>
-                        <Image style={styles.image}
+                        <FastImage style={styles.image}
                             source={{ uri: ownUser?.avatarURL }} />
                     </TouchableOpacity>
                 </View>

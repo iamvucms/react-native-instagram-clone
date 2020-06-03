@@ -23,7 +23,6 @@ export const LoginRequest = (user: userLoginWithEmail):
                             navigate('HomeTab') //ADD this line to fix initialRouteName not working on first time
                             const result: userPayload = {
                                 user: {
-                                    email: userx.email,
                                     logined: true,
                                     firebaseUser: userx,
                                     userInfo: snap.docs[0].data()
@@ -265,6 +264,77 @@ export const FollowUsersFailure = ():
         payload: {
             message: `Error! Can't send following request`
         }
+    }
+}
+//UPDATE USER INFO ACTIONS 
+export const UpdateUserInfoRequest = (updateUserData: UserInfo):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            let me: UserInfo = { ...store.getState().user.user.userInfo }
+            const ref = firestore()
+            const rq = await ref.collection('users')
+                .where('username', '==', me.username).get()
+            if (rq.size > 0) {
+                const userData: UserInfo = rq.docs[0].data()
+                const userRef = rq.docs[0].ref
+                const userInfo = {
+                    ...userData,
+                    ...updateUserData
+                }
+                const { email,
+                    avatarURL,
+                    bio,
+                    birthday,
+                    followings,
+                    fullname,
+                    gender,
+                    phone,
+                    username,
+                    website
+                } = userInfo
+                const filterdUserInfo: UserInfo = {
+                    email,
+                    avatarURL,
+                    bio,
+                    birthday,
+                    followings,
+                    fullname,
+                    gender,
+                    phone,
+                    username,
+                    website
+                }
+                if (userInfo.username !== me.username) {
+                    ref.collection('users')
+                        .doc(userInfo.username)
+                        .set(userInfo)
+                    ref.collection('users').doc(me.username).delete()
+                } else userRef.update(userInfo)
+
+                dispatch(UpdateUserInfoSuccess(filterdUserInfo))
+            } else {
+                dispatch(UpdateUserInfoFailure())
+            }
+
+        } catch (e) {
+            console.warn(e)
+            dispatch(UpdateUserInfoFailure())
+        }
+    }
+}
+export const UpdateUserInfoFailure = (): ErrorAction => {
+    return {
+        type: userActionTypes.UPDATE_USER_INFO_FAILURE,
+        payload: {
+            message: `Can't update now, try again!`
+        }
+    }
+}
+export const UpdateUserInfoSuccess = (user: UserInfo): SuccessAction<UserInfo> => {
+    return {
+        type: userActionTypes.UPDATE_USER_INFO_SUCCESS,
+        payload: user
     }
 }
 //UPDATE NOTIFICATION ACTIONS

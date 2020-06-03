@@ -1,11 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { StyleSheet, TextInput, TouchableOpacity, View, Animated, TextInputProps, StyleProp, ViewStyle } from 'react-native'
+import { StyleSheet, TextInput, TouchableOpacity, View, Animated, TextInputProps, StyleProp, ViewStyle, Image } from 'react-native'
 export interface InputProps extends TextInputProps {
     value: string,
     onChangeText: React.Dispatch<React.SetStateAction<string>>,
     name: string,
     containerStyle?: StyleProp<ViewStyle>,
-    errorMsg?: string
+    errorMsg?: string,
 }
 const MaterialInput = ({
     errorMsg,
@@ -55,6 +55,21 @@ const MaterialInput = ({
             height: 66
         }]}>
             <View style={styles.inputContainer}>
+                {errorMsg && <View style={{
+                    position: 'absolute',
+                    height: 44,
+                    bottom: 0,
+                    right: 0,
+                    width: 44,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}>
+
+                    <Image style={{
+                        width: 20,
+                        height: 20
+                    }} source={require('../../assets/icons/caution.png')} />
+                </View>}
                 <TextInput
                     {...rest}
                     value={value}
@@ -90,7 +105,7 @@ const MaterialInput = ({
                             }),
                             color: errorMsg ? 'red' : "#999"
                         }}>
-                            {name}
+                            {errorMsg ? errorMsg : name}
                         </Animated.Text>
                     </TouchableOpacity>
                 </Animated.View>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, SetStateAction } from 'react'
-import { StyleSheet, Text, View, Image, TouchableOpacity, Platform } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Platform } from 'react-native'
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
+import FastImage from 'react-native-fast-image'
 import PhotoShower from './PhotoShower'
 import { ExtraPost } from '../../reducers/postReducer'
 import { useSelector } from '../../reducers'
@@ -91,7 +92,7 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                 <View
                     style={styles.infoWrapper}>
                     <TouchableOpacity>
-                        <Image style={styles.avatar}
+                        <FastImage style={styles.avatar}
                             source={{ uri: item.ownUser?.avatarURL }} />
                     </TouchableOpacity>
                     <Text style={{
@@ -185,7 +186,7 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                     activeOpacity={1}
                     style={styles.commentInputWrapper}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Image source={{ uri: user.userInfo?.avatarURL }}
+                        <FastImage source={{ uri: user.userInfo?.avatarURL, priority: FastImage.priority.high }}
                             style={styles.commentAvatar} />
                         <Text style={{
                             color: "#666",

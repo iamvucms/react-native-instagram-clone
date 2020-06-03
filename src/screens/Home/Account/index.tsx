@@ -1,15 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Animated, Image, ImageBackground, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import FastImage from 'react-native-fast-image'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useDispatch } from 'react-redux'
 import { FetchExtraInfoRequest } from '../../../actions/userActions'
+import AccountGallery from '../../../components/AccountGallery'
 import { getTabBarHeight } from '../../../components/BottomTabBar'
-import GalleryImageItem from '../../../components/GalleryImageItem'
 import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../../constants'
 import { navigate } from '../../../navigations/rootNavigation'
 import { useSelector } from '../../../reducers'
 import { Post } from '../../../reducers/postReducer'
-
 const index = () => {
     const dispatch = useDispatch()
     const [selectedPhoto, setSelectedPhoto] = useState<Post>({})
@@ -80,6 +80,9 @@ const index = () => {
     ].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0))
 
     useEffect(() => {
+        if (photos) {
+            FastImage.preload(photos.map(x => ({ uri: x.source ? x.source[0] : '' })))
+        }
         (async () => {
             setRefreshing(true)
             await dispatch(FetchExtraInfoRequest())
@@ -346,7 +349,7 @@ const index = () => {
                             alignItems: 'center',
                             width: '100%'
                         }}>
-                            <Image
+                            <FastImage
                                 style={{
                                     width: 30,
                                     height: 30,
@@ -354,11 +357,19 @@ const index = () => {
                                     marginLeft: 15,
                                     marginRight: 10,
                                 }}
-                                source={{ uri: user.userInfo?.avatarURL }} />
+                                source={{ uri: user.userInfo?.avatarURL, priority: FastImage.priority.normal }} />
                             <Text style={{ fontWeight: '500' }}>{user.userInfo?.username}</Text>
                         </View>
-                        <Animated.Image source={{ uri: selectedPhoto.source[0] }}
-                            height={_popupImageHeight} width={_popupImageWidth} />
+                        <Animated.View style={{
+                            height: _popupImageHeight,
+                            width: _popupImageWidth
+                        }}>
+                            <FastImage style={{
+                                width: '100%',
+                                height: '100%'
+                            }} source={{ uri: selectedPhoto.source[0], priority: FastImage.priority.high }}
+                            />
+                        </Animated.View>
                     </Animated.View>
                 </ImageBackground>
             </View>}
@@ -430,7 +441,7 @@ const index = () => {
                             <View onLayout={_onSetHeaderHeight}>
                                 <View style={styles.infoWrapper}>
                                     <TouchableOpacity style={styles.avatarWrapper}>
-                                        <Image style={styles.mainAvatar}
+                                        <FastImage style={styles.mainAvatar}
                                             source={{ uri: user?.userInfo?.avatarURL }} />
                                         <View style={styles.plusIcon}>
                                             <Icon name="plus" size={20} color="#fff" />
@@ -517,19 +528,16 @@ const index = () => {
                                         }}
                                         activeOpacity={1}
                                     >
-                                        <View style={styles.imageWrapper}>
-                                            {photos && photos.map((photo, index) => (
-                                                <GalleryImageItem
-                                                    _hidePopupImage={_hidePopupImage}
-                                                    _showPopupImage={_showPopupImage}
-                                                    key={index}
-                                                    index={index}
-                                                    photo={photo} />
-                                            ))}
-                                        </View>
-                                        <View style={styles.imageWrapper}>
-
-                                        </View>
+                                        <AccountGallery
+                                            photos={photos || []}
+                                            hidePopupImage={_hidePopupImage}
+                                            showPopupImage={_showPopupImage}
+                                        />
+                                        <AccountGallery
+                                            photos={[]}
+                                            hidePopupImage={_hidePopupImage}
+                                            showPopupImage={_showPopupImage}
+                                        />
                                     </TouchableOpacity>
                                 </ScrollView>
                             </View>
@@ -579,7 +587,7 @@ const index = () => {
                                                         bottom: -5,
                                                         right: -5
                                                     }}>
-                                                        <Image style={{
+                                                        <FastImage style={{
                                                             width: 24,
                                                             height: 24,
                                                             borderRadius: 24,
@@ -801,15 +809,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         width: SCREEN_WIDTH / 2
     },
-    imageWrapper: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        width: SCREEN_WIDTH,
-        backgroundColor: '#fff',
-        paddingVertical: 5,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd'
-    },
+
 
     recommend: {
         marginVertical: 20

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
-import { Image, StyleSheet, TouchableOpacity } from 'react-native'
+import { StyleSheet, TouchableOpacity } from 'react-native'
+import FastImage from 'react-native-fast-image'
 import { SCREEN_WIDTH } from '../../constants'
 import { Post } from '../../reducers/postReducer'
 export interface GalleryImageItem {
@@ -10,9 +11,9 @@ export interface GalleryImageItem {
 }
 const index = ({ index, _showPopupImage, _hidePopupImage, photo }: GalleryImageItem) => {
     const [containerWidth, setContainerWidth] = useState<number>(0)
-    const imageRef = useRef<Image>(null)
+    const containerRef = useRef<TouchableOpacity>(null)
     const _onLongPressHandler = () => {
-        imageRef.current?.measure((x, y, w, h, pX, pY) => {
+        containerRef.current?.measure((x, y, w, h, pX, pY) => {
             _showPopupImage({ pX, pY, w, h }, photo)
         })
     }
@@ -21,6 +22,7 @@ const index = ({ index, _showPopupImage, _hidePopupImage, photo }: GalleryImageI
     }
     return (
         <TouchableOpacity
+            ref={containerRef}
             delayLongPress={300}
             onLongPress={_onLongPressHandler}
             onPressOut={_onPressOutHandler}
@@ -29,7 +31,7 @@ const index = ({ index, _showPopupImage, _hidePopupImage, photo }: GalleryImageI
                 ...styles.photoWrapper,
                 marginRight: (index + 1) % 3 === 0 ? 0 : 5,
             }} key={index}>
-            {photo && <Image ref={imageRef} source={{
+            {photo && <FastImage source={{
                 uri: photo.source && photo.source[0]
             }} style={styles.photo} />}
         </TouchableOpacity>

@@ -12,6 +12,9 @@ export const userActionTypes = {
     FETCH_EXTRA_INFO_REQUEST: 'FETCH_EXTRA_INFO_REQUEST',
     FETCH_EXTRA_INFO_SUCCESS: 'FETCH_EXTRA_INFO_SUCCESS',
     FETCH_EXTRA_INFO_FAILURE: 'FETCH_EXTRA_INFO_FAILURE',
+    UPDATE_USER_INFO_REQUEST: 'UPDATE_USER_INFO_REQUEST',
+    UPDATE_USER_INFO_SUCCESS: 'UPDATE_USER_INFO_SUCCESS',
+    UPDATE_USER_INFO_FAILURE: 'UPDATE_USER_INFO_FAILURE',
     UNFOLLOW_REQUEST: 'UNFOLLOW_REQUEST',
     UNFOLLOW_SUCCESS: 'UNFOLLOW_SUCCESS',
     UNFOLLOW_FAILURE: 'UNFOLLOW_FAILURE',
@@ -166,7 +169,6 @@ export type UserSetting = {
 }
 export interface userPayload {
     user: {
-        email?: string | null,
         logined?: boolean,
         firebaseUser?: firebase.UserInfo,
         userInfo?: UserInfo
@@ -395,6 +397,24 @@ const reducer = (state: userPayload = defaultState, action: userAction): userPay
             }
             return state
         case userActionTypes.UPDATE_PRIVACY_SETTING_FAILURE:
+            action = <ErrorAction>action
+            Alert.alert('Error', action.payload.message)
+            return state
+        case userActionTypes.UPDATE_USER_INFO_REQUEST:
+            state = { ...state }
+            return state
+        case userActionTypes.UPDATE_USER_INFO_SUCCESS:
+            action = <SuccessAction<UserInfo>>action
+            state = {
+                ...state, user: {
+                    ...state.user,
+                    userInfo: {
+                        ...action.payload
+                    }
+                }
+            }
+            return state
+        case userActionTypes.UPDATE_USER_INFO_FAILURE:
             action = <ErrorAction>action
             Alert.alert('Error', action.payload.message)
             return state
