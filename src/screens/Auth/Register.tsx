@@ -105,7 +105,7 @@ const Register = () => {
     const SchemaStep1 = yup.object().shape({
         phone: yup.string().when('email', {
             is: (email: string) => !email || currentTab === 1,
-            then: yup.string().min(6).matches(/[0-6]{6,}/).required()
+            then: yup.string().min(6).matches(/[0-9]{6,}/).required()
         }),
         email: yup.string().when('phone', {
             is: (phone: string) => !phone || currentTab === 2,
@@ -699,6 +699,7 @@ const styles = StyleSheet.create({
     inputPhone: {
         width: '100%',
         height: 44,
+        fontSize: 16,
         paddingRight: 44,
         paddingLeft: 90,
         backgroundColor: 'rgb(242,242,242)'
