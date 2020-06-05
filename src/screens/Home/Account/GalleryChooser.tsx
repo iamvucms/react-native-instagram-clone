@@ -6,10 +6,16 @@ import { Animated, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View
 import { FlatList, PanGestureHandler, PinchGestureHandlerGestureEvent, PanGestureHandlerGestureEvent, PinchGestureHandler, State } from 'react-native-gesture-handler'
 import { Circle, Mask, Rect, Svg } from 'react-native-svg'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { SCREEN_WIDTH } from '../../../constants'
+import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../../../constants'
 import { SuperRootStackParamList } from '../../../navigations'
-import { goBack } from '../../../navigations/rootNavigation'
+import { goBack, navigate } from '../../../navigations/rootNavigation'
 import AvatarChooserMask from '../../../components/AvatarChooserMask'
+import ImageEditor, { ImageCropData } from '@react-native-community/image-editor'
+import { storage } from 'firebase'
+import { uriToBlob } from '../../../utils'
+import { useSelector } from '../../../reducers'
+import { UpdateUserInfoRequest } from '../../../actions/userActions'
+import { useDispatch } from 'react-redux'
 type GalleryChooserRouteProp = RouteProp<SuperRootStackParamList, 'GalleryChooser'>
 
 type GalleryChooserNavigationProp = StackNavigationProp<SuperRootStackParamList, 'GalleryChooser'>
@@ -20,6 +26,8 @@ type GalleryChooserProps = {
 }
 
 const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
+    const dispatch = useDispatch()
+    const user = useSelector(state => state.user.user.userInfo)
     const isChooseProfilePhoto = route.params.isChooseProfilePhoto
     const [selectedIndex, setSelectedIndex] = useState<number>(-1)
     const [photos, setPhotos] = useState<CameraRoll.PhotoIdentifier[]>([])
@@ -36,6 +44,20 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
             preRatio: number
         }
     }>({ preventNextScaleOffset: true, currentPhoto: { preX: 0, preY: 0, preRatio: 1 } })
+    const [uploading, setUploading] = useState<boolean>(false)
+    const _loadingDeg = new Animated.Value(0)
+    const _animateLoading = () => {
+        Animated.timing(_loadingDeg, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: false
+        }).start(() => {
+            if (uploading) {
+                _loadingDeg.setValue(0)
+                _animateLoading()
+            }
+        })
+    }
     useEffect(() => {
         CameraRoll.getPhotos({ assetType: 'Photos', first: 20 })
             .then(result => {
@@ -152,8 +174,80 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
             }
         }
     }
+    const _onDone = () => {
+        setUploading(true)
+        if (isChooseProfilePhoto) {
+            const cropData: ImageCropData = {
+                offset: {
+                    x: Math.abs(ref.current.currentPhoto.preX / ref.current.currentPhoto.preRatio),
+                    y: Math.abs(ref.current.currentPhoto.preY / ref.current.currentPhoto.preRatio)
+                },
+                size: {
+                    width: SCREEN_WIDTH
+                        / ref.current.currentPhoto.preRatio,
+                    height: SCREEN_WIDTH
+                        / ref.current.currentPhoto.preRatio
+                },
+            };
+            const img = photos[selectedIndex].node
+            ImageEditor
+                .cropImage(img.image.uri, cropData)
+                .then(uri => {
+                    const splitedName: string[] = img.image.filename.split('.')
+                    const extesion: string = splitedName[splitedName.length - 1].toLowerCase()
+                    uriToBlob(uri).then(blob => {
+                        storage().ref().child(`avatar/${user?.username}${new Date().getTime()}.${extesion}`).put(blob as Blob, {
+                            contentType: `image/${extesion}`
+                        }).then(result => {
+                            result.ref.getDownloadURL().then(uri => {
+                                dispatch(UpdateUserInfoRequest({
+                                    avatarURL: uri
+                                }))
+                                setUploading(false)
+                                navigate('Account')
+                            })
+                        })
+                    })
+
+                })
+        }
+    }
     return (
         <SafeAreaView style={styles.container}>
+            {uploading &&
+                <View style={{
+                    zIndex: 999,
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    height: SCREEN_HEIGHT,
+                    width: SCREEN_WIDTH,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: 'rgba(0,0,0,0.3)'
+                }}>
+                    <View style={styles.uploadingContainer}>
+                        <Animated.Image
+                            onLayout={_animateLoading}
+                            style={{
+                                height: 36,
+                                width: 36,
+                                marginRight: 10,
+                                transform: [{
+                                    rotate: _loadingDeg.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: ['0deg', '360deg']
+                                    })
+                                }]
+                            }}
+                            source={require('../../../assets/icons/waiting.png')} />
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: '500'
+                        }}>{isChooseProfilePhoto ? 'Uploading Photo...' : ''}</Text>
+                    </View>
+                </View>
+            }
             <>
                 <View style={styles.navigationBar}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -179,15 +273,17 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                                 </TouchableOpacity>
                             </ScrollView> */}
                     </View>
-                    <TouchableOpacity style={{
-                        ...styles.centerBtn,
-                        width: 60
-                    }}>
+                    <TouchableOpacity
+                        onPress={_onDone}
+                        style={{
+                            ...styles.centerBtn,
+                            width: 60
+                        }}>
                         <Text style={{
                             fontSize: 16,
                             fontWeight: '600',
                             color: '#318bfb'
-                        }}>Next</Text>
+                        }}>{isChooseProfilePhoto ? 'Done' : 'Next'}</Text>
                     </TouchableOpacity>
                 </View>
                 <View style={{
@@ -306,5 +402,15 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         width: '100%',
         padding: 15,
-    }
+    },
+    uploadingContainer: {
+        zIndex: 1,
+        width: '80%',
+        padding: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 5,
+    },
 })
