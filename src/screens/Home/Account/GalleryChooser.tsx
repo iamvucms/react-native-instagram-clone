@@ -1,21 +1,18 @@
 import CameraRoll from '@react-native-community/cameraroll'
+import ImageEditor, { ImageCropData } from '@react-native-community/image-editor'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useEffect, useRef, useState } from 'react'
-import { Animated, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { FlatList, PanGestureHandler, PinchGestureHandlerGestureEvent, PanGestureHandlerGestureEvent, PinchGestureHandler, State } from 'react-native-gesture-handler'
-import { Circle, Mask, Rect, Svg } from 'react-native-svg'
+import { Animated, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native'
+import { FlatList, PanGestureHandler, PanGestureHandlerGestureEvent, PinchGestureHandler, PinchGestureHandlerGestureEvent, State } from 'react-native-gesture-handler'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../../../constants'
+import { useDispatch } from 'react-redux'
+import { UploadAvatarRequest } from '../../../actions/userActions'
+import AvatarChooserMask from '../../../components/AvatarChooserMask'
+import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../../../constants'
 import { SuperRootStackParamList } from '../../../navigations'
 import { goBack, navigate } from '../../../navigations/rootNavigation'
-import AvatarChooserMask from '../../../components/AvatarChooserMask'
-import ImageEditor, { ImageCropData } from '@react-native-community/image-editor'
-import { storage } from 'firebase'
-import { uriToBlob } from '../../../utils'
 import { useSelector } from '../../../reducers'
-import { UpdateUserInfoRequest } from '../../../actions/userActions'
-import { useDispatch } from 'react-redux'
 type GalleryChooserRouteProp = RouteProp<SuperRootStackParamList, 'GalleryChooser'>
 
 type GalleryChooserNavigationProp = StackNavigationProp<SuperRootStackParamList, 'GalleryChooser'>
@@ -27,14 +24,16 @@ type GalleryChooserProps = {
 
 const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
     const dispatch = useDispatch()
-    const user = useSelector(state => state.user.user.userInfo)
-    const isChooseProfilePhoto = route.params.isChooseProfilePhoto
+    const [showGroupSelection, setShowGroupSelection] = useState<boolean>(false)
+    const isChooseProfilePhoto = route.params?.isChooseProfilePhoto
     const [selectedIndex, setSelectedIndex] = useState<number>(-1)
+    const [selectedGroupIndex, setSelectedGroupIndex] = useState<number>(-1)
     const [photos, setPhotos] = useState<CameraRoll.PhotoIdentifier[]>([])
+    const [groups, setGroups] = useState<string[]>([])
     const [enableGesture, setEnableGesture] = useState<boolean>(true)
     const [step, setStep] = useState<number>(1)
-    const _photoOffsetX = new Animated.Value(0)
-    const _photoOffsetY = new Animated.Value(0)
+    const _photoOffsetX = React.useMemo(() => new Animated.Value(0), [])
+    const _photoOffsetY = React.useMemo(() => new Animated.Value(0), [])
     const _photoRatio = React.useMemo(() => new Animated.Value(1), [])
     const ref = useRef<{
         preventNextScaleOffset: boolean,
@@ -58,17 +57,36 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
             }
         })
     }
+
     useEffect(() => {
         CameraRoll.getPhotos({ assetType: 'Photos', first: 20 })
             .then(result => {
                 const photos = result.edges
+                const groups = Array.from(new Set(photos.map(photo => photo.node.group_name)))
+                setGroups(groups)
+                if (groups.length > 0) setSelectedGroupIndex(0)
                 setPhotos(photos)
                 if (photos.length > 0) setSelectedIndex(0)
             })
         return () => {
-            // cleanup
         }
     }, [])
+    useEffect(() => {
+        if (selectedGroupIndex > -1) {
+            CameraRoll.getPhotos({ assetType: 'Photos', first: 20, groupName: groups[selectedGroupIndex] })
+                .then(result => {
+                    const photos = result.edges
+                    const groups = Array.from(new Set(photos.map(photo => photo.node.group_name)))
+                    setGroups(groups)
+                    setSelectedGroupIndex(0)
+                    setPhotos(photos)
+                    if (photos.length > 0) setSelectedIndex(0)
+                })
+        }
+        return () => {
+
+        }
+    }, [selectedGroupIndex])
     useEffect(() => {
         if (selectedIndex > -1) {
             ref.current.preventNextScaleOffset = true
@@ -93,7 +111,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
     const _onPanGestureEvent = ({
         nativeEvent: { translationX, translationY } }:
         PanGestureHandlerGestureEvent) => {
-
+        if (showGroupSelection) setShowGroupSelection(false)
         if (ref.current.preventNextScaleOffset) {
             _photoOffsetX.setValue((translationX + ref.current.currentPhoto.preX))
             _photoOffsetY.setValue((translationY + ref.current.currentPhoto.preY))
@@ -120,7 +138,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                     toValue: 0
                 }).start(() => ref.current.currentPhoto.preY = 0)
             }
-            if (photos[selectedIndex].node.image.height * ref.current.currentPhoto.preRatio + ref.current.currentPhoto.preRatio * ref.current.currentPhoto.preY - SCREEN_WIDTH < 0) {
+            if (photos[selectedIndex].node.image.height * ref.current.currentPhoto.preRatio + (ref.current.preventNextScaleOffset ? ref.current.currentPhoto.preY : ref.current.currentPhoto.preRatio * ref.current.currentPhoto.preY) - SCREEN_WIDTH < 0) {
                 Animated.spring(_photoOffsetY, {
                     useNativeDriver: false,
                     toValue: -(photos[selectedIndex].node.image.height * ref.current.currentPhoto.preRatio - SCREEN_WIDTH)
@@ -143,6 +161,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
     const _onPinchGestureEvent = ({
         nativeEvent: { scale } }:
         PinchGestureHandlerGestureEvent) => {
+        if (showGroupSelection) setShowGroupSelection(false)
         if (ref.current.preventNextScaleOffset) {
             _photoOffsetX.setValue(ref.current.currentPhoto.preX * scale)
             _photoOffsetY.setValue(ref.current.currentPhoto.preY * scale)
@@ -150,14 +169,18 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
             _photoOffsetX.setValue(ref.current.currentPhoto.preX * (scale * ref.current.currentPhoto.preRatio))
             _photoOffsetY.setValue(ref.current.currentPhoto.preY * (scale * ref.current.currentPhoto.preRatio))
         }
-
         _photoRatio.setValue(scale * ref.current.currentPhoto.preRatio)
     }
     const _onPinchStateChange = ({
         nativeEvent: { scale, state } }:
         PinchGestureHandlerGestureEvent) => {
         if (state === State.END) {
+            if (ref.current.preventNextScaleOffset) {
+                ref.current.currentPhoto.preX /= ref.current.currentPhoto.preRatio
+                ref.current.currentPhoto.preY /= ref.current.currentPhoto.preRatio
+            }
             ref.current.preventNextScaleOffset = false
+
             ref.current.currentPhoto.preRatio *= scale
             const defaultRatio = SCREEN_WIDTH /
                 (photos[selectedIndex].node.image.height
@@ -174,7 +197,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
             }
         }
     }
-    const _onDone = () => {
+    const _onDone = async () => {
         setUploading(true)
         if (isChooseProfilePhoto) {
             const cropData: ImageCropData = {
@@ -190,26 +213,18 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                 },
             };
             const img = photos[selectedIndex].node
-            ImageEditor
+            const uri = await ImageEditor
                 .cropImage(img.image.uri, cropData)
-                .then(uri => {
-                    const splitedName: string[] = img.image.filename.split('.')
-                    const extesion: string = splitedName[splitedName.length - 1].toLowerCase()
-                    uriToBlob(uri).then(blob => {
-                        storage().ref().child(`avatar/${user?.username}${new Date().getTime()}.${extesion}`).put(blob as Blob, {
-                            contentType: `image/${extesion}`
-                        }).then(result => {
-                            result.ref.getDownloadURL().then(uri => {
-                                dispatch(UpdateUserInfoRequest({
-                                    avatarURL: uri
-                                }))
-                                setUploading(false)
-                                navigate('Account')
-                            })
-                        })
-                    })
-
-                })
+            const extension = photos[selectedIndex].node.image.filename
+                .split('.').pop()?.toLocaleLowerCase()
+            await dispatch(UploadAvatarRequest(uri, extension as string))
+            setUploading(false)
+            navigate('Account')
+        } else {
+            if (step === 1) setStep(2)
+            else {
+                setUploading(false)
+            }
         }
     }
     return (
@@ -248,99 +263,113 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                     </View>
                 </View>
             }
-            <>
-                <View style={styles.navigationBar}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <TouchableOpacity
-                            onPress={goBack}
-                            style={styles.centerBtn}>
-                            <Icon name="arrow-left" size={20} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{
+            <View style={styles.navigationBar}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity
+                        onPress={goBack}
+                        style={styles.centerBtn}>
+                        <Icon name="arrow-left" size={20} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={setShowGroupSelection.bind(null, true)}
+                        style={{
                             marginLeft: 15,
                             flexDirection: 'row',
                             alignItems: 'center'
                         }}>
-                            <Text style={{
-                                fontSize: 16,
-                                fontWeight: '600'
-                            }}>Gallery</Text>
-                            <Icon name="chevron-down" size={20} />
-                        </TouchableOpacity>
-                        {/* <ScrollView style={styles.groupOptionsWrapper}>
-                                <TouchableOpacity>
-                                    <Text>aaaa</Text>
-                                </TouchableOpacity>
-                            </ScrollView> */}
-                    </View>
-                    <TouchableOpacity
-                        onPress={_onDone}
-                        style={{
-                            ...styles.centerBtn,
-                            width: 60
-                        }}>
                         <Text style={{
                             fontSize: 16,
-                            fontWeight: '600',
-                            color: '#318bfb'
-                        }}>{isChooseProfilePhoto ? 'Done' : 'Next'}</Text>
+                            fontWeight: '600'
+                        }}>{selectedGroupIndex > -1 ? groups[selectedGroupIndex] : '--'}</Text>
+                        <Icon name="chevron-down" size={20} />
                     </TouchableOpacity>
+                    {showGroupSelection && <ScrollView
+                        bounces={false}
+                        contentContainerStyle={{
+                            alignItems: 'flex-end',
+                        }}
+                        style={styles.groupOptionsWrapper}
+                    >
+                        {showGroupSelection && groups.map((group, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                activeOpacity={0.8}
+                                onPress={() => setSelectedGroupIndex(index)}>
+                                <Text style={{
+                                    fontSize: 16,
+                                    color: index === selectedGroupIndex ? '#000' : '#999'
+                                }}>{group}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>}
                 </View>
-                <View style={{
-                    height: SCREEN_WIDTH,
-                    width: SCREEN_WIDTH,
-                    overflow: "hidden"
-                }}>
-                    {selectedIndex > -1 &&
-                        <View >
-                            <Animated.View style={{
-                                transform: [
-                                    {
-                                        translateX: _photoOffsetX,
-                                    }, {
-                                        translateY: _photoOffsetY,
-                                    }
-                                ],
-                                width: Animated.multiply(photos[selectedIndex].node.image.width, _photoRatio),
-                                height: Animated.multiply(photos[selectedIndex].node.image.height, _photoRatio)
-                            }}>
-                                <Image
-                                    style={{
-                                        width: '100%',
-                                        height: '100%'
-                                    }} source={{ uri: photos[selectedIndex].node.image.uri || '' }} />
-                            </Animated.View>
+                <TouchableOpacity
+                    onPress={_onDone}
+                    style={{
+                        ...styles.centerBtn,
+                        width: 60
+                    }}>
+                    <Text style={{
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#318bfb'
+                    }}>{isChooseProfilePhoto ? 'Done' : 'Next'}</Text>
+                </TouchableOpacity>
+            </View>
+            <View style={{
+                height: SCREEN_WIDTH,
+                width: SCREEN_WIDTH,
+                overflow: "hidden"
+            }}>
+                {selectedIndex > -1 &&
+                    <View >
+                        <Animated.View style={{
+                            transform: [
+                                {
+                                    translateX: _photoOffsetX,
+                                }, {
+                                    translateY: _photoOffsetY,
+                                }
+                            ],
+                            width: Animated.multiply(photos[selectedIndex].node.image.width, _photoRatio),
+                            height: Animated.multiply(photos[selectedIndex].node.image.height, _photoRatio)
+                        }}>
+                            <Image
+                                style={{
+                                    width: '100%',
+                                    height: '100%'
+                                }} source={{ uri: photos[selectedIndex].node.image.uri || '' }} />
+                        </Animated.View>
+
+                    </View>
+                }
+                <PinchGestureHandler
+                    enabled={enableGesture}
+                    onHandlerStateChange={_onPinchStateChange}
+                    onGestureEvent={_onPinchGestureEvent}>
+                    <PanGestureHandler
+                        enabled={enableGesture}
+                        onHandlerStateChange={_onPanStateChange}
+                        onGestureEvent={_onPanGestureEvent}>
+                        <View style={{
+                            width: '100%',
+                            height: '100%',
+                            position: 'absolute',
+                            zIndex: 1,
+                            left: 0,
+                            top: 0
+                        }}>
+                            {isChooseProfilePhoto &&
+                                <AvatarChooserMask
+                                    maskColor="rgba(242,242,242,0.3)"
+                                    width={SCREEN_WIDTH}
+                                    height={SCREEN_WIDTH} />
+                            }
 
                         </View>
-                    }
-                    <PinchGestureHandler
-                        enabled={enableGesture}
-                        onHandlerStateChange={_onPinchStateChange}
-                        onGestureEvent={_onPinchGestureEvent}>
-                        <PanGestureHandler
-                            enabled={enableGesture}
-                            onHandlerStateChange={_onPanStateChange}
-                            onGestureEvent={_onPanGestureEvent}>
-                            <View style={{
-                                width: '100%',
-                                height: '100%',
-                                position: 'absolute',
-                                zIndex: 1,
-                                left: 0,
-                                top: 0
-                            }}>
-                                {isChooseProfilePhoto &&
-                                    <AvatarChooserMask
-                                        maskColor="rgba(242,242,242,0.3)"
-                                        width={SCREEN_WIDTH}
-                                        height={SCREEN_WIDTH} />
-                                }
-
-                            </View>
-                        </PanGestureHandler>
-                    </PinchGestureHandler>
-                </View>
-            </>
+                    </PanGestureHandler>
+                </PinchGestureHandler>
+            </View>
             {step === 1 && <FlatList
                 showsVerticalScrollIndicator={false}
                 bounces={false}
@@ -402,6 +431,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         width: '100%',
         padding: 15,
+        borderColor: '#ddd',
+        borderWidth: 0.5
     },
     uploadingContainer: {
         zIndex: 1,

@@ -3,7 +3,7 @@ import {
     BottomTabBarOptions, BottomTabNavigationOptions,
 } from '@react-navigation/bottom-tabs'
 import React, { useEffect } from 'react'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, Text } from 'react-native'
 import HomeIndex from '../screens/Home'
 import Explore from '../screens/Home/Explore'
 import Creator from '../screens/Home/Creator'
@@ -60,7 +60,7 @@ const Tab = createBottomTabNavigator<HomeTabParamList>()
 const HomeTab = () => {
 
     const tabBarOptions: BottomTabBarOptions = {
-        showLabel: false
+        showLabel: false,
     }
     const navigationOptions: BottomTabNavigationOptions = {
 
@@ -76,10 +76,17 @@ const HomeTab = () => {
                 tabBarIcon: ({ focused }) => <Icon name="magnify"
                     size={30} color={focused ? '#000' : '#ddd'} />
             }} component={Explore} name="Explore" />
-            <Tab.Screen options={{
-                tabBarIcon: ({ focused }) => <Icon name="plus-box"
-                    size={30} color={focused ? '#000' : '#ddd'} />
-            }} component={Creator} name="Creator" />
+            <Tab.Screen
+                listeners={({ navigation, route }) => ({
+                    tabPress: e => {
+                        e.preventDefault();
+                        navigation.navigate('GalleryChooser');
+                    },
+                })}
+                options={{
+                    tabBarIcon: ({ focused }) => <Icon name="plus-box"
+                        size={30} color={'#ddd'} />
+                }} component={Creator} name="Creator" />
             <Tab.Screen options={{
                 tabBarIcon: ({ focused }) => <Icon name="heart"
                     size={30} color={focused ? '#000' : '#ddd'} />

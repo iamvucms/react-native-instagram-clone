@@ -1,10 +1,10 @@
-import { auth, firestore } from 'firebase';
+import { auth, firestore, storage } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
-import { navigate } from "../navigations/rootNavigation";
+import { navigate, dispatch } from "../navigations/rootNavigation";
 import { ErrorAction, PrivacyProperties, ExtraInfoPayload, NotificationSetting, PostStoryCommentOptions, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, NotificationProperties, PrivacySetting, PrivacyCommentOptions } from '../reducers/userReducer';
 import { store } from '../store';
 import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
-import { generateUsernameKeywords } from '../utils';
+import { generateUsernameKeywords, uriToBlob } from '../utils';
 import { DEFAULT_PHOTO_URI } from '../constants';
 export interface userLoginWithEmail {
     email: string,
@@ -453,6 +453,26 @@ export const UpdatePrivacySettingFailure = ():
         type: userActionTypes.UPDATE_PRIVACY_SETTING_FAILURE,
         payload: {
             message: `Error! Can't update setting`
+        }
+    }
+}
+export const UploadAvatarRequest = (uri: string, extension: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const me = store.getState().user.user.userInfo
+            const blob = await uriToBlob(uri)
+            const result = await storage().ref()
+                .child(`avatar/${me?.username}.${extension}`)
+                .put(blob as Blob, {
+                    contentType: `image/${extension}`
+                })
+            const downloadUri = await result.ref.getDownloadURL()
+            dispatch(UpdateUserInfoRequest({
+                avatarURL: downloadUri
+            }))
+        } catch (e) {
+
         }
     }
 }
