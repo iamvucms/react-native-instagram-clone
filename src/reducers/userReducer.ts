@@ -175,6 +175,7 @@ export interface userPayload {
     },
     setting?: UserSetting,
     photos?: Post[],
+    taggedPhotos?: [],
     currentStory?: Story[],
     extraInfo?: ExtraInfo
 }
@@ -200,6 +201,7 @@ export type userAction = SuccessAction<userPayload> | ErrorAction
 const defaultState: userPayload = {
     user: {},
     photos: [],
+    taggedPhotos: [],
     setting: {
         notification: {
             pauseAll: {
