@@ -21,7 +21,22 @@ type GalleryChooserProps = {
     navigation: GalleryChooserNavigationProp,
     route: GalleryChooserRouteProp
 }
-
+export type ProcessedImage = {
+    uri: string,
+    width: number,
+    height: number,
+    extension: string,
+    tags: {
+        x: number,
+        y: number,
+        width?: number,
+        height?: number,
+        showBtnDelete: boolean,
+        animX: Animated.Value,
+        animY: Animated.Value
+        username: string
+    }[]
+}
 const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
     const dispatch = useDispatch()
     const isChooseProfilePhoto = route.params?.isChooseProfilePhoto
@@ -50,10 +65,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
     const [page, setPage] = useState<number>(1)
     const _maskOpacity = React.useMemo(() => new Animated.Value(0), [])
     const ref = useRef<{
-        processedImages: {
-            uri: string,
-            extension: string
-        }[],
+        processedImages: ProcessedImage[],
         maskTimeout: NodeJS.Timeout
         showMask: boolean,
         preventScaleOffset: boolean,
@@ -100,6 +112,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
         }
     }, [])
     useEffect(() => {
+
         if (selectedGroupIndex > -1) {
             CameraRoll.getPhotos({
                 assetType: 'Photos',
@@ -109,7 +122,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                 .then(result => {
                     const photos = result.edges
                     setPhotos(photos)
-                    if (photos.length > 0) setSelectedIndex(0)
+                    if (photos.length > 0 && selectedIndex < 0) setSelectedIndex(0)
                 })
         }
         return () => {
@@ -333,11 +346,15 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                         preventScaleOffset: ref.current.preventScaleOffset,
                         fullSize: ref.current.fullSize
                     })
+                } else if (specs.length === photoList.length) {
+                    specs[photoList.indexOf(selectedIndex)] = {
+                        currentPhoto: { ...ref.current.currentPhoto },
+                        enableGesture,
+                        preventScaleOffset: ref.current.preventScaleOffset,
+                        fullSize: ref.current.fullSize
+                    }
                 }
-                const tasks: Promise<{
-                    uri: string,
-                    extension: string
-                }>[] = photoList.map(async (index, rIndex) => {
+                const tasks: Promise<ProcessedImage>[] = photoList.map(async (index, rIndex) => {
                     const spec = specs[photoList.indexOf(index)]
                     const { width, height } = photos[index].node.image
                     const cropData: ImageCropData = {
@@ -356,7 +373,15 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                     const extension = img.image.filename
                         .split('.').pop()?.toLocaleLowerCase()
                     const uri = await ImageEditor.cropImage(img.image.uri, cropData)
-                    return { uri, extension: extension as string }
+                    return {
+                        uri,
+                        tags: [],
+                        extension: extension as string,
+                        width: (spec.fullSize && height > width) ? width : SCREEN_WIDTH
+                            / spec.currentPhoto.preRatio,
+                        height: (spec.fullSize && height < width) ? height : SCREEN_WIDTH
+                            / spec.currentPhoto.preRatio
+                    }
                 })
                 Promise.all(tasks).then(result => {
                     ref.current.processedImages = result
@@ -460,6 +485,15 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
             }
         }
     }
+    const _onTagPeople = () => {
+        navigation.navigate('TagPeople', {
+            images: [...ref.current.processedImages],
+            onDone: _onTagChange
+        })
+    }
+    const _onTagChange = React.useCallback((images: ProcessedImage[]) => {
+
+    }, [])
     return (
         <SafeAreaView style={styles.container}>
             {uploading &&
@@ -702,18 +736,20 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                         alignItems: 'center',
                         padding: 15
                     }}>
-                        <TouchableOpacity style={{
-                            height: 50,
-                            width: 50
-                        }}>
-                            <View style={{
+                        <TouchableOpacity
+                            onPress={_onGoBack}
+                            style={{
+                                height: 50,
+                                width: 50
+                            }}>
+                            {ref.current.processedImages.length > 1 && <View style={{
                                 position: 'absolute',
                                 zIndex: 1,
                                 top: 5,
                                 right: 5
                             }}>
                                 <Icon name="layers-outline" color="#fff" size={20} />
-                            </View>
+                            </View>}
                             <Image
                                 style={{
                                     width: '100%',
@@ -734,6 +770,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                         backgroundColor: '#000'
                     }}>
                         <TouchableOpacity
+                            onPress={_onTagPeople}
                             activeOpacity={0.9}
                             style={styles.postOptionItem}>
                             <Text style={{

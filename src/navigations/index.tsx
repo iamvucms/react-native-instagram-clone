@@ -7,7 +7,8 @@ import Comment from '../screens/Root/Comment';
 import { navigationRef } from './rootNavigation';
 import RootTab from './RootTab';
 import EditProfile from '../screens/Home/Account/EditProfile';
-import GalleryChooser from '../screens/Home/Account/GalleryChooser';
+import GalleryChooser, { ProcessedImage } from '../screens/Home/Account/GalleryChooser';
+import TagPeople from '../screens/Home/Account/TagPeople';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -17,7 +18,11 @@ export type SuperRootStackParamList = {
         item: ExtraPost
     },
     EditProfile: undefined,
-    GalleryChooser: { isChooseProfilePhoto?: boolean }
+    GalleryChooser: { isChooseProfilePhoto?: boolean },
+    TagPeople: {
+        images: ProcessedImage[],
+        onDone?: (images: ProcessedImage[]) => void
+    }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
 const index = (): JSX.Element => {
@@ -43,6 +48,9 @@ const index = (): JSX.Element => {
                 <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
                 }} name="GalleryChooser" component={GalleryChooser} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                }} name="TagPeople" component={TagPeople} />
             </RootStack.Navigator>
         </NavigationContainer>
     )
