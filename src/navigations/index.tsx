@@ -9,6 +9,8 @@ import RootTab from './RootTab';
 import EditProfile from '../screens/Home/Account/EditProfile';
 import GalleryChooser, { ProcessedImage } from '../screens/Home/Account/GalleryChooser';
 import TagPeople from '../screens/Home/Account/TagPeople';
+import LocationChooser from '../screens/Home/Account/LocationChooser';
+import { MapBoxAddress } from '../utils';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -22,7 +24,11 @@ export type SuperRootStackParamList = {
     TagPeople: {
         images: ProcessedImage[],
         onDone?: (images: ProcessedImage[]) => void
-    }
+    },
+    LocationChooser: {
+        address: MapBoxAddress,
+        onDone?: (address: MapBoxAddress) => void
+    },
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
 const index = (): JSX.Element => {
@@ -51,6 +57,9 @@ const index = (): JSX.Element => {
                 <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
                 }} name="TagPeople" component={TagPeople} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                }} name="LocationChooser" component={LocationChooser} />
             </RootStack.Navigator>
         </NavigationContainer>
     )

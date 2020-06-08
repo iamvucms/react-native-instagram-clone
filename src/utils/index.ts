@@ -1,6 +1,7 @@
 import { firestore } from "firebase"
 import { UserInfo } from "../reducers/userReducer"
 import { store } from "../store"
+import { MAPBOX_ACCESS_TOKEN } from "../constants"
 
 export const timestampToString = (create_at: number, suffix?: boolean): string => {
     let diffTime: string | number = (new Date().getTime() - (create_at || 0)) / 1000
@@ -63,4 +64,29 @@ export const uriToBlob = (uri: string) => {
 
         xhr.send(null);
     });
+}
+export type MapBoxAddress = {
+    id: string,
+    place_name: string,
+}
+export const searchLocation = (query: string): Promise<MapBoxAddress[]> => {
+    return new Promise((resolve, reject) => {
+        fetch(`http://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURI(query)}.json?access_token=${MAPBOX_ACCESS_TOKEN}`)
+            .then(res => res.json())
+            .then(data => {
+                const address: MapBoxAddress[] = []
+                const result: {
+                    features: MapBoxAddress[]
+                } = data
+                result.features.map(feature => {
+                    address.push({
+                        id: feature.id,
+                        place_name: feature.place_name
+                    })
+                })
+                resolve(address)
+            })
+            .catch(err => reject(err))
+    })
+
 }

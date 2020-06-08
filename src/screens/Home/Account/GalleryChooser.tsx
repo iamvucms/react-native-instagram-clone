@@ -3,16 +3,18 @@ import ImageEditor, { ImageCropData } from '@react-native-community/image-editor
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useEffect, useRef, useState } from 'react'
-import { Alert, Animated, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Animated, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, KeyboardAvoidingView } from 'react-native'
 import { FlatList, PanGestureHandler, PanGestureHandlerGestureEvent, PinchGestureHandler, PinchGestureHandlerGestureEvent, State, TextInput } from 'react-native-gesture-handler'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useDispatch } from 'react-redux'
 import { UploadAvatarRequest } from '../../../actions/userActions'
 import AvatarChooserMask from '../../../components/AvatarChooserMask'
 import ImageChooserMask from '../../../components/ImageChooserMask'
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../../../constants'
+import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../../constants'
 import { SuperRootStackParamList } from '../../../navigations'
 import { goBack, navigate } from '../../../navigations/rootNavigation'
+import Switcher from '../../../components/Switcher'
+import { MapBoxAddress } from '../../../utils'
 type GalleryChooserRouteProp = RouteProp<SuperRootStackParamList, 'GalleryChooser'>
 
 type GalleryChooserNavigationProp = StackNavigationProp<SuperRootStackParamList, 'GalleryChooser'>
@@ -41,6 +43,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
     const dispatch = useDispatch()
     const isChooseProfilePhoto = route.params?.isChooseProfilePhoto
     const [showGroupSelection, setShowGroupSelection] = useState<boolean>(false)
+    const [processedImages, setProcessedImages] = useState<ProcessedImage[]>([])
     const [multiple, setMultiple] = useState<boolean>(false)
     const [selectedIndex, setSelectedIndex] = useState<number>(-1)
     const [selectedPhotos, setSelectedPhotos] = useState<number[]>([])
@@ -64,8 +67,17 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
     const _photoRatio = React.useMemo(() => new Animated.Value(1), [])
     const [page, setPage] = useState<number>(1)
     const _maskOpacity = React.useMemo(() => new Animated.Value(0), [])
+    const [showAdvancedSettings, setShowAdvancedSettings] = useState<boolean>(false)
+    const [offComment, setOffComment] = useState<boolean>(false)
+    const [writeAltText, setWriteAltText] = useState<boolean>(false)
+    const [altText, setAltText] = useState<string>('')
+    const [caption, setCaption] = useState<string>('')
+    const [address, setAddress] = useState<MapBoxAddress>({
+        place_name: '',
+        id: ''
+    })
+    const _postToolScrollRef = useRef<ScrollView>(null)
     const ref = useRef<{
-        processedImages: ProcessedImage[],
         maskTimeout: NodeJS.Timeout
         showMask: boolean,
         preventScaleOffset: boolean,
@@ -78,7 +90,6 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
         }
     }>({
         enableGesture: true,
-        processedImages: [],
         fullSize: false,
         maskTimeout: setTimeout(() => { }, 0),
         showMask: false,
@@ -384,7 +395,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                     }
                 })
                 Promise.all(tasks).then(result => {
-                    ref.current.processedImages = result
+                    setProcessedImages([...result])
                     setUploading(false)
                     setStep(2)
                 })
@@ -487,13 +498,16 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
     }
     const _onTagPeople = () => {
         navigation.navigate('TagPeople', {
-            images: [...ref.current.processedImages],
+            images: [...processedImages],
             onDone: _onTagChange
         })
     }
     const _onTagChange = React.useCallback((images: ProcessedImage[]) => {
-
+        setProcessedImages(images)
     }, [])
+    const _onAddressChange = (address: MapBoxAddress) => {
+        setAddress({ ...address })
+    }
     return (
         <SafeAreaView style={styles.container}>
             {uploading &&
@@ -532,6 +546,77 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                     </View>
                 </View>
             }
+            {writeAltText &&
+                <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={setWriteAltText.bind(null, false)}
+                    style={{
+                        zIndex: 999,
+                        position: 'absolute',
+                        left: 0,
+                        top: 0,
+                        height: SCREEN_HEIGHT,
+                        width: SCREEN_WIDTH,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.3)'
+                    }}>
+                    <View style={{
+                        backgroundColor: "#fff",
+                        borderRadius: 10,
+                        width: '80%'
+                    }}>
+                        <View style={{
+                            height: 44,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderBottomColor: '#ddd',
+                            borderBottomWidth: 1
+                        }}>
+                            <Text style={{
+                                fontSize: 16,
+                                fontWeight: '500'
+                            }}>Write Alt Text</Text>
+                        </View>
+                        <TextInput
+                            placeholder="Write alt text"
+                            multiline={true}
+                            style={{
+                                padding: 10,
+                                minHeight: 100,
+                                borderBottomColor: '#ddd',
+                                borderBottomWidth: 1
+                            }}
+                            value={altText}
+                            onChangeText={setAltText}
+                        />
+                        <View style={{ flexDirection: 'row' }}>
+                            <TouchableOpacity
+                                onPress={setWriteAltText.bind(null, false)}
+                                style={{
+                                    ...styles.centerBtn,
+                                    width: '50%',
+                                }}>
+                                <Text style={{
+                                    fontWeight: '500',
+                                    color: '#999'
+                                }}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={setWriteAltText.bind(null, false)}
+                                style={{
+                                    ...styles.centerBtn,
+                                    width: '50%',
+
+                                }}>
+                                <Text style={{
+                                    fontWeight: '500',
+                                    color: '#318bfb'
+                                }}>Done</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </TouchableOpacity>}
             <View style={{
                 ...styles.navigationBar,
                 borderBottomColor: '#ddd',
@@ -729,20 +814,26 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
             </>}
             {step === 2 &&
                 <ScrollView
-                    bounces={false}
+                    ref={_postToolScrollRef}
+                    style={{
+                        height: '100%',
+                    }}
+                    keyboardShouldPersistTaps="never"
+                    bounces={true}
                 >
                     <View style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        padding: 15
+                        padding: 15,
+
                     }}>
-                        <TouchableOpacity
+                        {processedImages.length > 0 && <TouchableOpacity
                             onPress={_onGoBack}
                             style={{
                                 height: 50,
                                 width: 50
                             }}>
-                            {ref.current.processedImages.length > 1 && <View style={{
+                            {processedImages.length > 1 && <View style={{
                                 position: 'absolute',
                                 zIndex: 1,
                                 top: 5,
@@ -755,10 +846,12 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                                     width: '100%',
                                     height: '100%'
                                 }}
-                                source={{ uri: ref.current.processedImages[0].uri }}
+                                source={{ uri: processedImages[0].uri }}
                             />
-                        </TouchableOpacity>
+                        </TouchableOpacity>}
                         <TextInput
+                            value={caption}
+                            onChangeText={setCaption}
                             multiline={true}
                             style={{
                                 maxWidth: SCREEN_WIDTH - 30 - 50,
@@ -778,16 +871,61 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                             }}>Tag People</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
+                            onPress={() => {
+                                navigate('LocationChooser', {
+                                    address: { ...address },
+                                    onDone: _onAddressChange
+                                })
+                            }}
                             activeOpacity={0.9}
                             style={{
                                 borderTopWidth: 0,
-                                ...styles.postOptionItem
+                                ...styles.postOptionItem,
+
                             }}>
-                            <Text style={{
-                                fontSize: 16,
-                            }}>Add Location</Text>
+                            {address.place_name.length > 0 &&
+                                <View style={{
+                                    marginRight: 5,
+                                    width: 30,
+                                    height: 30,
+                                    justifyContent: 'center',
+                                    alignItems: 'center'
+                                }}>
+                                    <Icon name="map-marker" color="#318bfb" size={20} />
+                                </View>
+                            }
+                            <Text
+                                numberOfLines={2}
+                                style={{
+                                    fontSize: 16,
+                                    color: address.place_name.length > 0
+                                        ? '#318bfb' : '#000',
+                                    width: SCREEN_WIDTH - 30 - 30 - 30
+                                }}>
+                                {address.place_name.length > 0
+                                    ? address.place_name
+                                    : 'Add Location'}
+                            </Text>
+                            {address.place_name.length > 0 &&
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setAddress({
+                                            id: '',
+                                            place_name: ''
+                                        })
+                                    }}
+                                    style={{
+                                        width: 30,
+                                        height: 30,
+                                        justifyContent: 'center',
+                                        alignItems: 'center'
+                                    }}>
+                                    <Text>✕</Text>
+                                </TouchableOpacity>
+                            }
                         </TouchableOpacity>
                         <TouchableOpacity
+                            onPress={setShowAdvancedSettings.bind(null, !showAdvancedSettings)}
                             activeOpacity={1}
                             style={{
                                 ...styles.postOptionItem,
@@ -800,7 +938,58 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                             }}>Advanced Settings</Text>
                         </TouchableOpacity>
                     </View>
-                </ScrollView>}
+                    {showAdvancedSettings && <>
+                        <View style={styles.settingWrapper}>
+                            <Text style={{
+                                fontWeight: '600',
+                                fontSize: 16
+                            }}>Comments</Text>
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                marginVertical: 15
+                            }}>
+                                <Text style={{
+                                    fontSize: 16
+                                }}>Turn Off Commenting</Text>
+                                <Switcher
+                                    on={offComment}
+                                    onTurnOff={setOffComment.bind(null, false)}
+                                    onTurnOn={setOffComment.bind(null, true)}
+                                />
+                            </View>
+                            <Text style={{
+                                fontSize: 12,
+                                color: '#666'
+                            }}>You can change this later by going to option menu at the top of your post.</Text>
+                        </View>
+                        <View style={styles.settingWrapper}>
+                            <Text style={{
+                                fontWeight: '600',
+                                fontSize: 16
+                            }}>Accessibility</Text>
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                marginVertical: 15
+                            }}>
+                                <TouchableOpacity
+                                    onPress={setWriteAltText.bind(null, !writeAltText)}
+                                >
+                                    <Text style={{
+                                        fontSize: 16
+                                    }}>Write Alt Text</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <Text style={{
+                                fontSize: 12,
+                                color: '#666'
+                            }}>Alt text describes your photos for people with visual impairments.
+                        Alt text will be automatically reated for your photos or your can choose to write your own.</Text>
+                        </View>
+                    </>}
+                </ScrollView>
+            }
         </SafeAreaView >
     )
 }
@@ -869,11 +1058,15 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     postOptionItem: {
+        flexDirection: 'row',
         backgroundColor: '#fff',
-        height: 44,
-        justifyContent: 'center',
+        minHeight: 44,
+        alignItems: 'center',
         borderWidth: 0.5,
         borderColor: '#ddd',
         paddingHorizontal: 15
+    },
+    settingWrapper: {
+        padding: 15,
     }
 })

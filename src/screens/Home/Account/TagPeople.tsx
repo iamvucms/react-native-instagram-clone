@@ -23,7 +23,7 @@ type TagPeopleProps = {
 type MixedUserInfo = UserInfo & { privacySetting?: PrivacySetting }
 export default function TagPeople({ navigation, route }: TagPeopleProps) {
     const me = store.getState().user.user.userInfo
-
+    const onDone = route.params.onDone
     const [images, setImages] =
         useState<ProcessedImage[]>([...route.params.images])
     const [tagging, setTagging] = useState<boolean>(false)
@@ -157,6 +157,7 @@ export default function TagPeople({ navigation, route }: TagPeopleProps) {
     const _onTagUser = (item: UserInfo) => {
         const img = { ...images[ref.current.currentItem] }
         if (!img.tags) img.tags = []
+        img.tags = [...img.tags]
         img.tags.push({
             showBtnDelete: false,
             x: ref.current.whoLabel.x,
@@ -173,15 +174,15 @@ export default function TagPeople({ navigation, route }: TagPeopleProps) {
         setSearchResult([])
         setQuery("")
     }
-    const _toggleShowDelBtn = React.useCallback((index: number,
+    const _toggleShowDelBtn = (index: number,
         preX: number,
         preY: number, ) => {
         const imgs = [...images]
-        const img = { ...images[ref.current.currentItem] }
+        const img = { ...imgs[ref.current.currentItem] }
         img.tags[index].showBtnDelete = !img.tags[index].showBtnDelete
         imgs[ref.current.currentItem] = img
         setImages(imgs)
-    }, [])
+    }
     const _onDragLabel = (index: number,
         animX: Animated.Value,
         animY: Animated.Value,
@@ -264,7 +265,12 @@ export default function TagPeople({ navigation, route }: TagPeopleProps) {
                             Tag People
                     </Text>
                     </View>
-                    <TouchableOpacity style={styles.btnNavigation}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            if (onDone) onDone([...images])
+                            goBack()
+                        }}
+                        style={styles.btnNavigation}>
                         <Image
                             style={{
                                 height: 20,
@@ -288,6 +294,7 @@ export default function TagPeople({ navigation, route }: TagPeopleProps) {
                             placeholder="Search for a user"
                             style={styles.inputSearch} />
                         <TouchableOpacity
+                            onPress={setQuery.bind(null, '')}
                             style={styles.btnNavigation}>
                             <Text>✕</Text>
                         </TouchableOpacity>
@@ -306,7 +313,8 @@ export default function TagPeople({ navigation, route }: TagPeopleProps) {
                             </View>
                         }
                     </View>
-                )}
+                )
+            }
             <ScrollView
                 onScrollEndDrag={_onEndDrag}
                 scrollEnabled={enableGesture}
