@@ -20,7 +20,7 @@ yarn
 ## Usage
 
 ```bash
-react-native run-ios
+npx react-native run-ios
 
 ```
 
