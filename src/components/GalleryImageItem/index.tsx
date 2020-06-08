@@ -32,7 +32,7 @@ const index = ({ index, _showPopupImage, _hidePopupImage, photo }: GalleryImageI
                 marginRight: (index + 1) % 3 === 0 ? 0 : 5,
             }} key={index}>
             {photo && <FastImage source={{
-                uri: photo.source && photo.source[0]
+                uri: photo.source && photo.source[0].uri
             }} style={styles.photo} />}
         </TouchableOpacity>
     )

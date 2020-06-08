@@ -14,7 +14,11 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../../constan
 import { SuperRootStackParamList } from '../../../navigations'
 import { goBack, navigate } from '../../../navigations/rootNavigation'
 import Switcher from '../../../components/Switcher'
-import { MapBoxAddress } from '../../../utils'
+import { MapBoxAddress, uriToBlob } from '../../../utils'
+import { Post, PostImage } from '../../../reducers/postReducer'
+import { firestore, storage } from 'firebase'
+import { store } from '../../../store'
+import { CreatePostRequest } from '../../../actions/postActions'
 type GalleryChooserRouteProp = RouteProp<SuperRootStackParamList, 'GalleryChooser'>
 
 type GalleryChooserNavigationProp = StackNavigationProp<SuperRootStackParamList, 'GalleryChooser'>
@@ -40,6 +44,7 @@ export type ProcessedImage = {
     }[]
 }
 const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
+    const user = store.getState().user.user.userInfo
     const dispatch = useDispatch()
     const isChooseProfilePhoto = route.params?.isChooseProfilePhoto
     const [showGroupSelection, setShowGroupSelection] = useState<boolean>(false)
@@ -401,7 +406,51 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                 })
             }
             else {
-                setUploading(false)
+                const imageList = [...processedImages]
+                const tasks: Promise<PostImage>[] = imageList.map(async (img, index) => {
+                    const blob = await uriToBlob(img.uri)
+                    const rq = await storage()
+                        .ref(`posts/${user?.username || 'others'}/${new Date().getTime() + Math.random()}.${img.extension}`)
+                        .put(blob as Blob, {
+                            contentType: `image/${img.extension}`
+                        })
+                    const downloadUri = await rq.ref.getDownloadURL()
+                    return {
+                        uri: downloadUri,
+                        width: img.width,
+                        height: img.height,
+                        extension: img.extension,
+                        tags: img.tags.map(tag => ({
+                            x: tag.x,
+                            y: tag.y,
+                            width: tag?.width || 0,
+                            height: tag?.height || 0,
+                            username: tag.username
+                        }))
+                    }
+                })
+                Promise.all(tasks).then(resultList => {
+                    setUploading(false)
+                    const curDate = new Date()
+                    const second = Math.floor(curDate.getTime() / 1000)
+                    const nanosecond = curDate.getTime() - second * 1000
+                    const postData: Post = {
+                        altText,
+                        content: caption,
+                        create_at: new firestore.Timestamp(second, nanosecond),
+                        isVideo: false,
+                        permission: 1,
+                        notificationUsers: offComment ? [] : (
+                            user?.username ? [user.username] : []
+                        ),
+                        likes: [],
+                        source: resultList,
+                        address: { ...address },
+                        userId: user?.username
+                    }
+                    dispatch(CreatePostRequest(postData))
+                    goBack()
+                })
             }
         }
     }

@@ -30,6 +30,7 @@ export const FetchPostListRequest = ():
                         .get()
                     const temp = rs.docs.map(doc => {
                         if (userIds.indexOf(doc.data().userId) < 0) userIds.push(doc.data().userId)
+
                         let post = { ...doc.data() }
                         const rqCmt = doc.ref.collection('comments')
                             .orderBy('create_at', 'desc').get()
@@ -269,3 +270,43 @@ export const ToggleLikePostSuccess = (payload: PostList): PostSuccessAction<Post
         payload: payload
     }
 }
+//CREATE POST ACTION
+export const CreatePostRequest = (postData: Post):
+    ThunkAction<Promise<void>, {}, {}, PostAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, PostAction>) => {
+        try {
+            const me = store.getState().user.user.userInfo
+            let postList = [...store.getState().postList]
+            const ref = firestore()
+            const rq = await ref.collection('users')
+                .where('username', '==', me?.username).get()
+            if (rq.size > 0) {
+                const poster: UserInfo = rq.docs[0].data()
+                const uid = new Date().getTime()
+                ref.collection('posts').doc(`${uid}`).set({
+                    ...postData,
+                    uid
+                })
+                dispatch(FetchPostListRequest())
+            } else {
+                dispatch(CreatePostFailure())
+            }
+        } catch (e) {
+            dispatch(CreatePostFailure())
+        }
+    }
+}
+export const CreatePostFailure = (): PostErrorAction => {
+    return {
+        type: postActionTypes.CREATE_POST_FAILURE,
+        payload: {
+            message: 'Can not post this post!'
+        }
+    }
+}
+// export const CreatePostSuccess = (payload: PostList): PostSuccessAction<PostList> => {
+//     return {
+//         type: postActionTypes.CREATE_POST_SUCCESS,
+//         payload: payload
+//     }
+// }

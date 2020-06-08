@@ -2,11 +2,16 @@ import { Alert } from 'react-native'
 import { firestore } from 'firebase'
 import { UserInfo } from './userReducer'
 import { Comment } from './commentReducer'
+import { ProcessedImage } from '../screens/Home/Account/GalleryChooser'
+import { MapBoxAddress } from '../utils'
 export const LIMIT_POSTS_PER_LOADING = 2
 export const postActionTypes = {
     FETCH_POST_LIST_REQUEST: 'FETCH_POST_LIST_REQUEST',
     FETCH_POST_LIST_SUCCESS: 'FETCH_POST_LIST_SUCCESS',
     FETCH_POST_LIST_FAILURE: 'FETCH_POST_LIST_FAILURE',
+    CREATE_POST_REQUEST: 'CREATE_POST_REQUEST',
+    CREATE_POST_SUCCESS: 'CREATE_POST_SUCCESS',
+    CREATE_POST_FAILURE: 'CREATE_POST_FAILURE',
     LOAD_MORE_POST_LIST_REQUEST: 'LOAD_MORE_POST_LIST_REQUEST',
     LOAD_MORE_POST_LIST_SUCCESS: 'LOAD_MORE_POST_LIST_SUCCESS',
     LOAD_MORE_POST_LIST_FAILURE: 'LOAD_MORE_POST_LIST_FAILURE',
@@ -17,6 +22,19 @@ export const postActionTypes = {
     TOGGLE_LIKE_POST_SUCCESS: 'TOGGLE_LIKE_POST_SUCCESS',
     TOGGLE_LIKE_POST_FAILURE: 'TOGGLE_LIKE_POST_FAILURE',
 }
+export type PostImage = {
+    uri: string,
+    width: number,
+    height: number,
+    extension: string,
+    tags: {
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        username: string
+    }[]
+}
 export type Post = {
     userId?: string,
     content?: string,
@@ -25,9 +43,13 @@ export type Post = {
     likes?: string[],
     permission?: number,
     create_at?: firestore.Timestamp,
-    source?: string[],
+    source?: PostImage[],
     comments?: Comment[],
-    tags?: string[]
+    tags?: string[],
+    labels?: string[],
+    notificationUsers?: string[],
+    altText?: string,
+    address?: MapBoxAddress,
 }
 export type ExtraPost = Post & {
     ownUser?: UserInfo
@@ -46,6 +68,7 @@ export interface PostSuccessAction<T> {
 export type PostAction = PostSuccessAction<PostList>
     | PostSuccessAction<ExtraPost>
     | PostErrorAction
+    | PostSuccessAction<Post>
 const defaultState: PostList = []
 const reducer = (state: PostList = defaultState, action: PostAction): PostList => {
     switch (action.type) {
@@ -95,6 +118,16 @@ const reducer = (state: PostList = defaultState, action: PostAction): PostList =
             action = <PostErrorAction>action
             const message4 = action.payload.message
             Alert.alert('Error', message4)
+            return state
+        case postActionTypes.CREATE_POST_REQUEST:
+            return state
+        case postActionTypes.CREATE_POST_SUCCESS:
+            action = <PostSuccessAction<Post>>action
+            // state = [...action.payload]
+            return state
+        case postActionTypes.CREATE_POST_FAILURE:
+            action = <PostErrorAction>action
+            Alert.alert('Error', action.payload.message)
             return state
         default:
             return state

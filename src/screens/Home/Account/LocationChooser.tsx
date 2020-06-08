@@ -67,8 +67,8 @@ export default function LocationChooser({ navigation, route }: LocationChooserPr
                 <View style={{
                     marginTop: 10,
                 }}>
-                    {result.map(addressItem => (
-                        <View style={{
+                    {result.map((addressItem, index) => (
+                        <View key={index} style={{
                             marginVertical: 5,
                             backgroundColor: "#000"
                         }}>

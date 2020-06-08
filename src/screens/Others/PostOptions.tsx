@@ -6,15 +6,17 @@ import { SuperRootStackParamList } from '../../navigations'
 import { RouteProp } from '@react-navigation/native'
 import { useDispatch } from 'react-redux'
 import { UnfollowRequest } from '../../actions/userActions'
+import { store } from '../../store'
 type PostOptionsRouteProp = RouteProp<SuperRootStackParamList, 'PostOptions'>
 type PostOptionsProps = {
     route: PostOptionsRouteProp
 }
 const PostOptions = ({ route }: PostOptionsProps) => {
+    const user = store.getState().user.user.userInfo
     const item = route.params.item
     const dispatch = useDispatch()
     const _onUnfollow = () => {
-        dispatch(UnfollowRequest(item.ownUser?.username||``))
+        dispatch(UnfollowRequest(item.ownUser?.username || ``))
     }
     return (
         <TouchableOpacity
@@ -35,7 +37,9 @@ const PostOptions = ({ route }: PostOptionsProps) => {
                     <TouchableOpacity
                         activeOpacity={0.8}
                         style={styles.optionItem}>
-                        <Text>Turn On Post Notifications</Text>
+                        <Text>Turn {(item.notificationUsers && item.notificationUsers?.indexOf(user?.username || '')
+                            > -1) ? 'Off' : 'On'
+                        } Post Notifications</Text>
                     </TouchableOpacity>
                 </View>
                 <View style={{ backgroundColor: "#000" }}>

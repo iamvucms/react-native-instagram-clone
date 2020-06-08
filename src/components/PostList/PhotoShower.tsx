@@ -6,8 +6,9 @@ import {
 } from 'react-native'
 import { SCREEN_WIDTH } from '../../constants'
 import ScaleImage from '../ScaleImage/'
+import { PostImage } from '../../reducers/postReducer'
 export interface PhotoShowerProps {
-    sources?: string[],
+    sources?: PostImage[],
     onChangePage?: (page: number) => any
 }
 const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
@@ -56,10 +57,10 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
                 showsHorizontalScrollIndicator={false}
                 bounces={false}
                 horizontal={true}>
-                {sources && sources.map((src, index) => (
+                {sources && sources.map((img, index) => (
                     <ImageBackground
                         key={index}
-                        source={{ uri: src }}
+                        source={{ uri: img.uri }}
                         blurRadius={20}
                         style={{
                             height: maxImageHeight,
@@ -71,7 +72,7 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
                         <ScaleImage
                             onLayout={_onLayoutHandler}
                             width={SCREEN_WIDTH}
-                            source={{ uri: src }}
+                            source={{ uri: img.uri }}
                         />
                     </ImageBackground>
                 ))}

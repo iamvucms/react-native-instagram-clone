@@ -81,7 +81,7 @@ const index = () => {
 
     useEffect(() => {
         if (photos) {
-            FastImage.preload(photos.map(x => ({ uri: x.source ? x.source[0] : '' })))
+            FastImage.preload(photos.map(post => ({ uri: post.source ? post.source[0].uri : '' })))
         }
         (async () => {
             setRefreshing(true)
@@ -271,7 +271,7 @@ const index = () => {
     const _popupImageHeight = new Animated.Value(0)
     const _onAnimatePopup = ({ nativeEvent }: LayoutChangeEvent) => {
         if (selectedPhoto.source) {
-            Image.getSize(selectedPhoto.source[0], (xwidth: number, xheight: number) => {
+            Image.getSize(selectedPhoto.source[0].uri, (xwidth: number, xheight: number) => {
                 const nextHeight = xheight * 0.9 * SCREEN_WIDTH / xwidth
                 _popupImageTop.setValue(ref.current.prePopupImage.pY - 44)
                 _popupImageLeft.setValue(ref.current.prePopupImage.pX)
@@ -333,7 +333,7 @@ const index = () => {
                         position: 'relative',
                         width: '100%',
                         height: '100%',
-                    }} source={{ uri: selectedPhoto.source[0] }} >
+                    }} source={{ uri: selectedPhoto.source[0].uri }} >
                     <Animated.View style={{
                         width: _popupImageWidth,
                         position: 'absolute',
@@ -367,7 +367,7 @@ const index = () => {
                             <FastImage style={{
                                 width: '100%',
                                 height: '100%'
-                            }} source={{ uri: selectedPhoto.source[0], priority: FastImage.priority.high }}
+                            }} source={{ uri: selectedPhoto.source[0].uri, priority: FastImage.priority.high }}
                             />
                         </Animated.View>
                     </Animated.View>
