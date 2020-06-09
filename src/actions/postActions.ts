@@ -276,7 +276,6 @@ export const CreatePostRequest = (postData: Post):
     return async (dispatch: ThunkDispatch<{}, {}, PostAction>) => {
         try {
             const me = store.getState().user.user.userInfo
-            let postList = [...store.getState().postList]
             const ref = firestore()
             const rq = await ref.collection('users')
                 .where('username', '==', me?.username).get()
@@ -310,3 +309,52 @@ export const CreatePostFailure = (): PostErrorAction => {
 //         payload: payload
 //     }
 // }
+//UPDATE POST ACTION
+export const UpdatePostRequest = (uid: number, updatedData: ExtraPost):
+    ThunkAction<Promise<void>, {}, {}, PostAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, PostAction>) => {
+        try {
+            const me = store.getState().user.user.userInfo
+            let postList = [...store.getState().postList]
+            const ref = firestore()
+            const rq = await ref.collection('users')
+                .where('username', '==', me?.username).get()
+            const rq2 = await ref.collection('posts').doc(`${uid}`).get()
+            const post = postList.filter(p => p.uid === uid)
+            if (rq.size > 0 && rq2.exists && post.length > 0) {
+                let onlinePost: ExtraPost = rq2.data() || {}
+                const targetPost = { ...post[0] }
+                rq2.ref.update({
+                    ...onlinePost, ...updatedData
+                }).then(() => {
+                    dispatch(UpdatePostSuccess({
+                        ...targetPost.ownUser
+                        , ...onlinePost, ...updatedData
+                    }))
+                })
+                    .catch((err) => {
+                        dispatch(UpdatePostFailure())
+                    })
+
+            } else {
+                dispatch(UpdatePostFailure())
+            }
+        } catch (e) {
+            dispatch(UpdatePostFailure())
+        }
+    }
+}
+export const UpdatePostFailure = (): PostErrorAction => {
+    return {
+        type: postActionTypes.UPDATE_POST_FAILURE,
+        payload: {
+            message: 'Can not update post now!'
+        }
+    }
+}
+export const UpdatePostSuccess = (payload: ExtraPost): PostSuccessAction<ExtraPost> => {
+    return {
+        type: postActionTypes.UPDATE_POST_SUCCESS,
+        payload: payload
+    }
+}

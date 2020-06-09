@@ -2,6 +2,8 @@ import { firestore } from "firebase"
 import { UserInfo } from "../reducers/userReducer"
 import { store } from "../store"
 import { MAPBOX_ACCESS_TOKEN } from "../constants"
+import Share, { Options } from "react-native-share"
+import { ExtraPost } from "../reducers/postReducer"
 
 export const timestampToString = (create_at: number, suffix?: boolean): string => {
     let diffTime: string | number = (new Date().getTime() - (create_at || 0)) / 1000
@@ -89,4 +91,54 @@ export const searchLocation = (query: string): Promise<MapBoxAddress[]> => {
             .catch(err => reject(err))
     })
 
+}
+export const sharePost = (post: ExtraPost) => {
+    const options: Options = {
+        activityItemSources: [
+            { // For sharing url with custom title.
+                placeholderItem: {
+                    type: 'url',
+                    content: 'https://www.facebook.com/photo.php?fbid=619895371910790'
+                },
+                item: {
+                    default: { type: 'url', content: 'https://www.facebook.com/photo.php?fbid=619895371910790' },
+                },
+                subject: {
+                    default: post.content || '',
+                },
+                linkMetadata: {
+                    originalUrl: 'https://www.facebook.com/photo.php?fbid=619895371910790',
+                    url: 'https://www.facebook.com/photo.php?fbid=619895371910790',
+                    // title: post.content
+                },
+            },
+            { // For sharing text.
+                placeholderItem: { type: 'text', content: post.content || "" },
+                item: {
+                    default: { type: 'text', content: 'Hello....' },
+                    message: null, // Specify no text to share via Messages app.
+                },
+                linkMetadata: { // For showing app icon on share preview.
+                    title: `https://img.favpng.com/9/25/24/computer-icons-instagram-logo-sticker-png-favpng-LZmXr3KPyVbr8LkxNML458QV3.jpg`
+                },
+            },
+            { // For using custom icon instead of default text icon at share preview when sharing with message.
+                placeholderItem: {
+                    type: 'url',
+                    content: 'a'
+                },
+                item: {
+                    default: {
+                        type: 'text',
+                        content: `${post.ownUser?.username} has been posted a image`
+                    },
+                },
+                linkMetadata: {
+                    title: `${post.ownUser?.username} has been posted a image`,
+                    icon: `https://img.favpng.com/9/25/24/computer-icons-instagram-logo-sticker-png-favpng-LZmXr3KPyVbr8LkxNML458QV3.jpg`
+                }
+            },
+        ],
+    }
+    Share.open(options)
 }

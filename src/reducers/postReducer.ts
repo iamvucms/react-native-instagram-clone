@@ -9,9 +9,6 @@ export const postActionTypes = {
     FETCH_POST_LIST_REQUEST: 'FETCH_POST_LIST_REQUEST',
     FETCH_POST_LIST_SUCCESS: 'FETCH_POST_LIST_SUCCESS',
     FETCH_POST_LIST_FAILURE: 'FETCH_POST_LIST_FAILURE',
-    CREATE_POST_REQUEST: 'CREATE_POST_REQUEST',
-    CREATE_POST_SUCCESS: 'CREATE_POST_SUCCESS',
-    CREATE_POST_FAILURE: 'CREATE_POST_FAILURE',
     LOAD_MORE_POST_LIST_REQUEST: 'LOAD_MORE_POST_LIST_REQUEST',
     LOAD_MORE_POST_LIST_SUCCESS: 'LOAD_MORE_POST_LIST_SUCCESS',
     LOAD_MORE_POST_LIST_FAILURE: 'LOAD_MORE_POST_LIST_FAILURE',
@@ -21,12 +18,17 @@ export const postActionTypes = {
     TOGGLE_LIKE_POST_REQUEST: 'TOGGLE_LIKE_POST_REQUEST',
     TOGGLE_LIKE_POST_SUCCESS: 'TOGGLE_LIKE_POST_SUCCESS',
     TOGGLE_LIKE_POST_FAILURE: 'TOGGLE_LIKE_POST_FAILURE',
+    CREATE_POST_FAILURE: 'UPDATE_POST_FAILURE',
+    UPDATE_POST_REQUEST: 'UPDATE_POST_REQUEST',
+    UPDATE_POST_SUCCESS: 'UPDATE_POST_SUCCESS',
+    UPDATE_POST_FAILURE: 'UPDATE_POST_FAILURE',
 }
 export type PostImage = {
     uri: string,
     width: number,
     height: number,
     extension: string,
+    fullSize: boolean,
     tags: {
         x: number,
         y: number,
@@ -119,13 +121,20 @@ const reducer = (state: PostList = defaultState, action: PostAction): PostList =
             const message4 = action.payload.message
             Alert.alert('Error', message4)
             return state
-        case postActionTypes.CREATE_POST_REQUEST:
+        case postActionTypes.UPDATE_POST_REQUEST:
             return state
-        case postActionTypes.CREATE_POST_SUCCESS:
-            action = <PostSuccessAction<Post>>action
-            // state = [...action.payload]
+        case postActionTypes.UPDATE_POST_SUCCESS:
+            action = <PostSuccessAction<ExtraPost>>action
+            const updatedPost = action.payload
+            const postList = state.map(post => {
+                if (post.uid === updatedPost.uid) {
+                    return { ...updatedPost }
+                }
+                return post
+            })
+            state = [...postList]
             return state
-        case postActionTypes.CREATE_POST_FAILURE:
+        case postActionTypes.UPDATE_POST_FAILURE:
             action = <PostErrorAction>action
             Alert.alert('Error', action.payload.message)
             return state

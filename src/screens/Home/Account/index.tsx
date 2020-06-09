@@ -18,6 +18,7 @@ const index = () => {
     const extraInfo = useSelector(state => state.user.extraInfo)
     const photos = useSelector(state => state.user.photos)
     const scrollHRef = useRef<ScrollView>(null)
+    const scrollVRef = useRef<ScrollView>(null)
     const scrollTabRef = useRef<ScrollView>(null)
     const _headerTabOpacity = React.useMemo(() => new Animated.Value(-1), [])
     const ref = useRef<{
@@ -96,6 +97,13 @@ const index = () => {
             setRefreshing(false)
         })()
     }
+    const _scrollToPosts = () => {
+        scrollVRef.current?.scrollTo({
+            x: 0,
+            y: ref.current.headerHeight,
+            animated: true
+        })
+    }
     const _onShowOptions = () => {
 
         if (ref.current.currentTab === 1) {
@@ -153,6 +161,11 @@ const index = () => {
         }
     }
     const _onDoTask = (type: number) => {
+        if (type === 1 || type === 2 || type === 3) {
+            navigate('EditProfile')
+        } else {
+
+        }
 
     }
     const _onScrollEndDragContainerScroll = ({ nativeEvent: {
@@ -333,7 +346,7 @@ const index = () => {
                         position: 'relative',
                         width: '100%',
                         height: '100%',
-                    }} source={{ uri: selectedPhoto.source[0].uri }} >
+                    }} source={{ uri: selectedPhoto.source[0].uri, }} >
                     <Animated.View style={{
                         width: _popupImageWidth,
                         position: 'absolute',
@@ -426,6 +439,7 @@ const index = () => {
                         </Animated.View>
                     </Animated.View>
                     <ScrollView
+                        ref={scrollVRef}
                         onScroll={_onVerticalScrollViewScroll}
                         scrollEventThrottle={20}
                         refreshControl={<RefreshControl
@@ -448,30 +462,40 @@ const index = () => {
                                         </View>
                                     </TouchableOpacity>
                                     <View style={styles.extraInfoWrapper}>
-                                        <TouchableOpacity style={{
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
-                                        }}>
+                                        <TouchableOpacity
+                                            onPress={_scrollToPosts}
+                                            style={{
+                                                justifyContent: 'center',
+                                                alignItems: 'center'
+                                            }}>
                                             <Text style={{
                                                 fontSize: 18,
                                                 fontWeight: "500"
                                             }}>{extraInfo?.posts}</Text>
                                             <Text>Posts</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={{
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
-                                        }}>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                navigate('Follow', { type: 1 })
+                                            }}
+                                            style={{
+                                                justifyContent: 'center',
+                                                alignItems: 'center'
+                                            }}>
                                             <Text style={{
                                                 fontSize: 18,
                                                 fontWeight: "500"
                                             }}>{extraInfo?.followers.length}</Text>
                                             <Text>Followers</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={{
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
-                                        }}>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                navigate('Follow', { type: 2 })
+                                            }}
+                                            style={{
+                                                justifyContent: 'center',
+                                                alignItems: 'center'
+                                            }}>
                                             <Text style={{
                                                 fontSize: 18,
                                                 fontWeight: "500"

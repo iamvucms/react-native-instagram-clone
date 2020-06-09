@@ -2,24 +2,26 @@ import React, { useState, useRef } from 'react'
 import {
     ImageBackground, LayoutChangeEvent,
     Text, ScrollView, StyleSheet,
-    View, NativeSyntheticEvent, NativeScrollEvent
+    View, NativeSyntheticEvent, NativeScrollEvent,
+    Image
 } from 'react-native'
 import { SCREEN_WIDTH } from '../../constants'
 import ScaleImage from '../ScaleImage/'
 import { PostImage } from '../../reducers/postReducer'
 export interface PhotoShowerProps {
-    sources?: PostImage[],
+    sources: PostImage[],
     onChangePage?: (page: number) => any
 }
 const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
-    const [maxImageHeight, setMaxImageHeight] = useState<number>(0)
+    const [maxImageHeight, setMaxImageHeight] = useState<number>(
+        Math.max(...sources.map(img => {
+            if (img.fullSize) {
+                return SCREEN_WIDTH
+            } else return img.height * SCREEN_WIDTH / img.width
+        }))
+    )
     const [currentPage, setCurrentPage] = useState<number>(1)
     const scrollRef = useRef<ScrollView>(null)
-    const _onLayoutHandler = ({ nativeEvent: {
-        layout: { height }
-    } }: LayoutChangeEvent) => {
-        if (height > maxImageHeight) setMaxImageHeight(height)
-    }
     const _onEndDragHandler = ({ nativeEvent: {
         contentOffset: { x }
     } }: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -69,11 +71,21 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
                             justifyContent: 'center',
                             alignItems: 'center'
                         }}>
-                        <ScaleImage
-                            onLayout={_onLayoutHandler}
-                            width={SCREEN_WIDTH}
-                            source={{ uri: img.uri }}
-                        />
+                        {img.fullSize ? (
+                            <Image
+                                style={{
+                                    width: img.width < img.height ? img.width * SCREEN_WIDTH / img.height : SCREEN_WIDTH,
+                                    height: img.width > img.height ? img.height * SCREEN_WIDTH / img.width : SCREEN_WIDTH
+                                }}
+                                source={{ uri: img.uri }}
+                            />
+                        ) : (
+                                <ScaleImage
+                                    height={img.height * SCREEN_WIDTH / img.width}
+                                    width={SCREEN_WIDTH}
+                                    source={{ uri: img.uri }}
+                                />
+                            )}
                     </ImageBackground>
                 ))}
             </ScrollView>

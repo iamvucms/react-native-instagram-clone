@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
-import { navigation } from '../../navigations/rootNavigation'
+import Clipboard from '@react-native-community/clipboard'
+import { navigation, goBack } from '../../navigations/rootNavigation'
 import { SCREEN_WIDTH } from '../../constants'
 import { SuperRootStackParamList } from '../../navigations'
 import { RouteProp } from '@react-navigation/native'
 import { useDispatch } from 'react-redux'
 import { UnfollowRequest } from '../../actions/userActions'
 import { store } from '../../store'
+import { UpdatePostRequest } from '../../actions/postActions'
+import { sharePost } from '../../utils'
+import { firestore } from 'firebase'
+import { Post } from '../../reducers/postReducer'
+import { useSelector } from '../../reducers'
 type PostOptionsRouteProp = RouteProp<SuperRootStackParamList, 'PostOptions'>
 type PostOptionsProps = {
     route: PostOptionsRouteProp
@@ -14,9 +20,24 @@ type PostOptionsProps = {
 const PostOptions = ({ route }: PostOptionsProps) => {
     const user = store.getState().user.user.userInfo
     const item = route.params.item
+    const post = useSelector(state => state.postList).filter(post => post.uid === item.uid)[0]
     const dispatch = useDispatch()
     const _onUnfollow = () => {
-        dispatch(UnfollowRequest(item.ownUser?.username || ``))
+        dispatch(UnfollowRequest(post.ownUser?.username || ``))
+    }
+    const _toggleNotification = async () => {
+        const rq = await firestore().collection('posts')
+            .doc(`${post.uid}`).get()
+        const onlinePost: Post = rq.data() || {}
+        const notifications: string[] = onlinePost.notificationUsers || []
+        const index = notifications.indexOf(user?.username || '')
+        if (index > -1) {
+            notifications.splice(index, 1)
+        } else notifications.push(user?.username || '')
+        dispatch(UpdatePostRequest(post.uid || 0, {
+            notificationUsers: [...notifications]
+        }))
+        goBack()
     }
     return (
         <TouchableOpacity
@@ -35,15 +56,20 @@ const PostOptions = ({ route }: PostOptionsProps) => {
                 </View>
                 <View style={{ backgroundColor: "#000" }}>
                     <TouchableOpacity
+                        onPress={_toggleNotification}
                         activeOpacity={0.8}
                         style={styles.optionItem}>
-                        <Text>Turn {(item.notificationUsers && item.notificationUsers?.indexOf(user?.username || '')
+                        <Text>Turn {(post.notificationUsers
+                            && post.notificationUsers?.indexOf(user?.username || '')
                             > -1) ? 'Off' : 'On'
                         } Post Notifications</Text>
                     </TouchableOpacity>
                 </View>
                 <View style={{ backgroundColor: "#000" }}>
                     <TouchableOpacity
+                        onPress={() => {
+                            Clipboard.setString('https://instagram.com/' + item.uid)
+                        }}
                         activeOpacity={0.8}
                         style={styles.optionItem}>
                         <Text>Copy Link</Text>
@@ -51,6 +77,7 @@ const PostOptions = ({ route }: PostOptionsProps) => {
                 </View>
                 <View style={{ backgroundColor: "#000" }}>
                     <TouchableOpacity
+                        onPress={() => sharePost(post)}
                         activeOpacity={0.8}
                         style={styles.optionItem}>
                         <Text>Share to...</Text>

@@ -32,6 +32,7 @@ export type ProcessedImage = {
     width: number,
     height: number,
     extension: string,
+    fullSize: boolean,
     tags: {
         x: number,
         y: number,
@@ -391,6 +392,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                     const uri = await ImageEditor.cropImage(img.image.uri, cropData)
                     return {
                         uri,
+                        fullSize: spec.fullSize,
                         tags: [],
                         extension: extension as string,
                         width: (spec.fullSize && height > width) ? width : SCREEN_WIDTH
@@ -420,6 +422,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                         width: img.width,
                         height: img.height,
                         extension: img.extension,
+                        fullSize: img.fullSize,
                         tags: img.tags.map(tag => ({
                             x: tag.x,
                             y: tag.y,
