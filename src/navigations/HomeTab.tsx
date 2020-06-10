@@ -16,6 +16,7 @@ import { createStackNavigator, TransitionPresets } from '@react-navigation/stack
 import Setting from '../screens/Home/Account/SettingIndex'
 import { settingNavigationMap } from '../constants'
 import Follow from '../screens/Home/Account/Follow'
+import AccountYouDontFollowBack from '../screens/Home/Account/AccountYouDontFollowBack'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -35,9 +36,11 @@ const AccountStack = () => {
         }}>
             <Stack.Screen component={Account} name="AccountIndex" />
             <Stack.Screen component={Setting} name="Setting" />
+
             <Stack.Screen options={{
                 ...TransitionPresets.ModalSlideFromBottomIOS,
             }} component={Follow} name="Follow" />
+            <Stack.Screen component={AccountYouDontFollowBack} name="AccountYouDontFollowBack" />
             <Stack.Screen component={SettingNavigationx.Logout} name="Logout" />
             <Stack.Screen component={SettingNavigationx.AddAccount} name="AddAccount" />
             {settingNavigationMap.map((settingNavigation, index) => (

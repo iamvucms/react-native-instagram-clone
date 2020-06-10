@@ -48,6 +48,7 @@ export type Post = {
     source?: PostImage[],
     comments?: Comment[],
     tags?: string[],
+    tagUsername?: string[],
     labels?: string[],
     notificationUsers?: string[],
     altText?: string,

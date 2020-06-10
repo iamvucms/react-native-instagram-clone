@@ -4,7 +4,7 @@ import { navigation } from '../../../../../navigations/rootNavigation'
 import { PERMISSIONS, RESULTS, check, request } from 'react-native-permissions';
 import Contacts from 'react-native-contacts'
 import { useDispatch } from 'react-redux';
-import { FollowUsersRequest } from '../../../../../actions/userActions';
+import { FollowContactsRequest } from '../../../../../actions/userActions';
 const FollowContacts = (): JSX.Element => {
     const dispatch = useDispatch()
     const [syncing, setSyncing] = useState<boolean>(false)
@@ -55,7 +55,7 @@ const FollowContacts = (): JSX.Element => {
                                                 phoneList.push(phone.number)
                                             })
                                         });
-                                        (async () => await dispatch(FollowUsersRequest(phoneList)))()
+                                        (async () => await dispatch(FollowContactsRequest(phoneList)))()
                                             .then(() => {
                                                 setSyncing(false)
                                                 navigation.goBack()
@@ -80,7 +80,7 @@ const FollowContacts = (): JSX.Element => {
                                     phoneList.push(phone.number)
                                 })
                             });
-                            (async () => await dispatch(FollowUsersRequest(phoneList)))()
+                            (async () => await dispatch(FollowContactsRequest(phoneList)))()
                                 .then(() => {
                                     setSyncing(false)
                                     navigation.goBack()

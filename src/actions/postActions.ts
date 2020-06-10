@@ -1,7 +1,7 @@
 import { firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { ExtraComment } from '../reducers/commentReducer';
-import { LIMIT_POSTS_PER_LOADING, postActionTypes, ExtraPost, Post, PostAction, PostErrorAction, PostList, PostSuccessAction } from '../reducers/postReducer';
+import { ExtraPost, LIMIT_POSTS_PER_LOADING, Post, PostAction, postActionTypes, PostErrorAction, PostList, PostSuccessAction } from '../reducers/postReducer';
 import { UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
 import { LoadMoreCommentListSuccess } from './commentActions';
@@ -328,7 +328,7 @@ export const UpdatePostRequest = (uid: number, updatedData: ExtraPost):
                     ...onlinePost, ...updatedData
                 }).then(() => {
                     dispatch(UpdatePostSuccess({
-                        ...targetPost.ownUser
+                        ownUser: targetPost.ownUser
                         , ...onlinePost, ...updatedData
                     }))
                 })

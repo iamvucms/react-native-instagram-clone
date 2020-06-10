@@ -155,6 +155,7 @@ export const FetchExtraInfoRequest = ():
             const payload: ExtraInfoPayload = {
                 currentStory: [],
                 extraInfo: {
+                    skipRecommmendFollowBackList: [],
                     followers: [],
                     followings: [],
                     posts: rq.size || 0
@@ -168,12 +169,14 @@ export const FetchExtraInfoRequest = ():
                 const rq3 = await ref.collection('users')
                     .where('followings', 'array-contains', me.username).get()
                 payload.extraInfo.followers = rq3.docs.map(x => x.data().username)
-                const rq4 = await ref.collection('stories')
+                payload.extraInfo.skipRecommmendFollowBackList
+                    = rq2.docs[0].data().skipRecommmendFollowBackList || []
+                const rq5 = await ref.collection('stories')
                     .where('userId', '==', me.username)
                     .where('create_at', '>=',
                         new Date(new Date().getTime() - 24 * 3600 * 1000))
                     .orderBy('create_at', 'asc').get()
-                payload.currentStory = rq4.docs.map(x => x.data())
+                payload.currentStory = rq5.docs.map(x => x.data())
                 dispatch(FetchExtraInfoSuccess(payload))
 
             } else dispatch(FetchExtraInfoFailure())
@@ -198,7 +201,7 @@ export const FetchExtraInfoSuccess = (extraInfo: ExtraInfoPayload):
         payload: extraInfo
     }
 }
-export const FollowUsersRequest = (phoneList: string[]):
+export const FollowContactsRequest = (phoneList: string[]):
     ThunkAction<Promise<void>, {}, {}, userAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
         try {
@@ -234,30 +237,64 @@ export const FollowUsersRequest = (phoneList: string[]):
                             if (index2 === userList.length - 1) {
                                 const rq2 = await targetUser.ref.get()
                                 me = rq2.data() || {}
-                                dispatch(FollowUsersSuccess(me))
+                                dispatch(FollowUserSuccess(me))
                             }
                         })
 
                     }
                 })
             } else {
-
+                dispatch(FollowUserFailure())
             }
 
         } catch (e) {
             console.warn(e)
-            dispatch(FollowUsersFailure())
+            dispatch(FollowUserFailure())
         }
     }
 }
-export const FollowUsersSuccess = (payload: UserInfo):
+export const ToggleFollowUserRequest = (username: string, refreshExtraInfo: boolean = false):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            let me: UserInfo = { ...store.getState().user.user.userInfo }
+            const ref = firestore()
+            const rq = await ref.collection('users')
+                .where('username', '==', me.username).get()
+            if (rq.size > 0) {
+                const targetUser = rq.docs[0]
+                const userData: UserInfo = targetUser.data() || {}
+                const currentFollowings = userData.followings || []
+                if (currentFollowings.indexOf(username) < 0) {
+                    currentFollowings.push(username)
+                } else {
+                    currentFollowings.splice(currentFollowings.indexOf(username), 1)
+                }
+                targetUser.ref.update({
+                    followings: currentFollowings
+                })
+                dispatch(FollowUserSuccess(userData))
+                if (refreshExtraInfo) {
+                    dispatch(FetchExtraInfoRequest())
+                }
+            } else {
+                dispatch(FollowUserFailure())
+            }
+
+        } catch (e) {
+            console.warn(e)
+            dispatch(FollowUserFailure())
+        }
+    }
+}
+export const FollowUserSuccess = (payload: UserInfo):
     SuccessAction<UserInfo> => {
     return {
         type: userActionTypes.FOLLOW_SUCCESS,
         payload,
     }
 }
-export const FollowUsersFailure = ():
+export const FollowUserFailure = ():
     ErrorAction => {
     return {
         type: userActionTypes.FOLLOW_FAILURE,
@@ -471,6 +508,30 @@ export const UploadAvatarRequest = (uri: string, extension: string):
             dispatch(UpdateUserInfoRequest({
                 avatarURL: downloadUri
             }))
+        } catch (e) {
+
+        }
+    }
+}
+export const RemoveFollowerRequest = (username: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const me = store.getState().user.user.userInfo
+            const ref = firestore()
+            const myUsername = me?.username || ""
+            const rq = await ref.collection('users')
+                .doc(username).get()
+            const targetUser: UserInfo = rq.data() || {}
+            const targetFollowings = targetUser.followings || []
+            const index = targetFollowings.indexOf(myUsername)
+            if (index > -1) {
+                targetFollowings.splice(index, 1)
+                rq.ref.update({
+                    followings: [...targetFollowings]
+                })
+                dispatch(FetchExtraInfoRequest())
+            }
         } catch (e) {
 
         }

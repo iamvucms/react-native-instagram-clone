@@ -48,6 +48,7 @@ export type ExtraInfo = {
     posts: number,
     followers: string[],
     followings: string[],
+    skipRecommmendFollowBackList: string[]
 }
 export type NotificationProperties =
     'directMessages'
@@ -291,6 +292,7 @@ const defaultState: userPayload = {
         }
     },
     extraInfo: {
+        skipRecommmendFollowBackList: [],
         posts: 0,
         followers: [],
         followings: []

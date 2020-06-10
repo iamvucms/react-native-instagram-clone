@@ -433,6 +433,11 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                     }
                 })
                 Promise.all(tasks).then(resultList => {
+                    let tagUsername: string[] = []
+                    resultList.map(img => {
+                        img.tags.map(tag => tagUsername.push(tag.username))
+                    })
+                    tagUsername = Array.from(new Set(tagUsername))
                     setUploading(false)
                     const curDate = new Date()
                     const second = Math.floor(curDate.getTime() / 1000)
@@ -447,6 +452,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                             user?.username ? [user.username] : []
                         ),
                         likes: [],
+                        tagUsername,
                         source: resultList,
                         address: { ...address },
                         userId: user?.username
