@@ -43,6 +43,7 @@ export type Post = {
     uid?: number,
     isVideo?: boolean,
     likes?: string[],
+    commentList?: string[],
     permission?: number,
     create_at?: firestore.Timestamp,
     source?: PostImage[],

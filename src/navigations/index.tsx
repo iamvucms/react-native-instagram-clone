@@ -2,15 +2,18 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, StackNavigationOptions, TransitionPresets } from '@react-navigation/stack';
 import React from 'react';
 import { ExtraPost } from '../reducers/postReducer';
-import PostOptions from '../screens/Others/PostOptions';
-import Comment from '../screens/Root/Comment';
-import { navigationRef } from './rootNavigation';
-import RootTab from './RootTab';
+import { UserInfo } from '../reducers/userReducer';
 import EditProfile from '../screens/Home/Account/EditProfile';
 import GalleryChooser, { ProcessedImage } from '../screens/Home/Account/GalleryChooser';
-import TagPeople from '../screens/Home/Account/TagPeople';
 import LocationChooser from '../screens/Home/Account/LocationChooser';
+import MuteOptions from '../screens/Home/Account/MuteOptions';
+import NotificationOptions from '../screens/Home/Account/NotificationOptions';
+import TagPeople from '../screens/Home/Account/TagPeople';
+import PostOptions from '../screens/Others/PostOptions';
+import Comment from '../screens/Root/Comment';
 import { MapBoxAddress } from '../utils';
+import { navigationRef } from './rootNavigation';
+import RootTab from './RootTab';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -29,6 +32,12 @@ export type SuperRootStackParamList = {
         address: MapBoxAddress,
         onDone?: (address: MapBoxAddress) => void
     },
+    NotificationOptions: {
+        user: UserInfo
+    },
+    MuteOptions: {
+        user: UserInfo
+    }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
 const index = (): JSX.Element => {
@@ -60,6 +69,14 @@ const index = (): JSX.Element => {
                 <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
                 }} name="LocationChooser" component={LocationChooser} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="NotificationOptions" component={NotificationOptions} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="MuteOptions" component={MuteOptions} />
             </RootStack.Navigator>
         </NavigationContainer>
     )

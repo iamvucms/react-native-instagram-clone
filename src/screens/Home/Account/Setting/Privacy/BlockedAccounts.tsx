@@ -5,7 +5,7 @@ import NavigationBar from '../../../../../components/NavigationBar'
 import { navigation } from '../../../../../navigations/rootNavigation'
 import { settingNavigationMap, SettingNavigation, SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../../../constants'
 import { UserInfo } from '../../../../../reducers/userReducer'
-import { firestore } from 'firebase'
+import { firestore, User } from 'firebase'
 import { store } from '../../../../../store'
 import { useDispatch } from 'react-redux'
 import { UpdatePrivacySettingsRequest } from '../../../../../actions/userActions'
@@ -33,16 +33,15 @@ const BlockedAccounts = (): JSX.Element => {
         })
     }, [])
     useEffect(() => {
-        const result: UserInfo[] = []
         const ref = firestore()
         if (blockList && blockList.length === 0)
-            return setBlockedUsers(result)
+            return setBlockedUsers([])
         if (blockList !== undefined) {
-            blockList.map(async (username, index) => {
+            const tasks: Promise<UserInfo>[] = blockList.map(async (username, index) => {
                 const rs = await ref.collection('users').doc(username).get()
-                result.push(rs.data() || {})
-                if (index === blockList.length - 1) setBlockedUsers(result)
+                return rs.data() || {}
             })
+            Promise.all(tasks).then(rs => setBlockedUsers(rs))
         }
     }, [blockList])
     const _unblock = (username: string) => {

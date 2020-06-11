@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native'
 import { useRoute } from '@react-navigation/native'
-import NavigationBar from '../../../../../components/NavigationBar'
-import { navigation } from '../../../../../navigations/rootNavigation'
-import { settingNavigationMap, SettingNavigation, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../../../constants'
-import { store } from '../../../../../store'
-import { UserInfo } from '../../../../../reducers/userReducer'
-import { getTabBarHeight } from '../../../../../components/BottomTabBar'
 import { firestore } from 'firebase'
+import React, { useEffect, useState } from 'react'
+import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { getTabBarHeight } from '../../../../../components/BottomTabBar'
+import NavigationBar from '../../../../../components/NavigationBar'
+import { SCREEN_HEIGHT, SettingNavigation, settingNavigationMap, STATUS_BAR_HEIGHT } from '../../../../../constants'
+import { navigation } from '../../../../../navigations/rootNavigation'
+import { UserInfo } from '../../../../../reducers/userReducer'
+import { store } from '../../../../../store'
 type MutedUser = {
     user: UserInfo,
     mutedPost: boolean,

@@ -1,7 +1,7 @@
-import { Alert } from 'react-native'
-import { Story } from './storyReducer'
-import { Post } from './postReducer'
 import { firestore } from 'firebase'
+import { Alert } from 'react-native'
+import { Post } from './postReducer'
+import { Story } from './storyReducer'
 export const userActionTypes = {
     LOGIN_REQUEST: 'LOGIN_REQUEST',
     LOGIN_SUCCESS: 'LOGIN_SUCCESS',
@@ -26,7 +26,10 @@ export const userActionTypes = {
     UPDATE_NOTIFICATION_SETTING_FAILURE: 'UPDATE_NOTIFICATION_SETTING_FAILURE',
     UPDATE_PRIVACY_SETTING_REQUEST: 'UPDATE_PRIVACY_SETTING_REQUEST',
     UPDATE_PRIVACY_SETTING_SUCCESS: 'UPDATE_PRIVACY_SETTING_SUCCESS',
-    UPDATE_PRIVACY_SETTING_FAILURE: 'UPDATE_PRIVACY_SETTING_FAILURE'
+    UPDATE_PRIVACY_SETTING_FAILURE: 'UPDATE_PRIVACY_SETTING_FAILURE',
+    FETCH_SETTING_REQUEST: 'FETCH_SETTING_REQUEST',
+    FETCH_SETTING_SUCCESS: 'FETCH_SETTING_SUCCESS',
+    FETCH_SETTING_FAILURE: 'FETCH_SETTING_FAILURE'
 }
 export type UserInfo = {
     email?: string,
@@ -42,16 +45,19 @@ export type UserInfo = {
     avatarURL?: string,
     bio?: string,
     website?: string,
-    gender?: 0 | 1 | 2
+    gender?: 0 | 1 | 2,
+    notificationStoryList?: string[],
+    notificationPostList?: string[],
 }
 export type ExtraInfo = {
     posts: number,
     followers: string[],
     followings: string[],
-    skipRecommmendFollowBackList: string[]
+    requestedList: string[]
 }
 export type NotificationProperties =
-    'directMessages'
+    'notificationAccounts'
+    | 'directMessages'
     | 'postStoryComment'
     | 'followingFollowers'
     | 'liveIGTV'
@@ -107,6 +113,10 @@ export type FollowingFollower = {
     recommendationsFromOthers?: NotificationLevel,
 }
 export type NotificationSetting = {
+    notificationAccounts?: {
+        posts?: string[],
+        story?: string[]
+    },
     pauseAll?: {
         active: boolean,
         from?: firestore.Timestamp,
@@ -178,7 +188,8 @@ export interface userPayload {
     photos?: Post[],
     taggedPhotos?: [],
     currentStory?: Story[],
-    extraInfo?: ExtraInfo
+    extraInfo?: ExtraInfo,
+
 }
 export interface ErrorAction {
     type: string,
@@ -199,12 +210,17 @@ export type userAction = SuccessAction<userPayload> | ErrorAction
     | SuccessAction<UserInfo> | SuccessAction<ExtraInfoPayload>
     | SuccessAction<NotificationSetting>
     | SuccessAction<PrivacySetting>
-const defaultState: userPayload = {
+    | SuccessAction<UserSetting>
+export const defaultUserState: userPayload = {
     user: {},
     photos: [],
     taggedPhotos: [],
     setting: {
         notification: {
+            notificationAccounts: {
+                posts: [],
+                story: []
+            },
             pauseAll: {
                 active: false,
             },
@@ -292,14 +308,14 @@ const defaultState: userPayload = {
         }
     },
     extraInfo: {
-        skipRecommmendFollowBackList: [],
+        requestedList: [],
         posts: 0,
         followers: [],
-        followings: []
+        followings: [],
     },
     currentStory: []
 }
-const reducer = (state: userPayload = defaultState, action: userAction): userPayload => {
+const reducer = (state: userPayload = defaultUserState, action: userAction): userPayload => {
     switch (action.type) {
         case userActionTypes.LOGIN_REQUEST:
             state = { ...state, user: {} }
@@ -419,6 +435,21 @@ const reducer = (state: userPayload = defaultState, action: userAction): userPay
             }
             return state
         case userActionTypes.UPDATE_USER_INFO_FAILURE:
+            action = <ErrorAction>action
+            Alert.alert('Error', action.payload.message)
+            return state
+        case userActionTypes.FETCH_SETTING_REQUEST:
+            state = { ...state }
+            return state
+        case userActionTypes.FETCH_SETTING_SUCCESS:
+            action = <SuccessAction<UserSetting>>action
+            state = {
+                ...state, setting: {
+                    ...action.payload
+                }
+            }
+            return state
+        case userActionTypes.FETCH_SETTING_FAILURE:
             action = <ErrorAction>action
             Alert.alert('Error', action.payload.message)
             return state

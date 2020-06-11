@@ -3,17 +3,17 @@ import React, { useEffect, useState } from 'react'
 import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import FastImage from 'react-native-fast-image'
 import { useDispatch } from 'react-redux'
-import { FetchExtraInfoRequest, RemoveFollowerRequest, ToggleFollowUserRequest, ToggleSendFollowRequest } from '../../../actions/userActions'
+import { FetchExtraInfoRequest, RemoveFollowerRequest, ToggleFollowUserRequest } from '../../../actions/userActions'
 import NavigationBar from '../../../components/NavigationBar'
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../../../constants'
 import { goBack, navigate } from '../../../navigations/rootNavigation'
 import { useSelector } from '../../../reducers'
+import { UserInfo } from '../../../reducers/userReducer'
 import { store } from '../../../store'
-import { MixedUserInfo } from './Follow'
-
-const AccountYouDontFollowBack = () => {
+import { Post } from '../../../reducers/postReducer'
+const RecentFollowerInteraction = () => {
     const dispatch = useDispatch()
-    const [list, setList] = useState<MixedUserInfo[]>([])
+    const [list, setList] = useState<UserInfo[]>([])
     const [selectedIndex, setSelectedIndex] = useState<number>(-1)
     const extraInfo = useSelector(state => state.user.extraInfo)
     const username = store.getState().user.user.userInfo?.username
@@ -22,43 +22,35 @@ const AccountYouDontFollowBack = () => {
     }, [])
     useEffect(() => {
         if (extraInfo) {
-            const followerUsrnames = [...extraInfo.followers]
-            const follwingUsrnames = [...extraInfo.followings]
-            const dontFollowUsrnames = [...followerUsrnames.filter(usr =>
-                follwingUsrnames.indexOf(usr) < 0)]
             const ref = firestore()
-            const taskFollowers: Promise<MixedUserInfo & {
-                requestedList: string[]
-            }>[] = dontFollowUsrnames.map(async userX => {
-                const rq = await ref.collection('users').doc(userX).get()
-                const { username, avatarURL, requestedList, privacySetting: {
-                    accountPrivacy
-                } } = rq.data() as (MixedUserInfo & {
-                    requestedList?: string[],
-                    privacySetting: { accountPrivacy: { private?: boolean } }
+            ref.collection('posts')
+                .where('userId', '==', username)
+                .limit(10)
+                .orderBy('create_at', 'desc')
+                .get().then(rs => {
+                    let interactionList: string[] = []
+                    rs.docs.map(post => {
+                        const data: Post = post.data()
+                        data.likes?.map(usr =>
+                            interactionList.push(usr)
+                        )
+                        data.commentList?.map(usr =>
+                            interactionList.push(usr)
+                        )
+                    })
+                    interactionList = Array.from(new Set(interactionList))
+                        .filter(usr => usr !== username)
+                    const taskFollowers: Promise<UserInfo>[] = interactionList.map(async userX => {
+                        const rq = await ref.collection('users').doc(userX).get()
+                        const info: UserInfo = rq.data() || {}
+                        return info
+                    })
+                    Promise.all(taskFollowers).then(result => {
+                        setList(result)
+                    })
+
                 })
-                const info = {
-                    private: accountPrivacy.private || false,
-                    username,
-                    avatarURL,
-                    requestedList: requestedList || []
-                }
-                return info
-            })
-            Promise.all(taskFollowers).then(result => {
-                result = result.map(usr => {
-                    if (usr.requestedList.indexOf(username || '') > -1) {
-                        usr.followType = 3
-                        return usr
-                    }
-                    if (follwingUsrnames.indexOf(usr.username || '') > -1) {
-                        usr.followType = 1
-                    }
-                    else usr.followType = 2
-                    return usr
-                })
-                setList([...result])
-            })
+
         }
     }, [extraInfo])
     const _onRemove = (index: number) => {
@@ -68,26 +60,7 @@ const AccountYouDontFollowBack = () => {
         dispatch(RemoveFollowerRequest(username))
         setSelectedIndex(-1)
     }
-    const _onToggleFollow = (index: number) => {
-        let temp = [...list]
-        if (list[index].followType === 1) {
-            dispatch(ToggleFollowUserRequest(list[index].username || ''))
-            temp[index].followType = 2
-        } else if (list[index].followType === 2) {
-            if (list[index].private) {
-                dispatch(ToggleSendFollowRequest(list[index].username || ''))
-                temp[index].followType = 3
-            } else {
-                dispatch(ToggleFollowUserRequest(list[index].username || ''))
-                temp[index].followType = 1
-            }
-            setList(temp)
-        } else {
-            dispatch(ToggleSendFollowRequest(list[index].username || ''))
-            temp[index].followType = 2
-        }
-        setList(temp)
-    }
+
     return (
         <SafeAreaView style={styles.container}>
             {selectedIndex > -1 &&
@@ -128,7 +101,7 @@ const AccountYouDontFollowBack = () => {
                     </View>
                 </TouchableOpacity>
             }
-            <NavigationBar title="Account You Don't Follow Back"
+            <NavigationBar title="Recent Interacted With"
                 callback={goBack}
             />
             <FlatList
@@ -156,18 +129,6 @@ const AccountYouDontFollowBack = () => {
                                     alignItems: 'center'
                                 }}>
                                     <Text>{item.username}</Text>
-                                    <Text> • </Text>
-                                    <TouchableOpacity
-                                        onPress={() => _onToggleFollow(index)}
-                                    >
-                                        <Text style={{
-                                            color: '#318bfb',
-                                            fontWeight: '500'
-                                        }}>{item.followType === 1 ? 'Following' : (
-                                            item.followType === 2 ? 'Follow' : 'Requested'
-                                        )
-                                            }</Text>
-                                    </TouchableOpacity>
                                 </View>
                                 <Text style={{
                                     fontWeight: '500',
@@ -190,7 +151,7 @@ const AccountYouDontFollowBack = () => {
     )
 }
 
-export default AccountYouDontFollowBack
+export default RecentFollowerInteraction
 
 const styles = StyleSheet.create({
     container: {

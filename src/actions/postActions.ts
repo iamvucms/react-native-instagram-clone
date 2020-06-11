@@ -172,6 +172,13 @@ export const PostCommentRequest = (postId: number, content: string):
             const rq = await ref.collection('posts').where('uid', '==', postId).get()
             if (rq.docs.length > 0) {
                 const targetPost = rq.docs[0]
+                let commentList = targetPost.data().commentList || []
+                if (commentList.length > 0 && commentList.indexOf(me.userInfo?.username) < 0) {
+                    commentList.push(me.userInfo?.username)
+                } else commentList = [me.userInfo?.username]
+                targetPost.ref.update({
+                    commentList
+                })
                 const uid = new Date().getTime()
                 await targetPost.ref.collection('comments').doc(`${uid}`).set({
                     uid: uid,

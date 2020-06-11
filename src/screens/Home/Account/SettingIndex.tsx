@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
 import NavigationBar from '../../../components/NavigationBar'
 import { goBack, navigation } from '../../../navigations/rootNavigation'
@@ -6,9 +6,15 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT, settingNavigationMap, SettingNavigation } from '../../../constants'
 import { TextInput } from 'react-native-gesture-handler'
 import { getTabBarHeight } from '../../../components/BottomTabBar'
+import { FetchSettingRequest } from '../../../actions/userActions'
+import { useDispatch } from 'react-redux'
 const Setting = () => {
+    const dispatch = useDispatch()
     const [result, setResult] = useState<SettingNavigation[]>([])
     const [isSearching, setIsSearching] = useState<boolean>(false)
+    useEffect(() => {
+        dispatch(FetchSettingRequest())
+    }, [])
     const _onSearch = (q: string) => {
         if (q.length === 0) return (() => { setResult([]); setIsSearching(false) })()
 

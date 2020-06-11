@@ -5,6 +5,7 @@ import * as firebase from 'firebase';
 import { Dimensions } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import SettingComponents from '../screens/Home/Account/Setting';
+import { defaultUserState } from '../reducers/userReducer';
 const firebaseConfig = {
     apiKey: "AIzaSyATgIePHiOXnqlzUN4rRyyaPw4CTWH7yWA",
     authDomain: "vucms-7f6fa.firebaseapp.com",
@@ -22,6 +23,17 @@ firebase.initializeApp(firebaseConfig)
 //     docs.forEach(doc => doc.ref.update({
 //         create_at: new Date()
 //     }))
+// })
+//Add default Setting
+// firebase.firestore().collection('users').get().then(docs => {
+//     docs.forEach(doc => {
+//         if (doc.data().username !== 'vucms') {
+//             doc.ref.update({
+//                 notificationSetting: defaultUserState.setting?.notification,
+//                 privacySetting: defaultUserState.setting?.privacy,
+//             })
+//         }
+//     })
 // })
 //Add Keyword
 // firebase.firestore().collection('users').get().then(x => {

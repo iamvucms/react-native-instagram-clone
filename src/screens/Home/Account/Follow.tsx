@@ -10,7 +10,8 @@ import { UserInfo } from '../../../reducers/userReducer'
 import { firestore } from 'firebase'
 import FastImage from 'react-native-fast-image'
 import { useDispatch } from 'react-redux'
-import { FetchExtraInfoRequest, ToggleFollowUserRequest, RemoveFollowerRequest } from '../../../actions/userActions'
+import { FetchExtraInfoRequest, ToggleFollowUserRequest, RemoveFollowerRequest, UnfollowRequest, ToggleSendFollowRequest } from '../../../actions/userActions'
+import { Post } from '../../../reducers/postReducer'
 type FollowRouteProp = RouteProp<{
     Follow: {
         type: 1 | 2
@@ -27,6 +28,16 @@ type FollowProps = {
     navigation: FollowNavigationProp,
     route: FollowRouteProp
 }
+/**
+ * followType
+ * 1:Following
+ * 2:Aren't Following
+ * 3:Requested
+ */
+export type MixedUserInfo = UserInfo & {
+    followType?: 1 | 2 | 3,
+    private: boolean
+}
 const Follow = ({ route }: FollowProps) => {
     const dispatch = useDispatch()
     const type = route.params.type
@@ -35,21 +46,30 @@ const Follow = ({ route }: FollowProps) => {
     const [followerQuery, setFollowerQuery] = useState<string>('')
     const [followingQuery, setFollowingQuery] = useState<string>('')
     const [dontFollowBackList, setDontFollowBackList] = useState<UserInfo[]>([])
+    const [recentFollowerInteractionList, setRecentFollowerInteractionList]
+        = useState<UserInfo[]>([])
+    const [recentFollowingsInteractionList, setRecentFollowingsInteractionList]
+        = useState<UserInfo[]>([])
     const username = user.user.userInfo?.username
     const [selectedIndex, setSelectedIndex] = useState<number>(-1)
-    const [followers, setFollowers] = useState<UserInfo[]>([])
-    const [followersRenderList, setFollowersRenderList] = useState<UserInfo[]>([])
-    const [follwings, setFollowings] = useState<UserInfo[]>([])
-    const [follwingsRenderList, setFollowingsRenderList] = useState<UserInfo[]>([])
+    const [selectedUnfollowIndex, setSelectedUnfollowIndex] = useState<number>(-1)
+    const [selectedFollowingIndex, setSelectedFollowingIndex] = useState<number>(-1)
+    const [followers, setFollowers] = useState<MixedUserInfo[]>([])
+    const [followersRenderList, setFollowersRenderList] = useState<MixedUserInfo[]>([])
+    const [follwings, setFollowings] = useState<MixedUserInfo[]>([])
+    const [follwingsRenderList, setFollowingsRenderList] = useState<MixedUserInfo[]>([])
+    const [lastRequest, setLastRequest] = useState<UserInfo>({})
     const _scrollRef = useRef<ScrollView>(null)
     const _tabLineOffsetX = React.useMemo(() =>
         new Animated.Value((type - 1) * SCREEN_WIDTH / 2), [])
     const ref = useRef<{
         followerQueryTimeout: NodeJS.Timeout,
+        followingQueryTimeout: NodeJS.Timeout,
         currentTab: 1 | 2
     }>({
         currentTab: type,
-        followerQueryTimeout: setTimeout(() => { }, 0)
+        followerQueryTimeout: setTimeout(() => { }, 0),
+        followingQueryTimeout: setTimeout(() => { }, 0)
     })
     useEffect(() => {
         if (type === 2) {
@@ -71,8 +91,21 @@ const Follow = ({ route }: FollowProps) => {
             }, 300);
         } else setFollowersRenderList([...followers])
     }, [followerQuery])
+
+    useEffect(() => {
+        clearTimeout(ref.current.followingQueryTimeout)
+        if (followingQuery.length > 0) {
+            ref.current.followingQueryTimeout = setTimeout(() => {
+                const temp = [...follwings].filter(usr => usr.username
+                    && usr.username.indexOf(followingQuery.toLowerCase()) > -1)
+                setFollowingsRenderList(temp)
+            }, 300);
+        } else setFollowingsRenderList([...follwings])
+    }, [followingQuery])
+
     useEffect(() => {
         if (extraInfo) {
+            const requestedUsrname = [...extraInfo.requestedList].pop()
             const followerUsrnames = [...extraInfo.followers]
             const follwingUsrnames = [...extraInfo.followings]
             const dontFollowUsrnames = [...followerUsrnames.filter(usr =>
@@ -80,30 +113,133 @@ const Follow = ({ route }: FollowProps) => {
             followerUsrnames.splice(extraInfo.followers.indexOf(username || ""), 1)
             follwingUsrnames.splice(extraInfo.followings.indexOf(username || ""), 1)
             const ref = firestore()
-            const taskFollowers: Promise<UserInfo>[] = followerUsrnames.map(async userX => {
+            ref.collection('users').doc(requestedUsrname).get().then(rs => {
+                setLastRequest(rs.data() || {})
+            })
+
+
+            const taskFollowers: Promise<MixedUserInfo & {
+                requestedList: string[]
+            }>[] = followerUsrnames.map(async userX => {
                 const rq = await ref.collection('users').doc(userX).get()
-                const info: UserInfo = rq.data() || {}
+                const { username, avatarURL, requestedList, privacySetting: {
+                    accountPrivacy
+                } } = rq.data() as (MixedUserInfo & {
+                    requestedList?: string[],
+                    privacySetting: { accountPrivacy: { private?: boolean } }
+                })
+                const info = {
+                    private: accountPrivacy.private || false,
+                    username,
+                    avatarURL,
+                    requestedList: requestedList || []
+                }
                 return info
             })
             Promise.all(taskFollowers).then(result => {
+                result = result.map(usr => {
+                    if (usr.requestedList.indexOf(username || '') > -1) {
+                        usr.followType = 3
+                        return usr
+                    }
+                    if (follwingUsrnames.indexOf(usr.username || '') > -1) {
+                        usr.followType = 1
+                    }
+                    else usr.followType = 2
+                    return usr
+                })
                 const dontFollowBackUsers = [...result.filter(usr =>
                     dontFollowUsrnames.indexOf(usr.username || '') > -1
                 )]
                 setDontFollowBackList(dontFollowBackUsers)
                 setFollowers(result)
                 setFollowersRenderList(result)
+                ref.collection('posts')
+                    .where('userId', '==', username)
+                    .limit(10)
+                    .orderBy('create_at', 'desc')
+                    .get().then(rs => {
+                        let interactionList: string[] = []
+                        rs.docs.map(post => {
+                            const data: Post = post.data()
+                            data.likes?.map(usr =>
+                                interactionList.push(usr)
+                            )
+                            data.commentList?.map(usr =>
+                                interactionList.push(usr)
+                            )
+                        })
+                        interactionList = Array.from(new Set(interactionList))
+                        const temp = [...result.filter(usr =>
+                            interactionList.indexOf(usr.username || '') > -1
+                        )]
+                        setRecentFollowerInteractionList(temp)
+                    })
             })
-            const taskFollowings: Promise<UserInfo>[] = follwingUsrnames.map(async userX => {
+
+            const taskFollowings: Promise<MixedUserInfo & {
+                requestedList: string[]
+            }>[] = follwingUsrnames.map(async userX => {
                 const rq = await ref.collection('users').doc(userX).get()
-                const info: UserInfo = rq.data() || {}
+                const { username, avatarURL, requestedList, privacySetting: {
+                    accountPrivacy
+                } } = rq.data() as (MixedUserInfo & {
+                    requestedList?: string[],
+                    privacySetting: { accountPrivacy: { private?: boolean } }
+                })
+                const info = {
+                    private: accountPrivacy.private || false,
+                    username,
+                    avatarURL,
+                    requestedList: requestedList || []
+                }
                 return info
             })
             Promise.all(taskFollowings).then(result => {
+                result = result.map(usr => {
+                    if (usr.requestedList.indexOf(username || '') > -1) {
+                        usr.followType = 3
+                        return usr
+                    }
+                    if (follwingUsrnames.indexOf(usr.username || '') > -1) {
+                        usr.followType = 1
+                    }
+                    else usr.followType = 2
+                    return usr
+                })
                 setFollowings(result)
                 setFollowingsRenderList(result)
+                ref.collection('posts')
+                    .where('likes', 'array-contains', username)
+                    .limit(10)
+                    .orderBy('create_at', 'desc')
+                    .get().then(rs => {
+                        let interactionList: string[] = []
+                        rs.docs.map(post => {
+                            const data: Post = post.data()
+                            interactionList.push(data.userId || '')
+                        })
+                        ref.collection('posts')
+                            .where('commentList', 'array-contains', username)
+                            .limit(10)
+                            .orderBy('create_at', 'desc')
+                            .get().then(rs => {
+                                let interactionList: string[] = []
+                                rs.docs.map(post => {
+                                    const data: Post = post.data()
+                                    interactionList.push(data.userId || '')
+                                })
+                                interactionList = Array.from(new Set(interactionList))
+                                const temp = [...result.filter(usr =>
+                                    interactionList.indexOf(usr.username || '') > -1
+                                )]
+                                setRecentFollowingsInteractionList(temp)
+                            })
+                    })
             })
         }
     }, [extraInfo])
+
     const _onSwitchTab = (type: 1 | 2) => {
         if (type === 2 && ref.current.currentTab === 1) {
             ref.current.currentTab = type
@@ -165,8 +301,8 @@ const Follow = ({ route }: FollowProps) => {
             ref.current.currentTab = 1
         }
     }
-    const _onToggleFollow = (username: string) => {
-        dispatch(ToggleFollowUserRequest(username, true))
+    const _onToggleFollow = (index: number) => {
+        dispatch(ToggleFollowUserRequest(followersRenderList[index].username || '', true))
     }
     const _onRemove = (index: number) => {
         setSelectedIndex(index)
@@ -175,8 +311,81 @@ const Follow = ({ route }: FollowProps) => {
         dispatch(RemoveFollowerRequest(username))
         setSelectedIndex(-1)
     }
+    const _onUnFollow = (index: number) => {
+        let temp = [...follwingsRenderList]
+        if (follwingsRenderList[index].followType === 1) {
+            setSelectedUnfollowIndex(index)
+        } else if (follwingsRenderList[index].followType === 2) {
+
+            if (follwingsRenderList[index].private) {
+                dispatch(ToggleSendFollowRequest(follwingsRenderList[index].username || ''))
+                temp[index].followType = 3
+            } else {
+                dispatch(ToggleFollowUserRequest(follwingsRenderList[index].username || ''))
+                temp[index].followType = 1
+            }
+
+        } else {
+            dispatch(ToggleSendFollowRequest(follwingsRenderList[index].username || ''))
+            temp[index].followType = 2
+        }
+        setFollowingsRenderList(temp)
+    }
+    const _onConfirmUnFollow = (usernameX: string) => {
+        dispatch(UnfollowRequest(usernameX))
+        setSelectedUnfollowIndex(-1)
+        let temp = [...follwingsRenderList]
+        temp = temp.map(usr => {
+            if (usr.username === usernameX) {
+                usr.followType = 2
+            }
+            return usr
+        })
+        setFollowingsRenderList(temp)
+    }
     return (
         <SafeAreaView style={styles.container}>
+            {selectedFollowingIndex > -1 &&
+                <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={setSelectedFollowingIndex.bind(null, -1)}
+                    style={styles.confirmWrapper}>
+                    <View style={{ ...styles.confirmBox, paddingTop: 0, borderRadius: 5 }}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setSelectedFollowingIndex(-1)
+                                navigate('NotificationOptions', {
+                                    user: follwingsRenderList[selectedFollowingIndex]
+                                })
+                            }}
+                            style={{
+                                paddingHorizontal: 15,
+                                height: 44,
+                                width: '100%',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            <Text style={{ fontWeight: '500' }}>Manage Notifications</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setSelectedFollowingIndex(-1)
+                                navigate('MuteOptions', {
+                                    user: follwingsRenderList[selectedFollowingIndex]
+                                })
+                            }}
+                            style={{
+                                paddingHorizontal: 15,
+                                height: 44,
+                                width: '100%',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            <Text style={{ fontWeight: '500' }}>Muted</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            }
             {selectedIndex > -1 &&
                 <TouchableOpacity
                     activeOpacity={1}
@@ -207,6 +416,45 @@ const Follow = ({ route }: FollowProps) => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={setSelectedIndex.bind(null, -1)}
+                            style={styles.btnConfirm}>
+                            <Text style={{
+                                fontSize: 16,
+                            }}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            }
+            {selectedUnfollowIndex > -1 &&
+                <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={setSelectedUnfollowIndex.bind(null, -1)}
+                    style={styles.confirmWrapper}>
+                    <View style={styles.confirmBox}>
+                        <FastImage style={styles.avatar} source={{ uri: follwingsRenderList[selectedUnfollowIndex].avatarURL }} />
+                        <Text style={{
+                            marginTop: 15,
+                            fontSize: 20,
+                            fontWeight: '600'
+                        }}>Are You Sure?</Text>
+                        <Text style={{
+                            color: "#666",
+                            textAlign: 'center',
+                            marginBottom: 20,
+                            marginHorizontal: 15,
+                        }}>
+                            Are you sure to unfollow @{follwingsRenderList[selectedUnfollowIndex].username}
+                        </Text>
+                        <TouchableOpacity
+                            onPress={() => _onConfirmUnFollow(follwingsRenderList[selectedUnfollowIndex].username || '')}
+                            style={styles.btnConfirm}>
+                            <Text style={{
+                                color: '#318bfb',
+                                fontSize: 16,
+                                fontWeight: '600'
+                            }}>Unfollow</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={setSelectedUnfollowIndex.bind(null, -1)}
                             style={styles.btnConfirm}>
                             <Text style={{
                                 fontSize: 16,
@@ -270,154 +518,203 @@ const Follow = ({ route }: FollowProps) => {
                 <View style={styles.tabContainer}>
                     <FlatList
                         ListHeaderComponent={
-                            <View style={styles.headerList}>
-                                <View style={styles.searchWrapper}>
+                            <>
+                                <TouchableOpacity
+                                    onPress={() => navigate('FollowRequests')}
+                                    style={styles.requestListWrapper}>
                                     <View style={{
-                                        height: 44,
-                                        width: 44,
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
+                                        height: 40,
+                                        width: 40,
+                                        marginRight: 10,
                                     }}>
-                                        <Icon name="magnify" size={20} color="#666" />
+                                        <FastImage
+                                            source={{
+                                                uri: lastRequest.avatarURL
+                                            }}
+                                            style={{
+                                                height: 40,
+                                                width: 40,
+                                                borderRadius: 40,
+                                                borderColor: '#333',
+                                                borderWidth: 0.3
+                                            }} />
+                                        <View style={styles.requestNumber}>
+                                            <Text style={{
+                                                color: '#fff',
+                                                fontWeight: "bold"
+                                            }}>{extraInfo?.requestedList.length}</Text>
+                                        </View>
                                     </View>
-                                    <TextInput
-                                        style={{
-
-                                            height: '100%',
-                                            width: SCREEN_WIDTH - 30 - 44
-                                        }}
-                                        autoCapitalize="none"
-                                        value={followerQuery}
-                                        onChangeText={setFollowerQuery}
-                                        placeholder="Search followers"
-                                    />
+                                    <View>
+                                        <Text>Follow Request</Text>
+                                        <Text style={{
+                                            color: "#666"
+                                        }}>Approve or ignore requests</Text>
+                                    </View>
+                                </TouchableOpacity>
+                                <View style={styles.headerList}>
+                                    <View style={styles.searchWrapper}>
+                                        <View style={{
+                                            height: 44,
+                                            width: 44,
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}>
+                                            <Icon name="magnify" size={20} color="#666" />
+                                        </View>
+                                        <TextInput
+                                            style={{
+                                                height: '100%',
+                                                width: SCREEN_WIDTH - 30 - 44
+                                            }}
+                                            autoCapitalize="none"
+                                            value={followerQuery}
+                                            onChangeText={setFollowerQuery}
+                                            placeholder="Search followers"
+                                        />
+                                    </View>
+                                    <View style={styles.categoriesWrapper}>
+                                        <Text style={{
+                                            fontSize: 16,
+                                            fontWeight: '600'
+                                        }}>Categories</Text>
+                                        {dontFollowBackList.length > 0 &&
+                                            <TouchableOpacity
+                                                onPress={() =>
+                                                    navigate('AccountYouDontFollowBack')}
+                                                style={styles.categoryItem}>
+                                                {dontFollowBackList.length >= 2 ? (
+                                                    <View style={{
+                                                        height: 50,
+                                                        width: 50,
+                                                        marginRight: 10
+                                                    }}>
+                                                        <FastImage
+                                                            style={{
+                                                                position: 'absolute',
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40
+                                                            }}
+                                                            source={{
+                                                                uri: dontFollowBackList[0].avatarURL
+                                                            }}
+                                                        />
+                                                        <FastImage
+                                                            style={{
+                                                                borderWidth: 2,
+                                                                borderColor: '#fff',
+                                                                position: 'absolute',
+                                                                top: 10,
+                                                                left: 10,
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40,
+                                                            }}
+                                                            source={{
+                                                                uri: dontFollowBackList[1].avatarURL
+                                                            }}
+                                                        />
+                                                    </View>
+                                                ) : (
+                                                        <FastImage
+                                                            style={{
+                                                                marginRight: 10,
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40,
+                                                            }}
+                                                            source={{ uri: dontFollowBackList[0].avatarURL }} />
+                                                    )
+                                                }
+                                                <View>
+                                                    <Text style={{
+                                                        fontWeight: '600'
+                                                    }}>Account You Don't Follow Back</Text>
+                                                    <Text style={{
+                                                        color: "#666"
+                                                    }}>{dontFollowBackList[0].username} and {dontFollowBackList.length - 1} others</Text>
+                                                </View>
+                                            </TouchableOpacity>
+                                        }
+                                        {recentFollowerInteractionList.length > 0 &&
+                                            <TouchableOpacity
+                                                onPress={() => navigate('RecentFollowerInteraction')}
+                                                style={styles.categoryItem}>
+                                                {recentFollowerInteractionList.length >= 2 ? (
+                                                    <View style={{
+                                                        height: 50,
+                                                        width: 50,
+                                                        marginRight: 10
+                                                    }}>
+                                                        <FastImage
+                                                            style={{
+                                                                position: 'absolute',
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40
+                                                            }}
+                                                            source={{
+                                                                uri: recentFollowerInteractionList[0].avatarURL
+                                                            }}
+                                                        />
+                                                        <FastImage
+                                                            style={{
+                                                                borderWidth: 2,
+                                                                borderColor: '#fff',
+                                                                position: 'absolute',
+                                                                top: 10,
+                                                                left: 10,
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40,
+                                                            }}
+                                                            source={{
+                                                                uri: recentFollowerInteractionList[1].avatarURL
+                                                            }}
+                                                        />
+                                                    </View>
+                                                ) : (
+                                                        <FastImage
+                                                            style={{
+                                                                marginRight: 10,
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40,
+                                                            }}
+                                                            source={{ uri: recentFollowerInteractionList[0].avatarURL }} />
+                                                    )
+                                                }
+                                                <View>
+                                                    <Text style={{
+                                                        fontWeight: '600'
+                                                    }}>Recent Interacted With</Text>
+                                                    <Text style={{
+                                                        color: "#666"
+                                                    }}>{recentFollowerInteractionList[0].username} and {recentFollowerInteractionList.length - 1} others</Text>
+                                                </View>
+                                            </TouchableOpacity>
+                                        }
+                                    </View>
                                 </View>
-                                <View style={styles.categoriesWrapper}>
+                                <View>
                                     <Text style={{
+                                        margin: 15,
+                                        marginBottom: 5,
                                         fontSize: 16,
                                         fontWeight: '600'
-                                    }}>Categories</Text>
-                                    {dontFollowBackList.length > 0 &&
-                                        <TouchableOpacity
-                                            onPress={() =>
-                                                navigate('AccountYouDontFollowBack')}
-                                            style={styles.categoryItem}>
-                                            {dontFollowBackList.length >= 2 ? (
-                                                <View style={{
-                                                    height: 50,
-                                                    width: 50,
-                                                    marginRight: 10
-                                                }}>
-                                                    <Image
-                                                        style={{
-                                                            position: 'absolute',
-                                                            height: 40,
-                                                            width: 40,
-                                                            borderRadius: 40
-                                                        }}
-                                                        source={{
-                                                            uri: dontFollowBackList[0].avatarURL
-                                                        }}
-                                                    />
-                                                    <Image
-                                                        style={{
-                                                            borderWidth: 2,
-                                                            borderColor: '#fff',
-                                                            position: 'absolute',
-                                                            top: 10,
-                                                            left: 10,
-                                                            height: 40,
-                                                            width: 40,
-                                                            borderRadius: 40,
-                                                        }}
-                                                        source={{
-                                                            uri: dontFollowBackList[0].avatarURL
-                                                        }}
-                                                    />
-                                                </View>
-                                            ) : (
-                                                    <Image
-                                                        style={{
-                                                            marginRight: 10,
-                                                            height: 40,
-                                                            width: 40,
-                                                            borderRadius: 40,
-                                                        }}
-                                                        source={{ uri: dontFollowBackList[0].avatarURL }} />
-                                                )
-                                            }
-                                            <View>
-                                                <Text style={{
-                                                    fontWeight: '600'
-                                                }}>Account You Don't Follow Back</Text>
-                                                <Text style={{
-                                                    color: "#666"
-                                                }}>{dontFollowBackList[0].username} and {dontFollowBackList.length - 1} others</Text>
-                                            </View>
-                                        </TouchableOpacity>
-                                    }
-                                    {dontFollowBackList.length > 0 &&
-                                        <TouchableOpacity style={styles.categoryItem}>
-                                            {dontFollowBackList.length >= 2 ? (
-                                                <View style={{
-                                                    height: 50,
-                                                    width: 50,
-                                                    marginRight: 10
-                                                }}>
-                                                    <Image
-                                                        style={{
-                                                            position: 'absolute',
-                                                            height: 40,
-                                                            width: 40,
-                                                            borderRadius: 40
-                                                        }}
-                                                        source={{
-                                                            uri: dontFollowBackList[0].avatarURL
-                                                        }}
-                                                    />
-                                                    <Image
-                                                        style={{
-                                                            borderWidth: 2,
-                                                            borderColor: '#fff',
-                                                            position: 'absolute',
-                                                            top: 10,
-                                                            left: 10,
-                                                            height: 40,
-                                                            width: 40,
-                                                            borderRadius: 40,
-                                                        }}
-                                                        source={{
-                                                            uri: dontFollowBackList[0].avatarURL
-                                                        }}
-                                                    />
-                                                </View>
-                                            ) : (
-                                                    <Image
-                                                        style={{
-                                                            marginRight: 10,
-                                                            height: 40,
-                                                            width: 40,
-                                                            borderRadius: 40,
-                                                        }}
-                                                        source={{ uri: dontFollowBackList[0].avatarURL }} />
-                                                )
-                                            }
-                                            <View>
-                                                <Text style={{
-                                                    fontWeight: '600'
-                                                }}>Least Interacted With</Text>
-                                                <Text style={{
-                                                    color: "#666"
-                                                }}>{dontFollowBackList[0].username} and {dontFollowBackList.length - 1} others</Text>
-                                            </View>
-                                        </TouchableOpacity>
-                                    }
+                                    }}>All Followers</Text>
                                 </View>
-                            </View>
+                            </>
                         }
                         data={followersRenderList}
                         renderItem={({ item, index }) =>
                             <TouchableOpacity
+                                onPress={() => {
+                                    navigate('ProfileX', {
+                                        username: item.username
+                                    })
+                                }}
                                 style={styles.userItem}>
                                 <View style={{
                                     width: '50%',
@@ -446,14 +743,12 @@ const Follow = ({ route }: FollowProps) => {
                                     alignItems: 'center'
                                 }}>
                                     <TouchableOpacity
-                                        onPress={_onToggleFollow.bind(null, item.username || "")}
+                                        onPress={_onToggleFollow.bind(null, index)}
                                         style={{
                                             ...styles.btnFollow,
-                                            ...((extraInfo?.followings
-                                                && extraInfo.followings
-                                                    .indexOf(item.username || '') > -1) ? {
+                                            ...(item.followType === 1 || item.followType === 3 ? {
 
-                                                } : {
+                                            } : {
                                                     borderWidth: 0,
                                                     backgroundColor: '#318bfb'
                                                 }
@@ -461,16 +756,14 @@ const Follow = ({ route }: FollowProps) => {
                                         }}>
                                         <Text style={{
                                             fontWeight: '600',
-                                            ...((extraInfo?.followings
-                                                && extraInfo.followings
-                                                    .indexOf(item.username || '') > -1) ? {} : {
-                                                    color: '#fff'
-                                                }
+                                            ...(item.followType === 1 || item.followType === 3 ? {} : {
+                                                color: '#fff'
+                                            }
                                             )
                                         }}>
-                                            {(extraInfo?.followings
-                                                && extraInfo.followings
-                                                    .indexOf(item.username || '') > -1) ? 'Following' : 'Follow'
+                                            {item.followType === 1 ? 'Following' : (
+                                                item.followType === 2 ? 'Follow' : 'Requested'
+                                            )
                                             }
                                         </Text>
                                     </TouchableOpacity>
@@ -493,8 +786,169 @@ const Follow = ({ route }: FollowProps) => {
                 <View style={styles.tabContainer}>
                     <FlatList
                         data={follwingsRenderList}
-                        renderItem={({ item }) =>
+                        ListHeaderComponent={
+                            <>
+                                <View style={styles.headerList}>
+                                    <View style={styles.searchWrapper}>
+                                        <View style={{
+                                            height: 44,
+                                            width: 44,
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}>
+                                            <Icon name="magnify" size={20} color="#666" />
+                                        </View>
+                                        <TextInput
+                                            style={{
+
+                                                height: '100%',
+                                                width: SCREEN_WIDTH - 30 - 44
+                                            }}
+                                            autoCapitalize="none"
+                                            value={followingQuery}
+                                            onChangeText={setFollowingQuery}
+                                            placeholder="Search followings"
+                                        />
+                                    </View>
+                                    <View style={styles.categoriesWrapper}>
+                                        <Text style={{
+                                            fontSize: 16,
+                                            fontWeight: '600'
+                                        }}>Categories</Text>
+                                        {recentFollowingsInteractionList.length > 0 &&
+                                            <TouchableOpacity
+                                                onPress={() =>
+                                                    navigate('RecentFollowingInteraction')}
+                                                style={styles.categoryItem}>
+                                                {recentFollowingsInteractionList.length >= 2 ? (
+                                                    <View style={{
+                                                        height: 50,
+                                                        width: 50,
+                                                        marginRight: 10
+                                                    }}>
+                                                        <FastImage
+                                                            style={{
+                                                                position: 'absolute',
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40
+                                                            }}
+                                                            source={{
+                                                                uri: recentFollowingsInteractionList[0].avatarURL
+                                                            }}
+                                                        />
+                                                        <FastImage
+                                                            style={{
+                                                                borderWidth: 2,
+                                                                borderColor: '#fff',
+                                                                position: 'absolute',
+                                                                top: 10,
+                                                                left: 10,
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40,
+                                                            }}
+                                                            source={{
+                                                                uri: recentFollowingsInteractionList[1].avatarURL
+                                                            }}
+                                                        />
+                                                    </View>
+                                                ) : (
+                                                        <FastImage
+                                                            style={{
+                                                                marginRight: 10,
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40,
+                                                            }}
+                                                            source={{ uri: recentFollowingsInteractionList[0].avatarURL }} />
+                                                    )
+                                                }
+                                                <View>
+                                                    <Text style={{
+                                                        fontWeight: '600'
+                                                    }}>Recent Interacted With</Text>
+                                                    <Text style={{
+                                                        color: "#666"
+                                                    }}>{recentFollowingsInteractionList[0].username} and {recentFollowingsInteractionList.length - 1} others</Text>
+                                                </View>
+                                            </TouchableOpacity>
+                                        }
+                                        {dontFollowBackList.length > 0 &&
+                                            <TouchableOpacity style={styles.categoryItem}>
+                                                {dontFollowBackList.length >= 2 ? (
+                                                    <View style={{
+                                                        height: 50,
+                                                        width: 50,
+                                                        marginRight: 10
+                                                    }}>
+                                                        <FastImage
+                                                            style={{
+                                                                position: 'absolute',
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40
+                                                            }}
+                                                            source={{
+                                                                uri: dontFollowBackList[0].avatarURL
+                                                            }}
+                                                        />
+                                                        <FastImage
+                                                            style={{
+                                                                borderWidth: 2,
+                                                                borderColor: '#fff',
+                                                                position: 'absolute',
+                                                                top: 10,
+                                                                left: 10,
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40,
+                                                            }}
+                                                            source={{
+                                                                uri: dontFollowBackList[0].avatarURL
+                                                            }}
+                                                        />
+                                                    </View>
+                                                ) : (
+                                                        <FastImage
+                                                            style={{
+                                                                marginRight: 10,
+                                                                height: 40,
+                                                                width: 40,
+                                                                borderRadius: 40,
+                                                            }}
+                                                            source={{ uri: dontFollowBackList[0].avatarURL }} />
+                                                    )
+                                                }
+                                                <View>
+                                                    <Text style={{
+                                                        fontWeight: '600'
+                                                    }}>Most Shown in Feed</Text>
+                                                    <Text style={{
+                                                        color: "#666"
+                                                    }}>{dontFollowBackList[0].username} and {dontFollowBackList.length - 1} others</Text>
+                                                </View>
+                                            </TouchableOpacity>
+                                        }
+                                    </View>
+                                </View>
+                                <View>
+                                    <Text style={{
+                                        margin: 15,
+                                        marginBottom: 5,
+                                        fontSize: 16,
+                                        fontWeight: '600'
+                                    }}>All Followings</Text>
+                                </View>
+                            </>
+                        }
+                        renderItem={({ item, index }) =>
                             <TouchableOpacity
+                                onPress={() => {
+                                    navigate('ProfileX', {
+                                        username: item.username
+                                    })
+                                }}
                                 style={styles.userItem}>
                                 <View style={{
                                     width: '50%',
@@ -522,39 +976,37 @@ const Follow = ({ route }: FollowProps) => {
                                     flexDirection: 'row',
                                     alignItems: 'center'
                                 }}>
-                                    <TouchableOpacity style={{
-                                        ...styles.btnFollow,
-                                        ...((extraInfo?.followings
-                                            && extraInfo.followings
-                                                .indexOf(item.username || '') > -1) ? {
-
-                                            } : {
+                                    <TouchableOpacity
+                                        onPress={_onUnFollow.bind(null, index)}
+                                        style={{
+                                            ...styles.btnFollow,
+                                            ...(item.followType === 1 || item.followType === 3 ? {} : {
                                                 borderWidth: 0,
                                                 backgroundColor: '#318bfb'
                                             }
-                                        )
-                                    }}>
-                                        <Text style={{
-                                            fontWeight: '600',
-                                            ...((extraInfo?.followings
-                                                && extraInfo.followings
-                                                    .indexOf(item.username || '') > -1) ? {} : {
-                                                    color: '#fff'
-                                                }
                                             )
                                         }}>
-                                            {(extraInfo?.followings
-                                                && extraInfo.followings
-                                                    .indexOf(item.username || '') > -1) ? 'Following' : 'Follow'
+                                        <Text style={{
+                                            fontWeight: '600',
+                                            ...(item.followType === 1 || item.followType === 3 ? {} : {
+                                                color: '#fff'
+                                            }
+                                            )
+                                        }}>
+                                            {item.followType === 1 ? 'Following' : (
+                                                item.followType === 2 ? 'Follow' : 'Requested'
+                                            )
                                             }
                                         </Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={{
-                                        width: 30,
-                                        height: 30,
-                                        justifyContent: 'center',
-                                        alignItems: 'center'
-                                    }}>
+                                    <TouchableOpacity
+                                        onPress={setSelectedFollowingIndex.bind(null, index)}
+                                        style={{
+                                            width: 30,
+                                            height: 30,
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}>
                                         <Icon name="dots-vertical" size={20} />
                                     </TouchableOpacity>
                                 </View>
@@ -598,6 +1050,24 @@ const styles = StyleSheet.create({
     tabContainer: {
         width: SCREEN_WIDTH,
     },
+    requestListWrapper: {
+        alignItems: 'center',
+        flexDirection: 'row',
+        padding: 15,
+        borderBottomColor: '#ddd',
+        borderBottomWidth: 0.3
+    },
+    requestNumber: {
+        position: 'absolute',
+        height: 18,
+        width: 18,
+        borderRadius: 18,
+        backgroundColor: 'red',
+        justifyContent: 'center',
+        alignItems: 'center',
+        top: 0,
+        right: 0
+    },
     tabLine: {
         position: 'absolute',
         height: 2,
@@ -623,7 +1093,10 @@ const styles = StyleSheet.create({
         borderWidth: 1
     },
     headerList: {
-        padding: 15
+        padding: 15,
+        paddingBottom: 0,
+        borderBottomColor: '#ddd',
+        borderBottomWidth: 0.3
     },
     searchWrapper: {
         flexDirection: 'row',
@@ -641,9 +1114,9 @@ const styles = StyleSheet.create({
         marginVertical: 5
     },
     avatar: {
-        height: 64,
-        width: 64,
-        borderRadius: 32,
+        height: 100,
+        width: 100,
+        borderRadius: 100,
         borderColor: "#333",
         borderWidth: 0.3
     },

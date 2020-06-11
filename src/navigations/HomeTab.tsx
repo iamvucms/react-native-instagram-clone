@@ -1,22 +1,22 @@
-import {
-    createBottomTabNavigator,
-    BottomTabBarOptions, BottomTabNavigationOptions,
-} from '@react-navigation/bottom-tabs'
-import React, { useEffect } from 'react'
-import { StyleSheet, Text } from 'react-native'
-import HomeIndex from '../screens/Home'
-import Explore from '../screens/Home/Explore'
-import Creator from '../screens/Home/Creator'
-import Activity from '../screens/Home/Activity'
-import Account from '../screens/Home/Account'
-import SettingNavigationx from '../screens/Home/Account/Setting/index'
+import { BottomTabBarOptions, BottomTabNavigationOptions, createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { createStackNavigator, TransitionPresets } from '@react-navigation/stack'
+import React from 'react'
+import { StyleSheet } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { TabBarComponent } from '../components/BottomTabBar'
-import { createStackNavigator, TransitionPresets } from '@react-navigation/stack'
-import Setting from '../screens/Home/Account/SettingIndex'
 import { settingNavigationMap } from '../constants'
-import Follow from '../screens/Home/Account/Follow'
+import HomeIndex from '../screens/Home'
+import Account from '../screens/Home/Account'
 import AccountYouDontFollowBack from '../screens/Home/Account/AccountYouDontFollowBack'
+import Follow from '../screens/Home/Account/Follow'
+import RecentFollowerInteraction from '../screens/Home/Account/RecentFollowerInteraction'
+import RecentFollowingInteraction from '../screens/Home/Account/RecentFollowingInteraction'
+import SettingNavigationx from '../screens/Home/Account/Setting/index'
+import Setting from '../screens/Home/Account/SettingIndex'
+import Activity from '../screens/Home/Activity'
+import Creator from '../screens/Home/Creator'
+import Explore from '../screens/Home/Explore'
+import FollowRequests from '../screens/Home/Account/FollowRequests'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -36,10 +36,12 @@ const AccountStack = () => {
         }}>
             <Stack.Screen component={Account} name="AccountIndex" />
             <Stack.Screen component={Setting} name="Setting" />
-
             <Stack.Screen options={{
                 ...TransitionPresets.ModalSlideFromBottomIOS,
             }} component={Follow} name="Follow" />
+            <Stack.Screen component={FollowRequests} name="FollowRequests" />
+            <Stack.Screen component={RecentFollowingInteraction} name="RecentFollowingInteraction" />
+            <Stack.Screen component={RecentFollowerInteraction} name="RecentFollowerInteraction" />
             <Stack.Screen component={AccountYouDontFollowBack} name="AccountYouDontFollowBack" />
             <Stack.Screen component={SettingNavigationx.Logout} name="Logout" />
             <Stack.Screen component={SettingNavigationx.AddAccount} name="AddAccount" />

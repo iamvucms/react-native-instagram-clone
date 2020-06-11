@@ -1,11 +1,11 @@
 import { auth, firestore, storage } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
-import { navigate, dispatch } from "../navigations/rootNavigation";
-import { ErrorAction, PrivacyProperties, ExtraInfoPayload, NotificationSetting, PostStoryCommentOptions, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, NotificationProperties, PrivacySetting, PrivacyCommentOptions } from '../reducers/userReducer';
-import { store } from '../store';
-import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
-import { generateUsernameKeywords, uriToBlob } from '../utils';
 import { DEFAULT_PHOTO_URI } from '../constants';
+import { navigate } from "../navigations/rootNavigation";
+import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting } from '../reducers/userReducer';
+import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
+import { store } from '../store';
+import { generateUsernameKeywords, uriToBlob } from '../utils';
 export interface userLoginWithEmail {
     email: string,
     password: string
@@ -18,20 +18,52 @@ export const LoginRequest = (user: userLoginWithEmail):
             if (rs.user) {
                 let userx = rs.user
                 firestore().collection('users')
-                    .where('email', '==', user.email).get().then(snap => {
-                        if (snap.size > 0) {
+                    .where('email', '==', user.email).get().then(rq => {
+                        if (rq.size > 0) {
                             navigate('HomeTab') //ADD this line to fix initialRouteName not working on first time
+                            const {
+                                avatarURL,
+                                bio,
+                                birthday,
+                                email,
+                                followings,
+                                fullname,
+                                gender,
+                                phone,
+                                username,
+                                website,
+                                notificationSetting,
+                                privacySetting,
+                                notificationStoryList,
+                                notificationPostList,
+                            } = rq.docs[0].data()
                             const result: userPayload = {
                                 user: {
                                     logined: true,
                                     firebaseUser: userx,
-                                    userInfo: snap.docs[0].data()
+                                    userInfo: {
+                                        avatarURL,
+                                        bio,
+                                        birthday,
+                                        email,
+                                        followings,
+                                        fullname,
+                                        gender,
+                                        phone,
+                                        username,
+                                        website,
+                                        notificationStoryList,
+                                        notificationPostList,
+                                    }
+                                },
+                                setting: {
+                                    notification: notificationSetting || defaultUserState.setting?.notification,
+                                    privacy: privacySetting || defaultUserState.setting?.privacy
                                 }
                             }
                             dispatch(LoginSuccess(result))
                         } else dispatch(LoginFailure())
                     })
-
             } else dispatch(LoginFailure())
         }).catch(e => {
             dispatch(LoginFailure())
@@ -73,9 +105,18 @@ export const RegisterRequest = (userData: RegisterParams):
                         },
                         bio: '',
                         gender: 2,
-                        followings: [],
+                        followings: [userData.username],
+                        requestedList: [],
+                        notificationStoryList: [],
+                        notificationPostList: [],
                         website: '',
-                        avatarURL: DEFAULT_PHOTO_URI
+                        avatarURL: DEFAULT_PHOTO_URI,
+                        privacySetting: {
+                            ...defaultUserState.setting?.privacy
+                        },
+                        notificationSetting: {
+                            ...defaultUserState.setting?.notification
+                        }
                     })
                 dispatch(LoginRequest({
                     email: userData.email,
@@ -155,7 +196,7 @@ export const FetchExtraInfoRequest = ():
             const payload: ExtraInfoPayload = {
                 currentStory: [],
                 extraInfo: {
-                    skipRecommmendFollowBackList: [],
+                    requestedList: [],
                     followers: [],
                     followings: [],
                     posts: rq.size || 0
@@ -165,12 +206,11 @@ export const FetchExtraInfoRequest = ():
             const rq2 = await ref.collection('users')
                 .where('username', '==', me.username).limit(1).get()
             if (rq2.size > 0) {
-                payload.extraInfo.followings = rq2.docs[0].data().followings
+                payload.extraInfo.followings = rq2.docs[0].data().followings || []
+                payload.extraInfo.requestedList = rq2.docs[0].data().requestedList || []
                 const rq3 = await ref.collection('users')
                     .where('followings', 'array-contains', me.username).get()
                 payload.extraInfo.followers = rq3.docs.map(x => x.data().username)
-                payload.extraInfo.skipRecommmendFollowBackList
-                    = rq2.docs[0].data().skipRecommmendFollowBackList || []
                 const rq5 = await ref.collection('stories')
                     .where('userId', '==', me.username)
                     .where('create_at', '>=',
@@ -261,16 +301,26 @@ export const ToggleFollowUserRequest = (username: string, refreshExtraInfo: bool
             const ref = firestore()
             const rq = await ref.collection('users')
                 .where('username', '==', me.username).get()
+            const targetUser = await ref.collection('users').doc(username).get()
             if (rq.size > 0) {
-                const targetUser = rq.docs[0]
-                const userData: UserInfo = targetUser.data() || {}
+                const myUser = rq.docs[0]
+                const userData: UserInfo = myUser.data() || {}
                 const currentFollowings = userData.followings || []
                 if (currentFollowings.indexOf(username) < 0) {
-                    currentFollowings.push(username)
+                    const targetUserData: {
+                        privacySetting?: {
+                            accountPrivacy: {
+                                private: boolean
+                            }
+                        }
+                    } = targetUser.data() || {}
+                    if (targetUserData.privacySetting?.accountPrivacy.private) {
+                        dispatch(ToggleSendFollowRequest(username))
+                    } else currentFollowings.push(username)
                 } else {
                     currentFollowings.splice(currentFollowings.indexOf(username), 1)
                 }
-                targetUser.ref.update({
+                myUser.ref.update({
                     followings: currentFollowings
                 })
                 dispatch(FollowUserSuccess(userData))
@@ -300,6 +350,37 @@ export const FollowUserFailure = ():
         type: userActionTypes.FOLLOW_FAILURE,
         payload: {
             message: `Error! Can't send following request`
+        }
+    }
+}
+//SEND FOLLOW REQUEST
+export const ToggleSendFollowRequest = (username: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            let me: UserInfo = { ...store.getState().user.user.userInfo }
+            const ref = firestore()
+            const rq = await ref.collection('users')
+                .where('username', '==', me.username).get()
+            if (rq.size > 0) {
+                const targetUser = await ref.collection('users').doc(username).get()
+                const targetUserData = targetUser.data() || {}
+                const requestedList = targetUserData.requestedList || []
+                const index = requestedList.indexOf(me.username)
+                if (index < 0) {
+                    requestedList.push(me.username)
+                } else {
+                    requestedList.splice(index, 1)
+                }
+                targetUser.ref.update({
+                    requestedList
+                })
+            } else {
+                dispatch(FollowUserFailure())
+            }
+        } catch (e) {
+            console.warn(e)
+            dispatch(FollowUserFailure())
         }
     }
 }
@@ -535,5 +616,39 @@ export const RemoveFollowerRequest = (username: string):
         } catch (e) {
 
         }
+    }
+}
+//FETCH SETTING ACTION
+export const FetchSettingRequest = ():
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        const me = store.getState().user.user.userInfo
+        const rq = await firestore().collection('users')
+            .doc(me?.username).get()
+        if (rq.exists) {
+            const {
+                notificationSetting,
+                privacySetting,
+            } = rq.data() || {}
+            const result: UserSetting = {
+                notification: notificationSetting || defaultUserState.setting?.notification,
+                privacy: privacySetting || defaultUserState.setting?.privacy
+            }
+            dispatch(FetchSettingSuccess(result))
+        } else dispatch(FetchSettingFailure())
+    }
+}
+export const FetchSettingFailure = (): ErrorAction => {
+    return {
+        type: userActionTypes.FETCH_SETTING_FAILURE,
+        payload: {
+            message: 'FetchSetting Failed!'
+        }
+    }
+}
+export const FetchSettingSuccess = (payload: UserSetting): SuccessAction<UserSetting> => {
+    return {
+        type: userActionTypes.FETCH_SETTING_SUCCESS,
+        payload: payload
     }
 }
