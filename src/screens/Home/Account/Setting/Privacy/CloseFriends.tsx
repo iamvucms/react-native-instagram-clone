@@ -137,6 +137,7 @@ const CloseFriends = (): JSX.Element => {
         const ref = firestore()
         const rq = await ref.collection('posts')
             .where('userId', '==', myUsername)
+            .limit(25)
             .get()
         let preList: {
             username: string,

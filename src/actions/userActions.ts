@@ -6,6 +6,7 @@ import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties
 import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
 import { store } from '../store';
 import { generateUsernameKeywords, uriToBlob } from '../utils';
+import { Alert } from 'react-native';
 export interface userLoginWithEmail {
     email: string,
     password: string
@@ -32,10 +33,12 @@ export const LoginRequest = (user: userLoginWithEmail):
                                 phone,
                                 username,
                                 website,
+                                requestedList,
                                 notificationSetting,
                                 privacySetting,
                                 notificationStoryList,
                                 notificationPostList,
+                                unSuggestList
                             } = rq.docs[0].data()
                             const result: userPayload = {
                                 user: {
@@ -54,6 +57,8 @@ export const LoginRequest = (user: userLoginWithEmail):
                                         website,
                                         notificationStoryList,
                                         notificationPostList,
+                                        requestedList,
+                                        unSuggestList
                                     }
                                 },
                                 setting: {
@@ -196,6 +201,7 @@ export const FetchExtraInfoRequest = ():
             const payload: ExtraInfoPayload = {
                 currentStory: [],
                 extraInfo: {
+                    unSuggestList: [],
                     requestedList: [],
                     followers: [],
                     followings: [],
@@ -207,6 +213,7 @@ export const FetchExtraInfoRequest = ():
                 .where('username', '==', me.username).limit(1).get()
             if (rq2.size > 0) {
                 payload.extraInfo.followings = rq2.docs[0].data().followings || []
+                payload.extraInfo.unSuggestList = rq2.docs[0].data().unSuggestList || []
                 payload.extraInfo.requestedList = rq2.docs[0].data().requestedList || []
                 const rq3 = await ref.collection('users')
                     .where('followings', 'array-contains', me.username).get()
@@ -650,5 +657,95 @@ export const FetchSettingSuccess = (payload: UserSetting): SuccessAction<UserSet
     return {
         type: userActionTypes.FETCH_SETTING_SUCCESS,
         payload: payload
+    }
+}
+//CONFIRM REQUEST ACTION
+export const ConfirmFollowRequest = (username: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        const me = store.getState().user.user.userInfo
+        const ref = firestore()
+        const rq = await ref.collection('users')
+            .doc(me?.username).get()
+        const targetUser = await ref.collection('users').doc(username).get()
+        if (rq.exists && targetUser.exists) {
+            const targetUserData: UserInfo = targetUser.data() || {}
+            const currentTargetUserFollowings = targetUserData.followings || []
+            if (currentTargetUserFollowings.indexOf(me?.username || '') < 0) {
+                currentTargetUserFollowings.push(me?.username || '')
+                targetUser.ref.update({
+                    followings: currentTargetUserFollowings
+                })
+            }
+            const myUserData: UserInfo = rq.data() || {}
+            const currentRequest = myUserData.requestedList || []
+            const index = currentRequest.indexOf(username)
+            if (index > -1) {
+                currentRequest.splice(index, 1)
+                rq.ref.update({
+                    requestedList: currentRequest
+                })
+            }
+            dispatch(FetchExtraInfoRequest())
+        } else {
+            Alert.alert('Error', 'Please check your network!')
+        }
+    }
+}
+export const DeclineFollowRequest = (username: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        const me = store.getState().user.user.userInfo
+        const ref = firestore()
+        const rq = await ref.collection('users')
+            .doc(me?.username).get()
+        const targetUser = await ref.collection('users').doc(username).get()
+        if (rq.exists && targetUser.exists) {
+            const targetUserData: UserInfo = targetUser.data() || {}
+            const currentTargetUserFollowings = targetUserData.followings || []
+            const index = currentTargetUserFollowings.indexOf(me?.username || '')
+            if (index > -1) {
+                currentTargetUserFollowings.splice(index, 1)
+                targetUser.ref.update({
+                    followings: currentTargetUserFollowings
+                })
+            }
+            const myUserData: UserInfo = rq.data() || {}
+            const currentRequest = myUserData.requestedList || []
+            const index2 = currentRequest.indexOf(username)
+            if (index2 > -1) {
+                currentRequest.splice(index2, 1)
+                rq.ref.update({
+                    requestedList: currentRequest
+                })
+            }
+            dispatch(FetchExtraInfoRequest())
+        } else {
+            Alert.alert('Error', 'Please check your network!')
+        }
+    }
+}
+//ADD UNSUGGESTION LIST 
+export const UnSuggestionRequest = (username: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        const me = store.getState().user.user.userInfo
+        const ref = firestore()
+        const rq = await ref.collection('users')
+            .doc(me?.username).get()
+        if (rq.exists) {
+            const myUserData: UserInfo = rq.data() || {}
+            const currentUnSuggestList = myUserData.unSuggestList || []
+            const index = currentUnSuggestList.indexOf(username)
+            if (index < 0) {
+                currentUnSuggestList.push(username)
+                rq.ref.update({
+                    unSuggestList: currentUnSuggestList
+                })
+            }
+            dispatch(FetchExtraInfoRequest())
+        } else {
+            Alert.alert('Error', 'Please check your network!')
+        }
     }
 }

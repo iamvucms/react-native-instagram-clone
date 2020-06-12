@@ -70,20 +70,19 @@ const AccountYouDontFollowBack = () => {
     }
     const _onToggleFollow = (index: number) => {
         let temp = [...list]
-        if (list[index].followType === 1) {
-            dispatch(ToggleFollowUserRequest(list[index].username || ''))
+        if (temp[index].followType === 1) {
+            dispatch(ToggleFollowUserRequest(temp[index].username || ''))
             temp[index].followType = 2
-        } else if (list[index].followType === 2) {
-            if (list[index].private) {
-                dispatch(ToggleSendFollowRequest(list[index].username || ''))
+        } else if (temp[index].followType === 2) {
+            if (temp[index].private) {
+                dispatch(ToggleSendFollowRequest(temp[index].username || ''))
                 temp[index].followType = 3
             } else {
-                dispatch(ToggleFollowUserRequest(list[index].username || ''))
+                dispatch(ToggleFollowUserRequest(temp[index].username || ''))
                 temp[index].followType = 1
             }
-            setList(temp)
         } else {
-            dispatch(ToggleSendFollowRequest(list[index].username || ''))
+            dispatch(ToggleSendFollowRequest(temp[index].username || ''))
             temp[index].followType = 2
         }
         setList(temp)

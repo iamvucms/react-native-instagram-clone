@@ -48,12 +48,15 @@ export type UserInfo = {
     gender?: 0 | 1 | 2,
     notificationStoryList?: string[],
     notificationPostList?: string[],
+    requestedList?: string[],
+    unSuggestList?: string[]
 }
 export type ExtraInfo = {
     posts: number,
     followers: string[],
     followings: string[],
-    requestedList: string[]
+    requestedList: string[],
+    unSuggestList: string[]
 }
 export type NotificationProperties =
     'notificationAccounts'
@@ -308,6 +311,7 @@ export const defaultUserState: userPayload = {
         }
     },
     extraInfo: {
+        unSuggestList: [],
         requestedList: [],
         posts: 0,
         followers: [],

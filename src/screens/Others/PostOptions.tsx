@@ -47,13 +47,15 @@ const PostOptions = ({ route }: PostOptionsProps) => {
                 ...styles.container,
             }}>
             <View style={styles.mainOptions}>
-                <View style={{ backgroundColor: "#000" }}>
-                    <TouchableOpacity
-                        activeOpacity={0.8}
-                        style={styles.optionItem}>
-                        <Text>Report...</Text>
-                    </TouchableOpacity>
-                </View>
+                {user?.username !== item.userId &&
+                    <View style={{ backgroundColor: "#000" }}>
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={styles.optionItem}>
+                            <Text>Report...</Text>
+                        </TouchableOpacity>
+                    </View>
+                }
                 <View style={{ backgroundColor: "#000" }}>
                     <TouchableOpacity
                         onPress={_toggleNotification}
@@ -83,21 +85,26 @@ const PostOptions = ({ route }: PostOptionsProps) => {
                         <Text>Share to...</Text>
                     </TouchableOpacity>
                 </View>
-                <View style={{ backgroundColor: "#000" }}>
-                    <TouchableOpacity
-                        onPress={_onUnfollow}
-                        activeOpacity={0.8}
-                        style={styles.optionItem}>
-                        <Text>Unfollow</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={{ backgroundColor: "#000" }}>
-                    <TouchableOpacity
-                        activeOpacity={0.8}
-                        style={styles.optionItem}>
-                        <Text>Mute</Text>
-                    </TouchableOpacity>
-                </View>
+                {user?.username !== item.userId &&
+                    <View style={{ backgroundColor: "#000" }}>
+                        <TouchableOpacity
+                            onPress={_onUnfollow}
+                            activeOpacity={0.8}
+                            style={styles.optionItem}>
+                            <Text>Unfollow</Text>
+                        </TouchableOpacity>
+                    </View>
+                }
+
+                {user?.username !== item.userId &&
+                    <View style={{ backgroundColor: "#000" }}>
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={styles.optionItem}>
+                            <Text>Mute</Text>
+                        </TouchableOpacity>
+                    </View>}
+
 
             </View>
         </TouchableOpacity>

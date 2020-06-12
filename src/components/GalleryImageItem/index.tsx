@@ -23,7 +23,7 @@ const index = ({ index, _showPopupImage, _hidePopupImage, photo }: GalleryImageI
     return (
         <TouchableOpacity
             ref={containerRef}
-            delayLongPress={300}
+            delayLongPress={150}
             onLongPress={_onLongPressHandler}
             onPressOut={_onPressOutHandler}
             activeOpacity={0.8}

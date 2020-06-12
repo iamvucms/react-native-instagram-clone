@@ -106,6 +106,7 @@ const Follow = ({ route }: FollowProps) => {
     useEffect(() => {
         if (extraInfo) {
             const requestedUsrname = [...extraInfo.requestedList].pop()
+
             const followerUsrnames = [...extraInfo.followers]
             const follwingUsrnames = [...extraInfo.followings]
             const dontFollowUsrnames = [...followerUsrnames.filter(usr =>
@@ -113,11 +114,11 @@ const Follow = ({ route }: FollowProps) => {
             followerUsrnames.splice(extraInfo.followers.indexOf(username || ""), 1)
             follwingUsrnames.splice(extraInfo.followings.indexOf(username || ""), 1)
             const ref = firestore()
-            ref.collection('users').doc(requestedUsrname).get().then(rs => {
-                setLastRequest(rs.data() || {})
-            })
-
-
+            if (requestedUsrname) {
+                ref.collection('users').doc(requestedUsrname).get().then(rs => {
+                    setLastRequest(rs.data() || {})
+                })
+            }
             const taskFollowers: Promise<MixedUserInfo & {
                 requestedList: string[]
             }>[] = followerUsrnames.map(async userX => {
@@ -519,39 +520,42 @@ const Follow = ({ route }: FollowProps) => {
                     <FlatList
                         ListHeaderComponent={
                             <>
-                                <TouchableOpacity
-                                    onPress={() => navigate('FollowRequests')}
-                                    style={styles.requestListWrapper}>
-                                    <View style={{
-                                        height: 40,
-                                        width: 40,
-                                        marginRight: 10,
-                                    }}>
-                                        <FastImage
-                                            source={{
-                                                uri: lastRequest.avatarURL
-                                            }}
-                                            style={{
-                                                height: 40,
-                                                width: 40,
-                                                borderRadius: 40,
-                                                borderColor: '#333',
-                                                borderWidth: 0.3
-                                            }} />
-                                        <View style={styles.requestNumber}>
-                                            <Text style={{
-                                                color: '#fff',
-                                                fontWeight: "bold"
-                                            }}>{extraInfo?.requestedList.length}</Text>
+                                {lastRequest.hasOwnProperty('username') &&
+                                    <TouchableOpacity
+                                        onPress={() => navigate('FollowRequests')}
+                                        style={styles.requestListWrapper}>
+                                        <View style={{
+                                            height: 40,
+                                            width: 40,
+                                            marginRight: 10,
+                                        }}>
+                                            <FastImage
+                                                source={{
+                                                    uri: lastRequest.avatarURL
+                                                }}
+                                                style={{
+                                                    height: 40,
+                                                    width: 40,
+                                                    borderRadius: 40,
+                                                    borderColor: '#333',
+                                                    borderWidth: 0.3
+                                                }} />
+                                            <View style={styles.requestNumber}>
+                                                <Text style={{
+                                                    color: '#fff',
+                                                    fontWeight: "bold"
+                                                }}>{extraInfo?.requestedList.length}</Text>
+                                            </View>
                                         </View>
-                                    </View>
-                                    <View>
-                                        <Text>Follow Request</Text>
-                                        <Text style={{
-                                            color: "#666"
-                                        }}>Approve or ignore requests</Text>
-                                    </View>
-                                </TouchableOpacity>
+                                        <View>
+                                            <Text>Follow Request</Text>
+                                            <Text style={{
+                                                color: "#666"
+                                            }}>Approve or ignore requests</Text>
+                                        </View>
+                                    </TouchableOpacity>
+
+                                }
                                 <View style={styles.headerList}>
                                     <View style={styles.searchWrapper}>
                                         <View style={{
