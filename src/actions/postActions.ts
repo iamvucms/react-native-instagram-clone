@@ -5,6 +5,10 @@ import { ExtraPost, LIMIT_POSTS_PER_LOADING, Post, PostAction, postActionTypes, 
 import { UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
 import { LoadMoreCommentListSuccess } from './commentActions';
+import { CreateNotificationRequest } from './notificationActions';
+import { Timestamp } from '../utils';
+import { seenTypes } from '../reducers/storyReducer';
+import { notificationTypes } from '../reducers/notificationReducer';
 
 export const FetchPostListRequest = ():
     ThunkAction<Promise<void>, {}, {}, PostAction> => {
@@ -170,7 +174,7 @@ export const PostCommentRequest = (postId: number, content: string):
             let postList = [...store.getState().postList]
             const ref = firestore()
             const rq = await ref.collection('posts').where('uid', '==', postId).get()
-            if (rq.docs.length > 0) {
+            if (rq.size > 0) {
                 const targetPost = rq.docs[0]
                 let commentList = targetPost.data().commentList || []
                 if (commentList.length > 0 && commentList.indexOf(me.userInfo?.username) < 0) {
@@ -179,14 +183,27 @@ export const PostCommentRequest = (postId: number, content: string):
                 targetPost.ref.update({
                     commentList
                 })
+
                 const uid = new Date().getTime()
-                await targetPost.ref.collection('comments').doc(`${uid}`).set({
+                targetPost.ref.collection('comments').doc(`${uid}`).set({
                     uid: uid,
                     content,
                     likes: [],
                     userId: me.userInfo?.username,
                     create_at: new Date()
                 })
+                //ADD NOTIFICATION
+                if (targetPost.data().userId !== me.userInfo?.username) {
+                    dispatch(CreateNotificationRequest({
+                        postId,
+                        replyId: 0,
+                        commentId: uid,
+                        userId: targetPost.data().userId,
+                        from: me.userInfo?.username,
+                        create_at: Timestamp(),
+                        type: notificationTypes.COMMENT_MY_POST
+                    }))
+                }
                 const rq2 = await targetPost.ref.collection('comments')
                     .orderBy('create_at', 'desc').get()
                 postList = postList.map((post) => {
@@ -208,6 +225,7 @@ export const PostCommentRequest = (postId: number, content: string):
                 dispatch(PostCommentFailure())
             }
         } catch (e) {
+            console.warn(e)
             dispatch(PostCommentFailure())
         }
     }
@@ -241,16 +259,38 @@ export const ToggleLikePostRequest = (postId: number):
             if (rq.docs.length > 0) {
                 postList = postList.map((post) => {
                     if (post.uid === postId) {
-                        const targetPost: Post = rq.docs[0].data()
-                        const index = targetPost.likes?.indexOf(
+                        const targetPost: Post = rq.docs[0].data() || {}
+                        const index = (targetPost.likes || []).indexOf(
                             me.userInfo?.username || '')
-                        if (index !== undefined && index > -1) {
+                        if (index > -1) {
                             targetPost.likes?.splice(index, 1)
                         } else targetPost.likes?.push(me.userInfo?.username || '')
                         rq.docs[0].ref.update({
                             likes: targetPost.likes
                         })
                         post = { ...post, likes: targetPost.likes }
+                        if (targetPost.userId !== me.userInfo?.username) {
+                            if (index < 0)
+                                dispatch(CreateNotificationRequest({
+                                    postId,
+                                    commentId: 0,
+                                    replyId: 0,
+                                    userId: targetPost.userId,
+                                    from: me.userInfo?.username,
+                                    create_at: Timestamp(),
+                                    type: notificationTypes.LIKE_MY_POST
+                                }))
+                            else dispatch(CreateNotificationRequest({
+                                isUndo: true,
+                                postId,
+                                commentId: 0,
+                                replyId: 0,
+                                userId: targetPost.userId,
+                                from: me.userInfo?.username,
+                                create_at: Timestamp(),
+                                type: notificationTypes.LIKE_MY_POST
+                            }))
+                        }
                     }
                     return post
                 })

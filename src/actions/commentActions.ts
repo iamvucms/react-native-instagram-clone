@@ -3,6 +3,9 @@ import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { LIMIT_COMMENTS_PER_LOADING, CommentAction, CommentErrorAction, commentActionTypes, CommentExtraList, CommentList, CommentListWithScroll, CommentSuccessAction, ExtraComment } from '../reducers/commentReducer';
 import { UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
+import { CreateNotificationRequest } from './notificationActions';
+import { Timestamp } from '../utils';
+import { notificationTypes } from '../reducers/notificationReducer';
 
 export const FetchCommentListRequest = (postId: number):
     ThunkAction<Promise<void>, {}, {}, CommentAction> => {
@@ -324,7 +327,7 @@ export const ToggleLikeReplySuccess = (payload: CommentListWithScroll):
 /**
  * POST REPLY ACTIONS
  */
-export const PostReplyRequest = (commentId: number, content: string):
+export const PostReplyRequest = (postId: number, commentId: number, content: string):
     ThunkAction<Promise<void>, {}, {}, CommentAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, CommentAction>) => {
         try {
@@ -333,6 +336,8 @@ export const PostReplyRequest = (commentId: number, content: string):
             const ref = firestore()
             const rq = await ref.collectionGroup('comments')
                 .where('uid', '==', commentId).limit(1).get()
+            const rqTemp = await ref.collection('posts').doc(`${postId}`).get()
+            const targetPost = rqTemp.data() || {}
             if (rq.size > 0) {
                 const targetComment = rq.docs[0]
                 const replyUid = new Date().getTime()
@@ -346,6 +351,19 @@ export const PostReplyRequest = (commentId: number, content: string):
                     })
                 const rq2 = await ref.collectionGroup('replies')
                     .where('uid', '==', replyUid).limit(1).get()
+
+                if (targetPost.userId !== me.userInfo?.username) {
+                    dispatch(CreateNotificationRequest({
+                        postId,
+                        commentId: commentId,
+                        replyId: replyUid,
+                        userId: targetPost.userId,
+                        from: me.userInfo?.username,
+                        create_at: Timestamp(),
+                        type: notificationTypes.LIKE_MY_POST
+                    }))
+                }
+
                 comments = comments.map(comment => {
                     if (comment.uid === commentId) {
                         comment = { ...comment }
@@ -355,7 +373,6 @@ export const PostReplyRequest = (commentId: number, content: string):
                             comment.replies = []
                         }
                         comment.replies?.push(reply)
-
                     }
                     return comment
                 })
@@ -365,6 +382,7 @@ export const PostReplyRequest = (commentId: number, content: string):
                 }))
             } else dispatch(PostReplyFailure())
         } catch (e) {
+            console.warn(e)
             dispatch(PostReplyFailure())
         }
     }

@@ -14,7 +14,7 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../../constan
 import { SuperRootStackParamList } from '../../../navigations'
 import { goBack, navigate } from '../../../navigations/rootNavigation'
 import Switcher from '../../../components/Switcher'
-import { MapBoxAddress, uriToBlob } from '../../../utils'
+import { MapBoxAddress, uriToBlob, Timestamp } from '../../../utils'
 import { Post, PostImage } from '../../../reducers/postReducer'
 import { firestore, storage } from 'firebase'
 import { store } from '../../../store'
@@ -439,13 +439,10 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                     })
                     tagUsername = Array.from(new Set(tagUsername))
                     setUploading(false)
-                    const curDate = new Date()
-                    const second = Math.floor(curDate.getTime() / 1000)
-                    const nanosecond = curDate.getTime() - second * 1000
                     const postData: Post = {
                         altText,
                         content: caption,
-                        create_at: new firestore.Timestamp(second, nanosecond),
+                        create_at: Timestamp(),
                         isVideo: false,
                         permission: 1,
                         notificationUsers: offComment ? [] : (

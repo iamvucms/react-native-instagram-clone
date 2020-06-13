@@ -78,6 +78,7 @@ const Setting = () => {
                                             backgroundColor: '#000'
                                         }}>
                                         <TouchableOpacity
+                                            onPress={() => navigation.navigate(settingNavigation.navigationName)}
                                             activeOpacity={0.9}
                                             style={styles.settingItem}>
                                             {settingNavigation.icon &&

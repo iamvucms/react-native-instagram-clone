@@ -144,8 +144,9 @@ const CloseFriends = (): JSX.Element => {
             score: number
         }[] = []
         rq.docs.map(async (rs, index) => {
-            const likes = (rs.data().likes as string[])
-            likes.map(usr => {
+            const likes = (rs.data().likes as string[]) || []
+            const comments = (rs.data().commentList as string[]) || []
+            likes.concat(comments).map(usr => {
                 if (usr !== myUsername && closeList.indexOf(usr) < 0) {
                     let i = -1
                     preList.every((x, index2) => {

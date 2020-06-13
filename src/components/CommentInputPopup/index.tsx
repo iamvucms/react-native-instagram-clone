@@ -55,7 +55,7 @@ const index = ({ commentInputRef, preValue,
         setCommenting(true)
         if (ref.current.isReplying && replyToCommentId) {
             (async () => {
-                await dispatch(PostReplyRequest(replyToCommentId, text))
+                await dispatch(PostReplyRequest(id, replyToCommentId, text))
             })().then(() => {
                 _onHideReplyLabel()
                 setCommenting(false)

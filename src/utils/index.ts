@@ -90,7 +90,6 @@ export const searchLocation = (query: string): Promise<MapBoxAddress[]> => {
             })
             .catch(err => reject(err))
     })
-
 }
 export const sharePost = (post: ExtraPost) => {
     const options: Options = {
@@ -141,4 +140,10 @@ export const sharePost = (post: ExtraPost) => {
         ],
     }
     Share.open(options)
+}
+export const Timestamp = () => {
+    const curDate = new Date()
+    const second = Math.floor(curDate.getTime() / 1000)
+    const nanosecond = curDate.getTime() - second * 1000
+    return new firestore.Timestamp(second, nanosecond)
 }

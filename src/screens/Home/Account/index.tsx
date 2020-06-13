@@ -40,7 +40,7 @@ const index = () => {
         currentGalleryTab: 1,
         prePopupImage: { pX: 0, pY: 0, w: 0, h: 0 }
     })
-    const _tabLineOffsetX = new Animated.Value(0)
+    const _tabLineOffsetX = React.useMemo(() => new Animated.Value(0), [])
     const recommendTasks = [
         {
             type: 1,
