@@ -189,6 +189,7 @@ export interface userPayload {
     },
     setting?: UserSetting,
     photos?: Post[],
+    tagPhotos?: Post[],
     taggedPhotos?: [],
     currentStory?: Story[],
     extraInfo?: ExtraInfo,
@@ -207,7 +208,8 @@ export interface SuccessAction<T> {
 export type ExtraInfoPayload = {
     photos: Post[],
     currentStory: Story[],
-    extraInfo: ExtraInfo
+    extraInfo: ExtraInfo,
+    tagPhotos: Post[],
 }
 export type userAction = SuccessAction<userPayload> | ErrorAction
     | SuccessAction<UserInfo> | SuccessAction<ExtraInfoPayload>
@@ -217,6 +219,7 @@ export type userAction = SuccessAction<userPayload> | ErrorAction
 export const defaultUserState: userPayload = {
     user: {},
     photos: [],
+    tagPhotos: [],
     taggedPhotos: [],
     setting: {
         notification: {
@@ -376,7 +379,8 @@ const reducer = (state: userPayload = defaultUserState, action: userAction): use
             state = {
                 ...state, currentStory: [...action.payload.currentStory],
                 extraInfo: { ...action.payload.extraInfo },
-                photos: [...action.payload.photos]
+                photos: [...action.payload.photos],
+                tagPhotos: [...action.payload.tagPhotos]
             }
             return state
         case userActionTypes.FETCH_EXTRA_INFO_FAILURE:

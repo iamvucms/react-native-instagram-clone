@@ -17,6 +17,7 @@ const index = () => {
     const user = useSelector(state => state.user.user)
     const extraInfo = useSelector(state => state.user.extraInfo)
     const photos = useSelector(state => state.user.photos)
+    const tagPhotos = useSelector(state => state.user.tagPhotos)
     const scrollHRef = useRef<ScrollView>(null)
     const scrollVRef = useRef<ScrollView>(null)
     const scrollTabRef = useRef<ScrollView>(null)
@@ -164,9 +165,8 @@ const index = () => {
         if (type === 1 || type === 2 || type === 3) {
             navigate('EditProfile')
         } else {
-
+            navigate('DiscoverPeople')
         }
-
     }
     const _onScrollEndDragContainerScroll = ({ nativeEvent: {
         contentOffset: { x }
@@ -558,7 +558,7 @@ const index = () => {
                                             showPopupImage={_showPopupImage}
                                         />
                                         <AccountGallery
-                                            photos={[]}
+                                            photos={tagPhotos || []}
                                             hidePopupImage={_hidePopupImage}
                                             showPopupImage={_showPopupImage}
                                         />
@@ -698,7 +698,9 @@ const index = () => {
                                 marginLeft: 5,
                             }}>Close Friends</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity activeOpacity={0.8} style={styles.optionItem}>
+                        <TouchableOpacity
+                            onPress={() => navigate('DiscoverPeople')}
+                            activeOpacity={0.8} style={styles.optionItem}>
                             <Icon name="account-plus-outline" size={30} color="#333" />
                             <Text style={{
                                 fontSize: 16,

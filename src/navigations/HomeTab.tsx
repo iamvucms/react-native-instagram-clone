@@ -9,6 +9,7 @@ import HomeIndex from '../screens/Home'
 import Account from '../screens/Home/Account'
 import AccountYouDontFollowBack from '../screens/Home/Account/AccountYouDontFollowBack'
 import Follow from '../screens/Home/Account/Follow'
+import FollowRequests from '../screens/Home/Account/FollowRequests'
 import RecentFollowerInteraction from '../screens/Home/Account/RecentFollowerInteraction'
 import RecentFollowingInteraction from '../screens/Home/Account/RecentFollowingInteraction'
 import SettingNavigationx from '../screens/Home/Account/Setting/index'
@@ -16,7 +17,6 @@ import Setting from '../screens/Home/Account/SettingIndex'
 import Activity from '../screens/Home/Activity'
 import Creator from '../screens/Home/Creator'
 import Explore from '../screens/Home/Explore'
-import FollowRequests from '../screens/Home/Account/FollowRequests'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -68,6 +68,19 @@ const AccountStack = () => {
         </Stack.Navigator>
     )
 }
+
+const ActivityStack = () => {
+    return (
+        <Stack.Navigator screenOptions={{
+            headerShown: false,
+            gestureEnabled: false
+        }}>
+            <Stack.Screen name="ActiviyIndex" component={Activity} />
+            <Stack.Screen name="ActivityFollowRequests" component={FollowRequests} />
+        </Stack.Navigator>
+    )
+}
+
 const Tab = createBottomTabNavigator<HomeTabParamList>()
 const HomeTab = () => {
 
@@ -102,7 +115,7 @@ const HomeTab = () => {
             <Tab.Screen options={{
                 tabBarIcon: ({ focused }) => <Icon name="heart"
                     size={30} color={focused ? '#000' : '#ddd'} />
-            }} component={Activity} name="Activity" />
+            }} component={ActivityStack} name="Activity" />
             <Tab.Screen options={{
                 tabBarIcon: ({ focused }) => <Icon name="account"
                     size={30} color={focused ? '#000' : '#ddd'} />

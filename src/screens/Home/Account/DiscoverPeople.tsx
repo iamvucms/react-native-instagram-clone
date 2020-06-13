@@ -1,40 +1,21 @@
-import { firestore } from 'firebase'
 import React, { useEffect, useState } from 'react'
 import { FlatList, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useDispatch } from 'react-redux'
-import { ConfirmFollowRequest, DeclineFollowRequest, FetchExtraInfoRequest, ToggleFollowUserRequest, ToggleSendFollowRequest, UnSuggestionRequest } from '../../../actions/userActions'
+import { FetchExtraInfoRequest, ToggleFollowUserRequest, ToggleSendFollowRequest, UnSuggestionRequest } from '../../../actions/userActions'
 import NavigationBar from '../../../components/NavigationBar'
 import { ExtraSuggestionUserInfo, useSuggestion } from '../../../hooks/useSuggestion'
 import { goBack, navigate } from '../../../navigations/rootNavigation'
 import { useSelector } from '../../../reducers'
-import { UserInfo } from '../../../reducers/userReducer'
 
 
-const FollowRequests = () => {
+const DiscoverPeople = () => {
     const dispatch = useDispatch()
     const extraInfo = useSelector(state => state.user.extraInfo)
-    const [requests, setRequests] = useState<UserInfo[]>([])
-    const [suggests, setSuggests] = useSuggestion(20)
+    const [suggests, setSuggests] = useSuggestion()
     const [loading, setLoading] = useState<boolean>(false)
     useEffect(() => {
         dispatch(FetchExtraInfoRequest())
     }, [])
-    useEffect(() => {
-        if (extraInfo?.requestedList) {
-            const requestUsernames = [...extraInfo.requestedList]
-            const ref = firestore()
-            const tasks: Promise<UserInfo>[] = requestUsernames.map(async usr => {
-                const rq = await ref.collection('users').doc(usr).get()
-                const userData = rq.data() || {}
-                return userData
-            })
-            Promise.all(tasks).then(result => {
-                result.reverse()
-                setRequests(result)
-            })
-        }
-    }, [extraInfo?.requestedList])
-
     const _onToggleFollow = (index: number) => {
         let temp = [...suggests]
         if (temp[index].followType === 1) {
@@ -61,21 +42,12 @@ const FollowRequests = () => {
     }
     return (
         <SafeAreaView style={styles.container}>
-            <NavigationBar title="Follow Requests"
+            <NavigationBar title="Discover People"
                 callback={goBack}
             />
             <FlatList
                 refreshing={loading}
                 onRefresh={_onRefresh}
-                ListHeaderComponent={
-                    <FlatList
-                        data={requests}
-                        renderItem={({ item, index }) =>
-                            <RequestItem {...{ item, index }} />
-                        }
-                        keyExtractor={(item, index) => `${index}`}
-                    />
-                }
                 data={suggests}
                 renderItem={({ item, index }) =>
                     <>
@@ -84,7 +56,7 @@ const FollowRequests = () => {
                                 margin: 15,
                                 fontSize: 16,
                                 fontWeight: '500'
-                            }}>Suggestion for you</Text>
+                            }}>All Suggestions</Text>
                         }
                         <SuggestItem   {...{
                             item, index,
@@ -93,25 +65,12 @@ const FollowRequests = () => {
                     </>
                 }
                 keyExtractor={(item, index) => `${index}`}
-                ListFooterComponent={
-                    <TouchableOpacity
-                        style={{
-                            padding: 15
-                        }}
-                        onPress={() => navigate('DiscoverPeople')}
-                    >
-                        <Text style={{
-                            color: '#318bfb'
-                        }}>See All Suggestions</Text>
-                    </TouchableOpacity>
-                }
             />
-
         </SafeAreaView>
     )
 }
 
-export default FollowRequests
+export default DiscoverPeople
 
 const styles = StyleSheet.create({
     container: {
@@ -159,60 +118,6 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     }
 })
-const RequestItem = ({ item, index }: { item: UserInfo, index: number }) => {
-    const dispatch = useDispatch()
-    const _onDeleteRequest = () => {
-        dispatch(DeclineFollowRequest(item.username || ""))
-    }
-    const _onConfirmRequest = () => {
-        dispatch(ConfirmFollowRequest(item.username || ""))
-    }
-    return (
-        <TouchableOpacity
-            onPress={() => navigate('ProfileX', {
-                username: item.username
-            })}
-            style={styles.requestItem}>
-            <View style={styles.infoWrapper}>
-                <Image
-                    style={styles.requestAvatar}
-                    source={{
-                        uri: item.avatarURL
-                    }} />
-                <View>
-                    <Text style={{
-                        fontWeight: '600'
-                    }}>{item.username}</Text>
-                    <Text style={{
-                        fontWeight: '600', color: '#666'
-                    }}>{item.fullname}</Text>
-                </View>
-            </View>
-            <View style={styles.requestBtnGroups}>
-                <TouchableOpacity
-                    onPress={_onConfirmRequest}
-                    style={{
-                        ...styles.btnRequest,
-                        backgroundColor: '#318bfb'
-                    }}>
-                    <Text style={{
-                        fontWeight: '600',
-                        color: '#fff'
-                    }}>Confirm</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    onPress={_onDeleteRequest}
-                    style={{
-                        ...styles.btnRequest,
-                        borderWidth: 1,
-                        marginLeft: 5,
-                    }}>
-                    <Text style={{ fontWeight: '600' }}>Delete</Text>
-                </TouchableOpacity>
-            </View>
-        </TouchableOpacity>
-    )
-}
 const SuggestItem = ({ item, index, onToggleFollow }: { onToggleFollow: (index: number) => void, item: ExtraSuggestionUserInfo, index: number }) => {
     const dispatch = useDispatch()
     const _onUnSuggestion = () => {

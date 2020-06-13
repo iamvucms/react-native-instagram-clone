@@ -198,6 +198,8 @@ export const FetchExtraInfoRequest = ():
             const ref = firestore()
             const rq = await ref.collection('posts')
                 .where('userId', '==', me.username).get()
+            const tagPhotos = await ref.collection('posts')
+                .where('tagUsername', 'array-contains', me.username).get()
             const payload: ExtraInfoPayload = {
                 currentStory: [],
                 extraInfo: {
@@ -207,7 +209,8 @@ export const FetchExtraInfoRequest = ():
                     followings: [],
                     posts: rq.size || 0
                 },
-                photos: rq.docs.map(x => x.data())
+                photos: rq.docs.map(x => x.data()),
+                tagPhotos: tagPhotos.docs.map(x => x.data()),
             }
             const rq2 = await ref.collection('users')
                 .where('username', '==', me.username).limit(1).get()
