@@ -1,4 +1,7 @@
+
 # React Native Instagram Clone
+
+## Don't forget give me a star =))
 
 The 2nd project what I did with React Native.
 
