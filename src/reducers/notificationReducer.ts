@@ -25,7 +25,7 @@ export const notificationActionTypes = {
     FETCH_NOTIFICATIONS_FAILURE: 'FETCH_NOTIFICATIONS_FAILURE',
 }
 export type Notification = {
-    userId?: string,
+    userId?: string[],
     uid?: number,
     type?: number,
     froms?: string[],
@@ -45,7 +45,7 @@ export type ExtraNotification = Notification & {
 }
 export type PostingNotification = {
     isUndo?: boolean,
-    userId?: string,
+    userId?: string[],
     type?: number,
     from?: string,
     postId?: number,

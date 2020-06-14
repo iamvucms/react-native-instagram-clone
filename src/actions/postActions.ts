@@ -194,11 +194,14 @@ export const PostCommentRequest = (postId: number, content: string):
                 })
                 //ADD NOTIFICATION
                 if (targetPost.data().userId !== me.userInfo?.username) {
+                    const notificationList = targetPost.data().notificationUsers || []
+                    const myIndex = notificationList.indexOf(me.userInfo?.username || '')
+                    if (myIndex > -1) notificationList.splice(myIndex, 1)
                     dispatch(CreateNotificationRequest({
                         postId,
                         replyId: 0,
                         commentId: uid,
-                        userId: targetPost.data().userId,
+                        userId: notificationList,
                         from: me.userInfo?.username,
                         create_at: Timestamp(),
                         type: notificationTypes.COMMENT_MY_POST
@@ -269,27 +272,35 @@ export const ToggleLikePostRequest = (postId: number):
                             likes: targetPost.likes
                         })
                         post = { ...post, likes: targetPost.likes }
-                        if (targetPost.userId !== me.userInfo?.username) {
-                            if (index < 0)
-                                dispatch(CreateNotificationRequest({
+
+
+                        if (targetPost.userId !== me.userInfo?.username
+                        ) {
+                            const notificationList = targetPost.notificationUsers || []
+                            const myIndex = notificationList.indexOf(me.userInfo?.username || '')
+                            if (myIndex > -1) notificationList.splice(myIndex, 1)
+                            if (notificationList.length > 0) {
+                                if (index < 0)
+                                    dispatch(CreateNotificationRequest({
+                                        postId,
+                                        commentId: 0,
+                                        replyId: 0,
+                                        userId: notificationList,
+                                        from: me.userInfo?.username,
+                                        create_at: Timestamp(),
+                                        type: notificationTypes.LIKE_MY_POST
+                                    }))
+                                else dispatch(CreateNotificationRequest({
+                                    isUndo: true,
                                     postId,
                                     commentId: 0,
                                     replyId: 0,
-                                    userId: targetPost.userId,
+                                    userId: notificationList,
                                     from: me.userInfo?.username,
                                     create_at: Timestamp(),
                                     type: notificationTypes.LIKE_MY_POST
                                 }))
-                            else dispatch(CreateNotificationRequest({
-                                isUndo: true,
-                                postId,
-                                commentId: 0,
-                                replyId: 0,
-                                userId: targetPost.userId,
-                                from: me.userInfo?.username,
-                                create_at: Timestamp(),
-                                type: notificationTypes.LIKE_MY_POST
-                            }))
+                            }
                         }
                     }
                     return post

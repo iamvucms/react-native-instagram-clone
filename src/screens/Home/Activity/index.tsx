@@ -12,6 +12,7 @@ import { FlatList } from 'react-native-gesture-handler'
 import { Notification } from '../../../reducers/notificationReducer'
 import { useIsFocused } from '@react-navigation/native'
 import { FetchNotificationListRequest } from '../../../actions/notificationActions'
+import NotificationItem from '../../../components/NotificationItem'
 
 const index = () => {
     const dispatch = useDispatch()
@@ -39,10 +40,9 @@ const index = () => {
         return () => {
         }
     }, [extraInfo?.requestedList])
-    const _onRefresh = async () => {
+    const _onRefresh = () => {
         setLoading(true)
-        await dispatch(FetchExtraInfoRequest())
-        setLoading(false)
+       console.warn("xxx")
     }
     const _onToggleFollow = (index: number) => {
         let temp = [...suggests]
@@ -114,9 +114,7 @@ const index = () => {
                 </>
                 }
                 renderItem={({ item, index }) => (
-                    <View>
-                        <Text>aaa</Text>
-                    </View>
+                    <NotificationItem {...{ item, key: index }} />
                 )}
                 keyExtractor={(item, index) => `${index}`}
                 ListFooterComponent={

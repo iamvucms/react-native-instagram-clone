@@ -11,17 +11,18 @@ import { ToggleLikeReplyRequest } from '../../actions/commentActions'
 export interface ReplyCommentItemProps {
     item: ExtraComment,
     commentId: number,
+    postId: number,
     onReply: (a: number, b: string) => void
 }
 
-const ReplyCommentItem = ({ item, commentId, onReply }: ReplyCommentItemProps) => {
+const ReplyCommentItem = ({ postId, item, commentId, onReply }: ReplyCommentItemProps) => {
     const dispatch = useDispatch()
     const user = useSelector(state => state.user.user)
     const isLiked = item.likes?.indexOf(user.userInfo?.username || '') !== undefined
         && item.likes?.indexOf(user.userInfo?.username || '') > -1
     const _onToggleLikeReply = () => {
         if (item?.uid) {
-            dispatch(ToggleLikeReplyRequest(item.uid, commentId))
+            dispatch(ToggleLikeReplyRequest(item.uid, commentId, postId))
         }
     }
     const _onReply = () => {

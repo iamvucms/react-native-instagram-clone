@@ -10,18 +10,19 @@ import { ToggleLikeCommentRequest } from '../../actions/commentActions'
 import ReplyCommentItem from './ReplyCommentItem'
 
 export interface CommentItemProps {
+    postId: number,
     item: ExtraComment,
     onReply: (a: number, b: string) => void
 }
 
-const CommentItem = ({ item, onReply }: CommentItemProps) => {
+const CommentItem = ({ item, onReply, postId }: CommentItemProps) => {
     const dispatch = useDispatch()
     const user = useSelector(state => state.user.user)
     const isLiked = item.likes?.indexOf(user.userInfo?.username || '') !== undefined
         && item.likes?.indexOf(user.userInfo?.username || '') > -1
     const _onToggleLikeComment = () => {
         if (item?.uid) {
-            dispatch(ToggleLikeCommentRequest(item.uid))
+            dispatch(ToggleLikeCommentRequest(postId, item.uid))
         }
     }
     const _onReply = () => {
@@ -92,6 +93,7 @@ const CommentItem = ({ item, onReply }: CommentItemProps) => {
             <View>
                 {item.replies && item.replies.map((reply, index) => (
                     <ReplyCommentItem
+                        postId={postId}
                         onReply={onReply}
                         commentId={item.uid || 0}
                         key={index}

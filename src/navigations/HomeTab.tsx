@@ -1,6 +1,6 @@
 import { BottomTabBarOptions, BottomTabNavigationOptions, createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { StyleSheet } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { TabBarComponent } from '../components/BottomTabBar'
@@ -17,6 +17,10 @@ import Setting from '../screens/Home/Account/SettingIndex'
 import Activity from '../screens/Home/Activity'
 import Creator from '../screens/Home/Creator'
 import Explore from '../screens/Home/Explore'
+import { database } from 'firebase'
+import { useDispatch } from 'react-redux'
+import { FetchNotificationListRequest } from '../actions/notificationActions'
+import CustomNotificationIcon from '../components/CustomNotificationIcon'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -76,6 +80,7 @@ const ActivityStack = () => {
             gestureEnabled: false
         }}>
             <Stack.Screen name="ActiviyIndex" component={Activity} />
+            <Stack.Screen name="ActiviyFollow" component={Follow} />
             <Stack.Screen name="ActivityFollowRequests" component={FollowRequests} />
         </Stack.Navigator>
     )
@@ -113,8 +118,7 @@ const HomeTab = () => {
                         size={30} color={'#ddd'} />
                 }} component={Creator} name="Creator" />
             <Tab.Screen options={{
-                tabBarIcon: ({ focused }) => <Icon name="heart"
-                    size={30} color={focused ? '#000' : '#ddd'} />
+                tabBarIcon: ({ focused }) => <CustomNotificationIcon focused={focused} />
             }} component={ActivityStack} name="Activity" />
             <Tab.Screen options={{
                 tabBarIcon: ({ focused }) => <Icon name="account"

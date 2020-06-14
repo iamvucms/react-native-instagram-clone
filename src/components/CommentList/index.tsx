@@ -106,7 +106,9 @@ const index = ({ postId, onReply }: CommentListProps) => {
             onRefresh={_onRefresh}
             ListHeaderComponent={() => <PostContentItem item={comment.post} />}
             ListFooterComponent={() => <FooterComponent loading={loadingMore} />}
-            renderItem={({ item, index }) => <CommentItem onReply={onReply} item={item} />}
+            renderItem={({ item, index }) =>
+                <CommentItem postId={postId}
+                    onReply={onReply} item={item} />}
             keyExtractor={(item, index) => `${index}`}
             data={comment.comments}
             onScroll={_onScrollHandler}

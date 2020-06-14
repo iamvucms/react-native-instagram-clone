@@ -15,6 +15,7 @@ import { MapBoxAddress } from '../utils';
 import { navigationRef } from './rootNavigation';
 import RootTab from './RootTab';
 import DiscoverPeople from '../screens/Home/Account/DiscoverPeople';
+import PostDetail from '../screens/Home/PostDetail';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -39,7 +40,10 @@ export type SuperRootStackParamList = {
     MuteOptions: {
         user: UserInfo
     },
-    DiscoverPeople: undefined
+    DiscoverPeople: undefined,
+    PostDetail: {
+        postId: number
+    }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
 const index = (): JSX.Element => {
@@ -80,6 +84,8 @@ const index = (): JSX.Element => {
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="MuteOptions" component={MuteOptions} />
                 <RootStack.Screen component={DiscoverPeople} name="DiscoverPeople" />
+                <RootStack.Screen component={PostDetail} name="PostDetail" />
+
             </RootStack.Navigator>
         </NavigationContainer>
     )

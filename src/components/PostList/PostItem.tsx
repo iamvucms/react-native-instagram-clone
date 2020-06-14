@@ -1,19 +1,18 @@
-import React, { useState, useEffect, SetStateAction } from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, Platform } from 'react-native'
-import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
+import React, { useEffect, useState } from 'react'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import FastImage from 'react-native-fast-image'
-import PhotoShower from './PhotoShower'
-import { ExtraPost } from '../../reducers/postReducer'
-import { useSelector } from '../../reducers'
-import CirclePagination from '../CirclePagination'
+import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useDispatch } from 'react-redux'
 import { ToggleLikePostRequest } from '../../actions/postActions'
 import { navigation } from '../../navigations/rootNavigation'
-import { timestampToString, sharePost } from '../../utils'
-import Share, { Options } from 'react-native-share'
+import { useSelector } from '../../reducers'
+import { ExtraPost } from '../../reducers/postReducer'
+import { sharePost, timestampToString } from '../../utils'
+import CirclePagination from '../CirclePagination'
+import PhotoShower from './PhotoShower'
 export interface PostItemProps {
     item: ExtraPost,
-    showCommentInput: (id: number, prefix?: string) => void
+    showCommentInput?: (id: number, prefix?: string) => void
 }
 const PostItem = ({ item, showCommentInput }: PostItemProps) => {
     const dispatch = useDispatch()
@@ -50,9 +49,10 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                         fontWeight: '600'
                     }}>{item.ownUser?.username}</Text>
                 </View>
-                <TouchableOpacity onPress={() => navigation.push('PostOptions', {
-                    item
-                })}>
+                <TouchableOpacity onPress={() =>
+                    navigation.push('PostOptions', {
+                        item
+                    })}>
                     <Icons name="dots-vertical" size={24} />
                 </TouchableOpacity>
             </View>
@@ -132,7 +132,7 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
 
                 <TouchableOpacity
                     onPress={() => {
-                        showCommentInput(item.uid || 0)
+                        if (showCommentInput) showCommentInput(item.uid || 0)
                     }}
                     activeOpacity={1}
                     style={styles.commentInputWrapper}>
@@ -146,14 +146,14 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                     </View>
                     <View style={styles.commentIconsWrapper}>
                         <TouchableOpacity onPress={() => {
-                            showCommentInput(item.uid || 0, '❤')
+                            if (showCommentInput) showCommentInput(item.uid || 0, '❤')
                         }}>
                             <Text style={{
                                 fontSize: 10
                             }}>❤</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => {
-                            showCommentInput(item.uid || 0, '🙌')
+                            if (showCommentInput) showCommentInput(item.uid || 0, '🙌')
                         }}>
                             <Text style={{
                                 fontSize: 10
@@ -184,7 +184,6 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                             fontWeight: '500'
                         }}>See Translation</Text>
                     </TouchableOpacity>
-
                 </View>
             </View>
         </View >

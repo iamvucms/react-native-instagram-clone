@@ -1,8 +1,10 @@
-import { firestore } from 'firebase';
+import { firestore, database } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { seenTypes, notificationActionTypes, ExtraNotification, Notification, NotificationAction, NotificationErrorAction, NotificationList, NotificationSuccessAction, notificationTypes, PostingNotification } from '../reducers/notificationReducer';
 import { UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
+import { Post } from '../reducers/postReducer';
+import { Comment } from '../reducers/commentReducer';
 
 export const FetchNotificationListRequest = ():
     ThunkAction<Promise<void>, {}, {}, NotificationAction> => {
@@ -11,7 +13,7 @@ export const FetchNotificationListRequest = ():
             const me = store.getState().user.user.userInfo
             const ref = firestore()
             const rq = await ref.collection('notifications')
-                .where('userId', '==', me?.username)
+                .where('userId', 'array-contains', me?.username)
                 .orderBy('create_at', 'desc')
                 .get()
             const notificationTasks: Promise<ExtraNotification>[] = rq.docs
@@ -35,7 +37,8 @@ export const FetchNotificationListRequest = ():
                     notification.previewFroms = previewUserInfos
                     const post = await ref.collection('posts')
                         .doc(`${notification.postId}`).get()
-                    notification.postInfo = post.data() || {}
+                    const postData: Post = post.data() || {}
+                    notification.postInfo = postData
                     if (notification.type === notificationTypes.LIKE_MY_COMMENT
                         || notification.type === notificationTypes.COMMENT_MY_POST) {
                         const rq3 = await ref.collectionGroup('comments')
@@ -47,13 +50,13 @@ export const FetchNotificationListRequest = ():
                         || notification.type === notificationTypes.REPLY_MY_COMMENT) {
                         const rq3 = await ref.collectionGroup('replies')
                             .where('uid', '==', notification.replyId).get()
-                        const reply = rq3.docs[0].data() || {}
+                        const reply: Comment = rq3.docs[0].data() || {}
                         notification.replyInfo = reply
                     }
                     return notification
                 })
             const notifications = await Promise.all(notificationTasks)
-            console.warn(notifications)
+            dispatch(FetchNotificationListSuccess(notifications))
         } catch (e) {
             console.warn(e)
             dispatch(FetchNotificationListFailure())
@@ -78,7 +81,7 @@ export const CreateNotificationRequest = (notification: PostingNotification):
     ThunkAction<Promise<void>, {}, {}, NotificationAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, NotificationAction>) => {
         try {
-            const me = store.getState().user.user.userInfo
+            const dbRef = database()
             const ref = firestore()
             const uid = new Date().getTime()
             const postNotification = { ...notification }
@@ -109,7 +112,6 @@ export const CreateNotificationRequest = (notification: PostingNotification):
                 || notification.type === notificationTypes.LIKE_MY_REPLY
                 || notification.type === notificationTypes.FOLLOW_ME
             ) {
-
                 if (rq.size > 0) {
                     const targetNotification = rq.docs[0]
                     const currentFroms = targetNotification.data().froms as string[]
@@ -117,6 +119,9 @@ export const CreateNotificationRequest = (notification: PostingNotification):
                     const index = currentFroms.indexOf(notification.from || "")
                     if (index < 0) {
                         currentFroms.push(notification.from || "")
+                        notification.userId?.map(usr => {
+                            dbRef.ref(`/notifications/${usr}`).set(true)
+                        })
                     } else if (index > -1 && notification.isUndo) {
                         currentFroms.splice(index, 1)
                     }
@@ -125,10 +130,11 @@ export const CreateNotificationRequest = (notification: PostingNotification):
                     } else {
                         targetNotification.ref.update({
                             seen: seenTypes.NOTSEEN,
-                            froms: currentFroms
+                            froms: currentFroms,
+                            ...((index < 0 && !notification.isUndo)
+                                ? { create_at: new Date() } : {})
                         })
                     }
-
                 } else {
                     if (!!!notification.isUndo) {
                         delete postNotification.from
@@ -138,7 +144,11 @@ export const CreateNotificationRequest = (notification: PostingNotification):
                                 ...postNotification,
                                 froms: [notification.from],
                                 seen: seenTypes.NOTSEEN,
+                                create_at: new Date()
                             })
+                        notification.userId?.map(usr => {
+                            dbRef.ref(`/notifications/${usr}`).set(true)
+                        })
                     }
                 }
             } else {
@@ -171,9 +181,11 @@ export const CreateNotificationRequest = (notification: PostingNotification):
                             froms: [notification.from],
                             seen: seenTypes.NOTSEEN,
                         })
+                    notification.userId?.map(usr => {
+                        dbRef.ref(`/notifications/${usr}`).set(true)
+                    })
                 }
             }
-
         } catch (e) {
             console.warn(e)
             dispatch(FetchNotificationListFailure())

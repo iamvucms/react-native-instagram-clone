@@ -8,18 +8,17 @@ import {
 import { SCREEN_WIDTH } from '../../constants'
 import ScaleImage from '../ScaleImage/'
 import { PostImage } from '../../reducers/postReducer'
+import FastImage from 'react-native-fast-image'
 export interface PhotoShowerProps {
     sources: PostImage[],
     onChangePage?: (page: number) => any
 }
 const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
-    const [maxImageHeight, setMaxImageHeight] = useState<number>(
-        Math.max(...sources.map(img => {
-            if (img.fullSize) {
-                return SCREEN_WIDTH
-            } else return img.height * SCREEN_WIDTH / img.width
-        }))
-    )
+    const maxImageHeight = Math.max(...sources.map(img => {
+        if (img.fullSize) {
+            return SCREEN_WIDTH
+        } else return img.height * SCREEN_WIDTH / img.width
+    }))
     const [currentPage, setCurrentPage] = useState<number>(1)
     const scrollRef = useRef<ScrollView>(null)
     const _onEndDragHandler = ({ nativeEvent: {
@@ -47,12 +46,12 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
     }
     return (
         <View style={styles.container}>
-            {sources?.length && sources.length > 1 && < View style={styles.paging}>
-                <Text style={{
+            {sources.length > 1 &&
+                <View style={styles.paging}><Text style={{
                     fontWeight: '600',
                     color: '#fff'
-                }}>{currentPage}/{sources?.length}</Text>
-            </View>}
+                }}>{currentPage}/{sources?.length}</Text></View>
+            }
             <ScrollView
                 ref={scrollRef}
                 onScrollEndDrag={_onEndDragHandler}
@@ -72,7 +71,7 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
                             alignItems: 'center'
                         }}>
                         {img.fullSize ? (
-                            <Image
+                            <FastImage
                                 style={{
                                     width: img.width < img.height ? img.width * SCREEN_WIDTH / img.height : SCREEN_WIDTH,
                                     height: img.width > img.height ? img.height * SCREEN_WIDTH / img.width : SCREEN_WIDTH

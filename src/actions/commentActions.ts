@@ -189,7 +189,7 @@ export const LoadMoreCommentListSuccess = (payload: CommentListWithScroll):
 /**
  * TOGGLE LIKE REPLY ACTION
  */
-export const ToggleLikeCommentRequest = (commentId: number):
+export const ToggleLikeCommentRequest = (postId: number, commentId: number):
     ThunkAction<Promise<void>, {}, {}, CommentAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, CommentAction>) => {
         try {
@@ -200,32 +200,66 @@ export const ToggleLikeCommentRequest = (commentId: number):
                 const username = me.username
                 const rq = await ref.collectionGroup('comments')
                     .where('uid', '==', commentId).limit(1).get()
+                const rq2 = await ref.collection('posts').doc(`${postId}`).get()
                 if (rq.size > 0) {
+                    const targetPost = rq2.data() || {}
                     const targetComment = rq.docs[0]
                     const comment: ExtraComment = targetComment.data()
-                    if (comment.likes) {
-                        if (comment.likes?.indexOf(me.username) < 0) {
-                            comment.likes.push(username)
-                        } else comment.likes.splice(
-                            comment.likes.indexOf(username), 1)
-                        await targetComment.ref.update({
-                            likes: comment.likes
-                        })
-                        commentList = commentList.map(xComment => {
-                            if (xComment.uid === comment.uid) {
-                                const newComment = { ...xComment }
-                                newComment.likes = comment.likes
-                                return newComment
-                            }
-                            return xComment
-                        })
+                    const likes = comment.likes || []
+                    const index = likes.indexOf(username)
+                    if (index < 0) {
+                        likes.push(username)
+                    } else likes.splice(index, 1)
+                    await targetComment.ref.update({
+                        likes: likes
+                    })
 
-                        const payload: CommentListWithScroll = {
-                            comments: commentList,
-                            scrollDown: false
+                    //add notification
+                    if (targetComment.data().userId !== me?.username) {
+                        let notificationList = targetPost.notificationUsers || []
+                        notificationList.push(targetComment.data().userId)
+                        const myIndex = notificationList.indexOf(me?.username || '')
+                        if (myIndex > -1) notificationList.splice(myIndex, 1)
+                        notificationList = Array.from(new Set(notificationList))
+                        if (notificationList.length > 0) {
+                            if (index < 0) {
+                                dispatch(CreateNotificationRequest({
+                                    postId,
+                                    replyId: 0,
+                                    commentId: commentId,
+                                    userId: notificationList,
+                                    from: username,
+                                    create_at: Timestamp(),
+                                    type: notificationTypes.LIKE_MY_COMMENT
+                                }))
+                            } else {
+                                dispatch(CreateNotificationRequest({
+                                    isUndo: true,
+                                    postId,
+                                    replyId: 0,
+                                    commentId: commentId,
+                                    userId: notificationList,
+                                    from: username,
+                                    create_at: Timestamp(),
+                                    type: notificationTypes.LIKE_MY_COMMENT
+                                }))
+                            }
                         }
-                        dispatch(ToggleLikeCommentSuccess(payload))
                     }
+                    commentList = commentList.map(xComment => {
+                        if (xComment.uid === comment.uid) {
+                            const newComment = { ...xComment }
+                            newComment.likes = likes
+                            return newComment
+                        }
+                        return xComment
+                    })
+
+                    const payload: CommentListWithScroll = {
+                        comments: commentList,
+                        scrollDown: false
+                    }
+                    dispatch(ToggleLikeCommentSuccess(payload))
 
                 } else dispatch(ToggleLikeCommentFailure())
 
@@ -255,7 +289,7 @@ export const ToggleLikeCommentSuccess = (payload: CommentListWithScroll):
 /**
  * TOGGLE LIKE COMMMENT ACTION
  */
-export const ToggleLikeReplyRequest = (replyId: number, commentId: number):
+export const ToggleLikeReplyRequest = (replyId: number, commentId: number, postId: number):
     ThunkAction<Promise<void>, {}, {}, CommentAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, CommentAction>) => {
         try {
@@ -270,13 +304,38 @@ export const ToggleLikeReplyRequest = (replyId: number, commentId: number):
                     const targetReply = rq.docs[0]
                     const reply: ExtraComment = targetReply.data()
                     if (reply.likes) {
-                        if (reply.likes?.indexOf(me.username) < 0) {
+                        const index = reply.likes.indexOf(username)
+                        if (index < 0) {
                             reply.likes.push(username)
                         } else reply.likes.splice(
-                            reply.likes.indexOf(username), 1)
+                            index, 1)
                         await targetReply.ref.update({
                             likes: reply.likes
                         })
+                        if (targetReply.data().userId !== me?.username) {
+                            if (index < 0) {
+                                dispatch(CreateNotificationRequest({
+                                    postId,
+                                    replyId,
+                                    commentId,
+                                    userId: [targetReply.data().userId],
+                                    from: username,
+                                    create_at: Timestamp(),
+                                    type: notificationTypes.LIKE_MY_REPLY
+                                }))
+                            } else {
+                                dispatch(CreateNotificationRequest({
+                                    isUndo: true,
+                                    postId,
+                                    replyId,
+                                    commentId,
+                                    userId: [targetReply.data().userId],
+                                    from: username,
+                                    create_at: Timestamp(),
+                                    type: notificationTypes.LIKE_MY_REPLY
+                                }))
+                            }
+                        }
                         commentList = commentList.map(xComment => {
                             if (xComment.uid === commentId) {
                                 const newComment = { ...xComment }
@@ -351,16 +410,18 @@ export const PostReplyRequest = (postId: number, commentId: number, content: str
                     })
                 const rq2 = await ref.collectionGroup('replies')
                     .where('uid', '==', replyUid).limit(1).get()
-
-                if (targetPost.userId !== me.userInfo?.username) {
+                //ADD NOTIFICATION
+                const targetCommentUsername = targetComment.data().userId
+                if (targetPost.userId !== me.userInfo?.username
+                    && targetCommentUsername !== me.userInfo?.username) {
                     dispatch(CreateNotificationRequest({
                         postId,
                         commentId: commentId,
                         replyId: replyUid,
-                        userId: targetPost.userId,
+                        userId: [targetCommentUsername],
                         from: me.userInfo?.username,
                         create_at: Timestamp(),
-                        type: notificationTypes.LIKE_MY_POST
+                        type: notificationTypes.REPLY_MY_COMMENT
                     }))
                 }
 

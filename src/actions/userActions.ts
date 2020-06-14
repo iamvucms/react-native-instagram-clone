@@ -5,8 +5,10 @@ import { navigate } from "../navigations/rootNavigation";
 import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting } from '../reducers/userReducer';
 import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
 import { store } from '../store';
-import { generateUsernameKeywords, uriToBlob } from '../utils';
+import { generateUsernameKeywords, uriToBlob, Timestamp } from '../utils';
 import { Alert } from 'react-native';
+import { CreateNotificationRequest } from './notificationActions';
+import { notificationTypes } from '../reducers/notificationReducer';
 export interface userLoginWithEmail {
     email: string,
     password: string
@@ -316,7 +318,8 @@ export const ToggleFollowUserRequest = (username: string, refreshExtraInfo: bool
                 const myUser = rq.docs[0]
                 const userData: UserInfo = myUser.data() || {}
                 const currentFollowings = userData.followings || []
-                if (currentFollowings.indexOf(username) < 0) {
+                const index = currentFollowings.indexOf(username)
+                if (index < 0) {
                     const targetUserData: {
                         privacySetting?: {
                             accountPrivacy: {
@@ -328,11 +331,36 @@ export const ToggleFollowUserRequest = (username: string, refreshExtraInfo: bool
                         dispatch(ToggleSendFollowRequest(username))
                     } else currentFollowings.push(username)
                 } else {
-                    currentFollowings.splice(currentFollowings.indexOf(username), 1)
+                    currentFollowings.splice(index, 1)
                 }
                 myUser.ref.update({
                     followings: currentFollowings
                 })
+
+                //add notification
+                if (index < 0) {
+                    dispatch(CreateNotificationRequest({
+                        postId: 0,
+                        replyId: 0,
+                        commentId: 0,
+                        userId: [username],
+                        from: me.username,
+                        create_at: Timestamp(),
+                        type: notificationTypes.FOLLOW_ME
+                    }))
+                } else {
+                    dispatch(CreateNotificationRequest({
+                        isUndo: true,
+                        postId: 0,
+                        replyId: 0,
+                        commentId: 0,
+                        userId: [username],
+                        from: me.username,
+                        create_at: Timestamp(),
+                        type: notificationTypes.FOLLOW_ME
+                    }))
+                }
+
                 dispatch(FollowUserSuccess(userData))
                 if (refreshExtraInfo) {
                     dispatch(FetchExtraInfoRequest())
