@@ -47,6 +47,7 @@ const NotificationItem = ({ item }: NotificationItemProps) => {
                 navigate('Comment', {
                     postId: item.postId,
                     showFullPost: true,
+                    postData: item.postInfo
                 })
                 break
             case notificationTypes.LIKE_MY_POST:
@@ -58,6 +59,7 @@ const NotificationItem = ({ item }: NotificationItemProps) => {
                 navigate('Comment', {
                     postId: item.postId,
                     showFullPost: true,
+                    postData: item.postInfo
                 })
                 break
             case notificationTypes.FOLLOW_ME:
@@ -65,7 +67,8 @@ const NotificationItem = ({ item }: NotificationItemProps) => {
                 break
             case notificationTypes.LIKE_MY_REPLY:
                 navigate('Comment', {
-                    postId: item.postId
+                    postId: item.postId,
+                    postData: item.postInfo
                 })
                 break
             case notificationTypes.REPLY_MY_COMMENT:
@@ -75,7 +78,8 @@ const NotificationItem = ({ item }: NotificationItemProps) => {
                 break
             case notificationTypes.SOMEONE_POSTS:
                 navigate('PostDetail', {
-                    postId: item.postId
+                    postId: item.postId,
+                    postData: item.postInfo
                 })
                 break
             case notificationTypes.SOMEONE_LIKE_SOMEONE_POST:
@@ -87,6 +91,7 @@ const NotificationItem = ({ item }: NotificationItemProps) => {
                 navigate('Comment', {
                     postId: item.postId,
                     showFullPost: true,
+                    postData: item.postInfo
                 })
                 break
         }

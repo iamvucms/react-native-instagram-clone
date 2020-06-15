@@ -1,7 +1,7 @@
 import { Alert } from 'react-native'
 import { firestore } from 'firebase'
 import { UserInfo } from './userReducer'
-import { Post } from './postReducer'
+import { Post, ExtraPost } from './postReducer'
 import { Comment } from './commentReducer'
 import { Story } from './storyReducer'
 export const seenTypes = {
@@ -37,7 +37,7 @@ export type Notification = {
     seen?: number,
 }
 export type ExtraNotification = Notification & {
-    postInfo?: Post,
+    postInfo?: ExtraPost,
     commentInfo?: Comment,
     storyInfo?: Story,
     previewFroms?: UserInfo[],

@@ -19,10 +19,12 @@ import PostDetail from '../screens/Home/PostDetail';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
-        postId: number
+        postId: number,
+        postData?: ExtraPost
     },
     PostOptions: {
-        item: ExtraPost
+        item: ExtraPost,
+        setPost?: React.Dispatch<React.SetStateAction<ExtraPost>>
     },
     EditProfile: undefined,
     GalleryChooser: { isChooseProfilePhoto?: boolean },

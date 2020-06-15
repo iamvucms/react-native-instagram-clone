@@ -12,9 +12,10 @@ import CirclePagination from '../CirclePagination'
 import PhotoShower from './PhotoShower'
 export interface PostItemProps {
     item: ExtraPost,
-    showCommentInput?: (id: number, prefix?: string) => void
+    showCommentInput?: (id: number, prefix?: string) => void,
+    setPost?: React.Dispatch<React.SetStateAction<ExtraPost>>
 }
-const PostItem = ({ item, showCommentInput }: PostItemProps) => {
+const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
     const dispatch = useDispatch()
     const [currentPage, setCurrentPage] = useState<number>(1)
     const [content, setContent] = useState<JSX.Element[]>([])
@@ -27,12 +28,13 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
         setContent(createFilterContent(item.content || ''))
     }, [item])
     const _toggleLikePost = () => {
-        dispatch(ToggleLikePostRequest(item.uid || 0))
+        dispatch(ToggleLikePostRequest(item.uid || 0, item, setPost))
     }
     let diffTime: string = timestampToString(item.create_at?.toMillis() || 0, true)
     const _onViewAllComments = () => {
         navigation.navigate('Comment', {
-            postId: item.uid
+            postId: item.uid,
+            ...(setPost ? { postData: { ...item } } : {})
         })
     }
 
@@ -51,7 +53,8 @@ const PostItem = ({ item, showCommentInput }: PostItemProps) => {
                 </View>
                 <TouchableOpacity onPress={() =>
                     navigation.push('PostOptions', {
-                        item
+                        item,
+                        setPost
                     })}>
                     <Icons name="dots-vertical" size={24} />
                 </TouchableOpacity>

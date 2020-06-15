@@ -42,7 +42,6 @@ const index = () => {
     }, [extraInfo?.requestedList])
     const _onRefresh = () => {
         setLoading(true)
-       console.warn("xxx")
     }
     const _onToggleFollow = (index: number) => {
         let temp = [...suggests]

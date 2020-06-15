@@ -1,9 +1,10 @@
 import { BottomTabBarOptions, BottomTabNavigationOptions, createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { StyleSheet } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { TabBarComponent } from '../components/BottomTabBar'
+import CustomNotificationIcon from '../components/CustomTabIcons/CustomNotificationIcon'
 import { settingNavigationMap } from '../constants'
 import HomeIndex from '../screens/Home'
 import Account from '../screens/Home/Account'
@@ -17,10 +18,7 @@ import Setting from '../screens/Home/Account/SettingIndex'
 import Activity from '../screens/Home/Activity'
 import Creator from '../screens/Home/Creator'
 import Explore from '../screens/Home/Explore'
-import { database } from 'firebase'
-import { useDispatch } from 'react-redux'
-import { FetchNotificationListRequest } from '../actions/notificationActions'
-import CustomNotificationIcon from '../components/CustomNotificationIcon'
+import CustomAccountIcon from '../components/CustomTabIcons/CustomAccountIcon'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -121,8 +119,7 @@ const HomeTab = () => {
                 tabBarIcon: ({ focused }) => <CustomNotificationIcon focused={focused} />
             }} component={ActivityStack} name="Activity" />
             <Tab.Screen options={{
-                tabBarIcon: ({ focused }) => <Icon name="account"
-                    size={30} color={focused ? '#000' : '#ddd'} />
+                tabBarIcon: ({ focused }) => <CustomAccountIcon focused={focused} />
             }} component={AccountStack} name="Account" />
         </Tab.Navigator>
     )

@@ -1,24 +1,38 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
     ImageBackground, LayoutChangeEvent,
     Text, ScrollView, StyleSheet,
     View, NativeSyntheticEvent, NativeScrollEvent,
-    Image
+    Image,
+    TouchableOpacity,
+    Animated
 } from 'react-native'
 import { SCREEN_WIDTH } from '../../constants'
 import ScaleImage from '../ScaleImage/'
 import { PostImage } from '../../reducers/postReducer'
 import FastImage from 'react-native-fast-image'
+import { store } from '../../store'
+import { navigate } from '../../navigations/rootNavigation'
 export interface PhotoShowerProps {
     sources: PostImage[],
     onChangePage?: (page: number) => any
 }
 const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
+    const [showTags, setShowTags] = useState<boolean>(false)
+    const myUsername = store.getState().user.user.userInfo?.username || ''
     const maxImageHeight = Math.max(...sources.map(img => {
         if (img.fullSize) {
             return SCREEN_WIDTH
         } else return img.height * SCREEN_WIDTH / img.width
     }))
+    const _animTags = React.useMemo(() =>
+        sources.map(source => {
+            return source.tags.map(tag =>
+                new Animated.Value(0)
+            )
+        })
+        , [])
+
     const [currentPage, setCurrentPage] = useState<number>(1)
     const scrollRef = useRef<ScrollView>(null)
     const _onEndDragHandler = ({ nativeEvent: {
@@ -44,6 +58,30 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
             setCurrentPage(currIndex + 1)
         }
     }
+    useEffect(() => {
+        if (showTags) {
+            Animated.parallel(_animTags[currentPage - 1].map(anim =>
+                Animated.spring(anim, {
+                    toValue: 1,
+                    useNativeDriver: false
+                }))).start()
+        }
+    }, [showTags])
+    const _onViewTagProfile = (username: string) => {
+        if (myUsername !== username) {
+            navigate('ProfileX', {
+                username
+            })
+        } else navigate('Account')
+    }
+    const _onHideTags = () => {
+        Animated.parallel(_animTags[currentPage - 1].map(anim =>
+            Animated.timing(anim, {
+                toValue: 0,
+                duration: 150,
+                useNativeDriver: false
+            }))).start(() => setShowTags(false))
+    }
     return (
         <View style={styles.container}>
             {sources.length > 1 &&
@@ -59,33 +97,79 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
                 bounces={false}
                 horizontal={true}>
                 {sources && sources.map((img, index) => (
-                    <ImageBackground
-                        key={index}
-                        source={{ uri: img.uri }}
-                        blurRadius={20}
-                        style={{
-                            height: maxImageHeight,
-                            width: SCREEN_WIDTH,
-                            backgroundColor: 'white',
-                            justifyContent: 'center',
-                            alignItems: 'center'
-                        }}>
-                        {img.fullSize ? (
-                            <FastImage
-                                style={{
-                                    width: img.width < img.height ? img.width * SCREEN_WIDTH / img.height : SCREEN_WIDTH,
-                                    height: img.width > img.height ? img.height * SCREEN_WIDTH / img.width : SCREEN_WIDTH
-                                }}
-                                source={{ uri: img.uri }}
-                            />
-                        ) : (
-                                <ScaleImage
-                                    height={img.height * SCREEN_WIDTH / img.width}
-                                    width={SCREEN_WIDTH}
-                                    source={{ uri: img.uri }}
-                                />
-                            )}
-                    </ImageBackground>
+                    <TouchableOpacity
+                        activeOpacity={1}
+                        onPress={() => {
+                            if (!showTags) setShowTags(true)
+                            else _onHideTags()
+                        }}
+                    >
+                        <ImageBackground
+                            key={index}
+                            source={{ uri: img.uri }}
+                            blurRadius={20}
+                            style={{
+                                height: maxImageHeight,
+                                width: SCREEN_WIDTH,
+                                backgroundColor: 'white',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}>
+                            <View>
+                                {img.fullSize ? (
+                                    <FastImage
+                                        style={{
+                                            width: img.width < img.height ? img.width * SCREEN_WIDTH / img.height : SCREEN_WIDTH,
+                                            height: img.width > img.height ? img.height * SCREEN_WIDTH / img.width : SCREEN_WIDTH
+                                        }}
+                                        source={{ uri: img.uri }}
+                                    />
+                                ) : (
+                                        <ScaleImage
+                                            height={img.height * SCREEN_WIDTH / img.width}
+                                            width={SCREEN_WIDTH}
+                                            source={{ uri: img.uri }}
+                                        />
+                                    )}
+                                {showTags && img.tags.map((tag, index2) => (
+                                    <Animated.View
+                                        key={index2}
+                                        style={{
+                                            width: _animTags[index][index2].interpolate({
+                                                inputRange: [0, 1],
+                                                outputRange: [0, tag.width]
+                                            }),
+                                            height: _animTags[index][index2].interpolate({
+                                                inputRange: [0, 1],
+                                                outputRange: [0, tag.height]
+                                            }),
+                                            opacity: _animTags[index][index2].interpolate({
+                                                inputRange: [0, 1],
+                                                outputRange: [0, 1]
+                                            }),
+                                            top: tag.y,
+                                            left: tag.x,
+                                            position: 'absolute'
+                                        }}>
+                                        <TouchableOpacity
+                                            onPress={_onViewTagProfile.bind(null, tag.username)}
+                                            activeOpacity={0.8}
+                                            style={{
+                                                ...styles.label,
+                                                width: '100%',
+                                                height: "100%",
+                                                justifyContent: 'center',
+                                                alignItems: "center"
+                                            }}>
+                                            <Text style={{
+                                                color: '#fff',
+                                            }}>{tag.username}</Text>
+                                        </TouchableOpacity>
+                                    </Animated.View>
+                                ))}
+                            </View>
+                        </ImageBackground>
+                    </TouchableOpacity>
                 ))}
             </ScrollView>
         </View >
@@ -107,5 +191,11 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         top: 10,
         right: 10,
+    },
+    label: {
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        position: 'absolute',
+        zIndex: 1,
+        borderRadius: 5,
     }
 })

@@ -20,7 +20,7 @@ const CommentItem = ({ item }: PostContentItemProps) => {
                 }}>
                     <TouchableOpacity>
                         <Text style={{ fontWeight: 'bold' }}>
-                            {item.ownUser?.username} </Text>
+                            {item.ownUser?.username || '-NaN-'} </Text>
                     </TouchableOpacity>
                     <Text>{item.content}</Text>
                 </View>

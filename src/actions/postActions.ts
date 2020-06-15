@@ -166,7 +166,10 @@ export const LoadMorePostListSuccess = (payload: PostList): PostSuccessAction<Po
 /**
  * POST COMMENTS ACTIONS
  */
-export const PostCommentRequest = (postId: number, content: string):
+export const PostCommentRequest = (postId: number,
+    content: string,
+    postData?: ExtraPost,
+    setPost?: React.Dispatch<React.SetStateAction<ExtraPost>>):
     ThunkAction<Promise<void>, {}, {}, PostAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, PostAction>) => {
         try {
@@ -209,21 +212,28 @@ export const PostCommentRequest = (postId: number, content: string):
                 }
                 const rq2 = await targetPost.ref.collection('comments')
                     .orderBy('create_at', 'desc').get()
-                postList = postList.map((post) => {
-                    if (post.uid === postId) {
-                        post = { ...post }
-                        post.comments = rq2.docs.map(x => x.data())
+                if (postData && setPost) {
+                    const post = { ...postData }
+                    post.comments = rq2.docs.map(x => x.data())
+                    setPost(post)
+                } else {
+                    postList = postList.map((post) => {
+                        if (post.uid === postId) {
+                            post = { ...post }
+                            post.comments = rq2.docs.map(x => x.data())
+                        }
+                        return post
+                    })
+                    const comment: ExtraComment = rq2.docs[0].data()
+                    comment.ownUser = me.userInfo
+                    const payload = {
+                        comments: [comment],
+                        scrollDown: true
                     }
-                    return post
-                })
-                const comment: ExtraComment = rq2.docs[0].data()
-                comment.ownUser = me.userInfo
-                const payload = {
-                    comments: [comment],
-                    scrollDown: true
+                    dispatch(LoadMoreCommentListSuccess(payload))
+                    dispatch(PostCommentSuccess(postList))
                 }
-                dispatch(LoadMoreCommentListSuccess(payload))
-                dispatch(PostCommentSuccess(postList))
+
             } else {
                 dispatch(PostCommentFailure())
             }
@@ -251,7 +261,9 @@ export const PostCommentSuccess = (payload: PostList): PostSuccessAction<PostLis
 /**
  * TOGGLE LIKE POST ACTIONS
  */
-export const ToggleLikePostRequest = (postId: number):
+export const ToggleLikePostRequest = (postId: number,
+    postData?: ExtraPost,
+    setPost?: React.Dispatch<React.SetStateAction<ExtraPost>>):
     ThunkAction<Promise<void>, {}, {}, PostAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, PostAction>) => {
         try {
@@ -260,52 +272,55 @@ export const ToggleLikePostRequest = (postId: number):
             const ref = firestore()
             const rq = await ref.collection('posts').where('uid', '==', postId).get()
             if (rq.docs.length > 0) {
-                postList = postList.map((post) => {
-                    if (post.uid === postId) {
-                        const targetPost: Post = rq.docs[0].data() || {}
-                        const index = (targetPost.likes || []).indexOf(
-                            me.userInfo?.username || '')
-                        if (index > -1) {
-                            targetPost.likes?.splice(index, 1)
-                        } else targetPost.likes?.push(me.userInfo?.username || '')
-                        rq.docs[0].ref.update({
-                            likes: targetPost.likes
-                        })
-                        post = { ...post, likes: targetPost.likes }
-
-
-                        if (targetPost.userId !== me.userInfo?.username
-                        ) {
-                            const notificationList = targetPost.notificationUsers || []
-                            const myIndex = notificationList.indexOf(me.userInfo?.username || '')
-                            if (myIndex > -1) notificationList.splice(myIndex, 1)
-                            if (notificationList.length > 0) {
-                                if (index < 0)
-                                    dispatch(CreateNotificationRequest({
-                                        postId,
-                                        commentId: 0,
-                                        replyId: 0,
-                                        userId: notificationList,
-                                        from: me.userInfo?.username,
-                                        create_at: Timestamp(),
-                                        type: notificationTypes.LIKE_MY_POST
-                                    }))
-                                else dispatch(CreateNotificationRequest({
-                                    isUndo: true,
-                                    postId,
-                                    commentId: 0,
-                                    replyId: 0,
-                                    userId: notificationList,
-                                    from: me.userInfo?.username,
-                                    create_at: Timestamp(),
-                                    type: notificationTypes.LIKE_MY_POST
-                                }))
-                            }
-                        }
-                    }
-                    return post
+                const targetPost: Post = rq.docs[0].data() || {}
+                const index = (targetPost.likes || []).indexOf(
+                    me.userInfo?.username || '')
+                if (index > -1) {
+                    targetPost.likes?.splice(index, 1)
+                } else targetPost.likes?.push(me.userInfo?.username || '')
+                rq.docs[0].ref.update({
+                    likes: targetPost.likes
                 })
-                dispatch(ToggleLikePostSuccess(postList))
+                if (postData && setPost) {
+                    const post = { ...postData, likes: targetPost.likes }
+                    setPost(post)
+                } else {
+                    postList = postList.map((post) => {
+                        if (post.uid === postId) {
+                            post = { ...post, likes: targetPost.likes }
+                        }
+                        return post
+                    })
+                    dispatch(ToggleLikePostSuccess(postList))
+                }
+                if (targetPost.userId !== me.userInfo?.username
+                ) {
+                    const notificationList = targetPost.notificationUsers || []
+                    const myIndex = notificationList.indexOf(me.userInfo?.username || '')
+                    if (myIndex > -1) notificationList.splice(myIndex, 1)
+                    if (notificationList.length > 0) {
+                        if (index < 0)
+                            dispatch(CreateNotificationRequest({
+                                postId,
+                                commentId: 0,
+                                replyId: 0,
+                                userId: notificationList,
+                                from: me.userInfo?.username,
+                                create_at: Timestamp(),
+                                type: notificationTypes.LIKE_MY_POST
+                            }))
+                        else dispatch(CreateNotificationRequest({
+                            isUndo: true,
+                            postId,
+                            commentId: 0,
+                            replyId: 0,
+                            userId: notificationList,
+                            from: me.userInfo?.username,
+                            create_at: Timestamp(),
+                            type: notificationTypes.LIKE_MY_POST
+                        }))
+                    }
+                }
             } else {
                 dispatch(ToggleLikePostFailure())
             }
@@ -378,10 +393,10 @@ export const UpdatePostRequest = (uid: number, updatedData: ExtraPost):
             const rq = await ref.collection('users')
                 .where('username', '==', me?.username).get()
             const rq2 = await ref.collection('posts').doc(`${uid}`).get()
-            const post = postList.filter(p => p.uid === uid)
-            if (rq.size > 0 && rq2.exists && post.length > 0) {
+            const posts = postList.filter(p => p.uid === uid)
+            if (rq.size > 0 && rq2.exists && posts.length > 0) {
                 let onlinePost: ExtraPost = rq2.data() || {}
-                const targetPost = { ...post[0] }
+                const targetPost = { ...posts[0] }
                 rq2.ref.update({
                     ...onlinePost, ...updatedData
                 }).then(() => {

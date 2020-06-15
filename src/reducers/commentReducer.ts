@@ -2,7 +2,7 @@ import { Alert } from 'react-native'
 import { firestore } from 'firebase'
 import { UserInfo } from './userReducer'
 import { ExtraPost } from './postReducer'
-export const LIMIT_COMMENTS_PER_LOADING = 5
+export const LIMIT_COMMENTS_PER_LOADING = 10
 export const commentActionTypes = {
     FETCH_COMMENTS_REQUEST: 'FETCH_COMMENTS_REQUEST',
     FETCH_COMMENTS_SUCCESS: 'FETCH_COMMENTS_SUCCESS',

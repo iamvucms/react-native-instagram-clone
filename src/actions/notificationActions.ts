@@ -3,7 +3,7 @@ import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { seenTypes, notificationActionTypes, ExtraNotification, Notification, NotificationAction, NotificationErrorAction, NotificationList, NotificationSuccessAction, notificationTypes, PostingNotification } from '../reducers/notificationReducer';
 import { UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
-import { Post } from '../reducers/postReducer';
+import { Post, ExtraPost } from '../reducers/postReducer';
 import { Comment } from '../reducers/commentReducer';
 
 export const FetchNotificationListRequest = ():
@@ -37,13 +37,14 @@ export const FetchNotificationListRequest = ():
                     notification.previewFroms = previewUserInfos
                     const post = await ref.collection('posts')
                         .doc(`${notification.postId}`).get()
-                    const postData: Post = post.data() || {}
+                    const postData: ExtraPost = post.data() || {}
+                    postData.ownUser = (await ref.collection('users').doc(`${postData.userId}`).get()).data() || {}
                     notification.postInfo = postData
                     if (notification.type === notificationTypes.LIKE_MY_COMMENT
                         || notification.type === notificationTypes.COMMENT_MY_POST) {
-                        const rq3 = await ref.collectionGroup('comments')
+                        const rq2 = await ref.collectionGroup('comments')
                             .where('uid', '==', notification.commentId).get()
-                        const comment = rq3.docs[0].data() || {}
+                        const comment = rq2.docs[0].data() || {}
                         notification.commentInfo = comment
                     }
                     if (notification.type === notificationTypes.LIKE_MY_REPLY

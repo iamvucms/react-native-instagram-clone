@@ -20,7 +20,8 @@ type PostOptionsProps = {
 const PostOptions = ({ route }: PostOptionsProps) => {
     const user = store.getState().user.user.userInfo
     const item = route.params.item
-    const post = useSelector(state => state.postList).filter(post => post.uid === item.uid)[0]
+    const setPost = route.params.setPost
+    const post = setPost ? item : useSelector(state => state.postList).filter(post => post.uid === item.uid)[0] || {}
     const dispatch = useDispatch()
     const _onUnfollow = () => {
         dispatch(UnfollowRequest(post.ownUser?.username || ``))
@@ -34,7 +35,14 @@ const PostOptions = ({ route }: PostOptionsProps) => {
         if (index > -1) {
             notifications.splice(index, 1)
         } else notifications.push(user?.username || '')
-        dispatch(UpdatePostRequest(post.uid || 0, {
+        if (setPost) {
+            rq.ref.update({
+                notificationUsers: [...notifications]
+            })
+            const temp = { ...post }
+            temp.notificationUsers = [...notifications]
+            setPost(temp)
+        } else dispatch(UpdatePostRequest(post.uid || 0, {
             notificationUsers: [...notifications]
         }))
         goBack()

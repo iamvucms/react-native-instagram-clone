@@ -5,6 +5,7 @@ import { PostReplyRequest } from '../../actions/commentActions'
 import { PostCommentRequest } from '../../actions/postActions'
 import { SCREEN_WIDTH } from '../../constants'
 import { useSelector } from '../../reducers'
+import { ExtraPost } from '../../reducers/postReducer'
 
 export interface CommentInputPopupProps {
     commentInputRef: RefObject<TextInput>,
@@ -13,9 +14,11 @@ export interface CommentInputPopupProps {
     preValue?: string,
     replyToCommentId?: number,
     replyToCommentUsername?: string,
-    onDone?: () => void
+    onDone?: () => void,
+    postData?: ExtraPost,
+    setPost?: React.Dispatch<React.SetStateAction<ExtraPost>>
 }
-const index = ({ commentInputRef, preValue,
+const index = ({ postData, setPost, commentInputRef, preValue,
     replyToCommentId, replyToCommentUsername, onDone,
     setCommentContents, id }: CommentInputPopupProps) => {
     const dispatch = useDispatch()
@@ -64,7 +67,10 @@ const index = ({ commentInputRef, preValue,
             })
 
         } else (async () => {
-            await dispatch(PostCommentRequest(id, text))
+            if (setPost && postData) {
+                await dispatch(PostCommentRequest(id, text, postData, setPost))
+            } else await dispatch(PostCommentRequest(id, text))
+
         })().then(() => {
             setCommenting(false)
             setText('')

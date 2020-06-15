@@ -6,8 +6,9 @@ import { store } from "../store";
 import { CreateNotificationRequest } from './notificationActions';
 import { Timestamp } from '../utils';
 import { notificationTypes } from '../reducers/notificationReducer';
+import { ExtraPost } from '../reducers/postReducer';
 
-export const FetchCommentListRequest = (postId: number):
+export const FetchCommentListRequest = (postId: number, postData?: ExtraPost):
     ThunkAction<Promise<void>, {}, {}, CommentAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, CommentAction>) => {
         try {
@@ -61,16 +62,29 @@ export const FetchCommentListRequest = (postId: number):
                     })
                     return comment
                 })
-                const post = {
-                    ...targetPost.data(), ownUser: store.getState()
+                if (postData) {
+                    const payload: CommentExtraList = {
+                        post: { ...postData },
+                        comments: collection
+                    }
+                    dispatch(FetchCommentListSuccess(payload))
+                } else {
+                    let ownUser = store.getState()
                         .postList.filter(x => x.uid
-                            === targetPost.data().uid)[0].ownUser
+                            === targetPost.data().uid)
+                    const info = ownUser.length > 0 ? (ownUser[0].ownUser || {}) : {}
+                    const post = {
+                        ...targetPost.data(), ownUser: info,
+                    }
+                    const payload: CommentExtraList = {
+                        post,
+                        comments: collection
+                    }
+                    dispatch(FetchCommentListSuccess(payload))
                 }
-                const payload: CommentExtraList = {
-                    post,
-                    comments: collection
-                }
-                dispatch(FetchCommentListSuccess(payload))
+
+
+
             } else dispatch(FetchCommentListFailure())
         } catch (e) {
             console.warn(e)

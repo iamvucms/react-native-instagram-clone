@@ -39,6 +39,7 @@ export type UserInfo = {
         year: number
     },
     followings?: string[],
+    searchRecent?: string[],
     fullname?: string,
     phone?: string,
     username?: string,

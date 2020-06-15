@@ -10,11 +10,13 @@ import {
     ResetCommentList,
     LoadMoreCommentListRequest
 } from '../../actions/commentActions'
+import { ExtraPost } from '../../reducers/postReducer'
 export interface CommentListProps {
     postId: number,
-    onReply: (a: number, b: string) => void
+    onReply: (a: number, b: string) => void,
+    postData?: ExtraPost
 }
-const index = ({ postId, onReply }: CommentListProps) => {
+const index = ({ postData, postId, onReply }: CommentListProps) => {
     const dispatch = useDispatch()
     const comment = useSelector(state => state.comment)
     const [refreshing, setRefreshing] = useState<boolean>(false)
@@ -26,12 +28,12 @@ const index = ({ postId, onReply }: CommentListProps) => {
     useEffect(() => {
         (async () => {
             setRefreshing(true)
-            await dispatch(ResetCommentList())
-            await dispatch(FetchCommentListRequest(postId))
+            await dispatch(FetchCommentListRequest(postId, postData))
             setRefreshing(false)
         })()
 
         return () => {
+            dispatch(ResetCommentList())
         }
     }, [])
     useEffect(() => {
@@ -42,7 +44,7 @@ const index = ({ postId, onReply }: CommentListProps) => {
     const _onRefresh = async () => {
         if (!refreshing) {
             setRefreshing(true)
-            await dispatch(FetchCommentListRequest(postId))
+            await dispatch(FetchCommentListRequest(postId, postData))
             setRefreshing(false)
         }
     }
@@ -57,7 +59,7 @@ const index = ({ postId, onReply }: CommentListProps) => {
         const offsetPercent = (nativeEvent.contentSize.height
             - nativeEvent.contentOffset.y) / nativeEvent.contentSize.height
         const isScrollDown = nativeEvent.contentOffset.y - ref.current.preOffsetY > 0
-        if (offsetPercent < 0.81 && isScrollDown) {
+        if (offsetPercent < 0.9 && isScrollDown) {
             _onLoadMore()
         }
         ref.current.preOffsetY = nativeEvent.contentOffset.y

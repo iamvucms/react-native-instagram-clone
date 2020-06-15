@@ -17,6 +17,7 @@ type CommentProps = {
 
 const index = ({ navigation, route }: CommentProps) => {
     const postId = route.params.postId
+    const postData = route.params.postData
     const commentInputRef = useRef<TextInput>(null)
     const [currentReplyCommentId, setCurrentReplyCommentId] = useState<number>(0)
     const [currentReplyUsername, setCurrentReplyUsername] = useState<string>('')
@@ -51,15 +52,8 @@ const index = ({ navigation, route }: CommentProps) => {
                             fontWeight: '600'
                         }}>Comments</Text>
                     </View>
-                    <TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={_onShareToDirect}
-                            style={styles.btnBack}>
-                            <Icons name="send" size={20} />
-                        </TouchableOpacity>
-                    </TouchableOpacity>
                 </View>
-                <CommentList onReply={_onReply} postId={postId} />
+                <CommentList postData={postData} onReply={_onReply} postId={postId} />
                 <CommentInputPopup
                     replyToCommentUsername={currentReplyUsername}
                     replyToCommentId={currentReplyCommentId}
