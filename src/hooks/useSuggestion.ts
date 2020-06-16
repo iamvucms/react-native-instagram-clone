@@ -6,6 +6,7 @@ import { store } from "../store";
 import { Post } from "../reducers/postReducer";
 import { MixedUserInfo } from "../screens/Home/Account/Follow";
 import { UserInfo } from "../reducers/userReducer";
+import { ProfileX } from "../reducers/profileXReducer";
 
 /**
  * Returns suggestion follow list
@@ -34,12 +35,17 @@ export function useSuggestion(limit?: number): [ExtraSuggestionUserInfo[],
     }, [extraInfo])
     //DANGEROUS~~!!!!
     const fetchSuggestion = async () => {
+
+
         const unSuggestList = [...(extraInfo?.unSuggestList || [])]
         const followerUsrnames = [...(extraInfo?.followers || [])]
         const follwingUsrnames = [...(extraInfo?.followings || [])]
         followerUsrnames.splice(followerUsrnames.indexOf(myUsername || ""), 1)
         follwingUsrnames.splice(follwingUsrnames.indexOf(myUsername || ""), 1)
         const ref = firestore()
+        const rq = await ref.collection('users').doc(myUsername).get()
+        const myUserData: ProfileX = rq.data() || {}
+        const currentBlockList = myUserData.privacySetting?.blockedAccounts?.blockedAccounts || []
         let recentInteractions: string[] = []
         const rs = await ref.collection('posts')
             .where('userId', '==', myUsername)
@@ -59,6 +65,7 @@ export function useSuggestion(limit?: number): [ExtraSuggestionUserInfo[],
             .filter(usr => usr !== myUsername &&
                 follwingUsrnames.indexOf(usr) < 0
                 && unSuggestList.indexOf(usr) < 0
+                && currentBlockList.indexOf(usr) < 0
             )
         let recentInteractionsForTask = [...recentInteractions]
         if (limit) recentInteractionsForTask = recentInteractionsForTask
@@ -90,7 +97,9 @@ export function useSuggestion(limit?: number): [ExtraSuggestionUserInfo[],
             .filter(usr =>
                 follwingUsrnames.indexOf(usr) < 0
                 && recentInteractionsForTask.indexOf(usr) < 0
-                && unSuggestList.indexOf(usr) < 0)
+                && unSuggestList.indexOf(usr) < 0
+                && currentBlockList.indexOf(usr) < 0)
+
         let dontFolloweUsernameForTask = [...dontFollowUsrnames]
         if (limit) dontFolloweUsernameForTask = dontFolloweUsernameForTask
             .splice(0, limit - recentInteractionsForTask.length)
@@ -111,7 +120,8 @@ export function useSuggestion(limit?: number): [ExtraSuggestionUserInfo[],
                     && follwingUsrnames.indexOf(usr) < 0
                     && recentInteractionsForTask.indexOf(usr) < 0
                     && dontFolloweUsernameForTask.indexOf(usr) < 0
-                    && unSuggestList.indexOf(usr) < 0)
+                    && unSuggestList.indexOf(usr) < 0
+                    && currentBlockList.indexOf(usr) < 0)
             let followedByInteractionForTask = [...followedByInteractionList]
             if (limit) followedByInteractionForTask = followedByInteractionForTask
                 .splice(0, limit - recentInteractionsForTask.length
@@ -141,7 +151,8 @@ export function useSuggestion(limit?: number): [ExtraSuggestionUserInfo[],
                             && recentInteractionsForTask.indexOf(usr) < 0
                             && dontFolloweUsernameForTask.indexOf(usr) < 0
                             && followedByInteractionForTask.indexOf(usr) < 0
-                            && unSuggestList.indexOf(usr) < 0)
+                            && unSuggestList.indexOf(usr) < 0
+                            && currentBlockList.indexOf(usr) < 0)
                     if (limit) followedByFollwers = followedByFollwers
                         .splice(0, limit - recentInteractionsForTask.length
                             - dontFolloweUsernameForTask.length

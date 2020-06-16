@@ -19,6 +19,9 @@ import Activity from '../screens/Home/Activity'
 import Creator from '../screens/Home/Creator'
 import Explore from '../screens/Home/Explore'
 import CustomAccountIcon from '../components/CustomTabIcons/CustomAccountIcon'
+import Location from '../screens/Home/Explore/Location'
+import Hashtag from '../screens/Home/Explore/Hashtag'
+import ProfileX from '../screens/Home/Explore/ProfileX'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -37,6 +40,7 @@ const AccountStack = () => {
             gestureEnabled: false
         }}>
             <Stack.Screen component={Account} name="AccountIndex" />
+            <Stack.Screen name="ProfileX" component={ProfileX} />
             <Stack.Screen component={Setting} name="Setting" />
             <Stack.Screen options={{
                 ...TransitionPresets.ModalSlideFromBottomIOS,
@@ -83,7 +87,30 @@ const ActivityStack = () => {
         </Stack.Navigator>
     )
 }
-
+const ExploreStack = () => {
+    return (
+        <Stack.Navigator screenOptions={{
+            headerShown: false,
+            gestureEnabled: false
+        }}>
+            <Stack.Screen name="Explore" component={Explore} />
+            <Stack.Screen name="Location" component={Location} />
+            <Stack.Screen name="Hashtag" component={Hashtag} />
+            <Stack.Screen name="ProfileX" component={ProfileX} />
+        </Stack.Navigator>
+    )
+}
+const HomeStack = () => {
+    return (
+        <Stack.Navigator screenOptions={{
+            headerShown: false,
+            gestureEnabled: false
+        }}>
+            <Stack.Screen component={HomeIndex} name="HomeIndex" />
+            <Stack.Screen name="ProfileX" component={ProfileX} />
+        </Stack.Navigator>
+    )
+}
 const Tab = createBottomTabNavigator<HomeTabParamList>()
 const HomeTab = () => {
 
@@ -99,11 +126,11 @@ const HomeTab = () => {
                 options={{
                     tabBarIcon: ({ focused }) => <Icon name="home"
                         size={30} color={focused ? '#000' : '#ddd'} />
-                }} component={HomeIndex} name="HomeIndex" />
+                }} component={HomeStack} name="HomeIndex" />
             <Tab.Screen options={{
                 tabBarIcon: ({ focused }) => <Icon name="magnify"
                     size={30} color={focused ? '#000' : '#ddd'} />
-            }} component={Explore} name="Explore" />
+            }} component={ExploreStack} name="Explore" />
             <Tab.Screen
                 listeners={({ navigation, route }) => ({
                     tabPress: e => {

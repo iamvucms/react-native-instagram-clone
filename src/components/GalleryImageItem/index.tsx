@@ -1,8 +1,10 @@
 import React, { useRef, useState } from 'react'
-import { StyleSheet, TouchableOpacity } from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import FastImage from 'react-native-fast-image'
 import { SCREEN_WIDTH } from '../../constants'
 import { Post } from '../../reducers/postReducer'
+import { navigate } from '../../navigations/rootNavigation'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 export interface GalleryImageItem {
     photo: Post,
     index: number,
@@ -22,6 +24,11 @@ const index = ({ index, _showPopupImage, _hidePopupImage, photo }: GalleryImageI
     }
     return (
         <TouchableOpacity
+            onPress={() => {
+                navigate('PostDetail', {
+                    postId: photo.uid
+                })
+            }}
             ref={containerRef}
             delayLongPress={150}
             onLongPress={_onLongPressHandler}
@@ -34,6 +41,11 @@ const index = ({ index, _showPopupImage, _hidePopupImage, photo }: GalleryImageI
             {photo && <FastImage source={{
                 uri: photo.source && photo.source[0].uri
             }} style={styles.photo} />}
+            {photo.source && photo.source.length > 1 &&
+                <View style={styles.multipleIcon}>
+                    <Icon name="layers" size={24} color="#fff" />
+                </View>
+            }
         </TouchableOpacity>
     )
 }
@@ -63,4 +75,9 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%'
     },
+    multipleIcon: {
+        position: 'absolute',
+        top: 10,
+        right: 10
+    }
 })

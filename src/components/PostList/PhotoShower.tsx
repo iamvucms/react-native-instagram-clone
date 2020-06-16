@@ -98,6 +98,7 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
                 horizontal={true}>
                 {sources && sources.map((img, index) => (
                     <TouchableOpacity
+                        key={index}
                         activeOpacity={1}
                         onPress={() => {
                             if (!showTags) setShowTags(true)
@@ -105,7 +106,6 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
                         }}
                     >
                         <ImageBackground
-                            key={index}
                             source={{ uri: img.uri }}
                             blurRadius={20}
                             style={{
@@ -194,7 +194,6 @@ const styles = StyleSheet.create({
     },
     label: {
         backgroundColor: 'rgba(0,0,0,0.9)',
-        position: 'absolute',
         zIndex: 1,
         borderRadius: 5,
     }

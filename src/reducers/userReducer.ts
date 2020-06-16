@@ -2,6 +2,7 @@ import { firestore } from 'firebase'
 import { Alert } from 'react-native'
 import { Post } from './postReducer'
 import { Story } from './storyReducer'
+import { MapBoxAddress } from '../utils'
 export const userActionTypes = {
     LOGIN_REQUEST: 'LOGIN_REQUEST',
     LOGIN_SUCCESS: 'LOGIN_SUCCESS',
@@ -29,7 +30,29 @@ export const userActionTypes = {
     UPDATE_PRIVACY_SETTING_FAILURE: 'UPDATE_PRIVACY_SETTING_FAILURE',
     FETCH_SETTING_REQUEST: 'FETCH_SETTING_REQUEST',
     FETCH_SETTING_SUCCESS: 'FETCH_SETTING_SUCCESS',
-    FETCH_SETTING_FAILURE: 'FETCH_SETTING_FAILURE'
+    FETCH_SETTING_FAILURE: 'FETCH_SETTING_FAILURE',
+    FETCH_RECENT_SEARCH_SUCCESS: 'FETCH_RECENT_SEARCH_SUCCESS',
+    UPDATE_EXTRA_INFO_SUCCESS: 'UPDATE_EXTRA_INFO_SUCCESS',
+    UPDATE_EXTRA_INFO_FAILURE: 'UPDATE_EXTRA_INFO_FAILURE'
+}
+/**
+ * type:
+ * 1:user,
+ * 2:hashtag
+ * 3:place
+ */
+export type SearchItem = {
+    type: 1 | 2 | 3,
+    username?: string,
+    address?: string,
+    hashtag?: number
+}
+export type HashTag = {
+    name?: string,
+    followers?: string[],
+    relatedTags?: string[],
+    sources?: number[],
+    uid?: number
 }
 export type UserInfo = {
     email?: string,
@@ -39,7 +62,7 @@ export type UserInfo = {
         year: number
     },
     followings?: string[],
-    searchRecent?: string[],
+    searchRecent?: SearchItem[],
     fullname?: string,
     phone?: string,
     username?: string,
@@ -47,8 +70,8 @@ export type UserInfo = {
     bio?: string,
     website?: string,
     gender?: 0 | 1 | 2,
-    notificationStoryList?: string[],
-    notificationPostList?: string[],
+    storyNotificationList?: string[],
+    postNotificationList?: string[],
     requestedList?: string[],
     unSuggestList?: string[]
 }
@@ -217,6 +240,7 @@ export type userAction = SuccessAction<userPayload> | ErrorAction
     | SuccessAction<NotificationSetting>
     | SuccessAction<PrivacySetting>
     | SuccessAction<UserSetting>
+    | SuccessAction<SearchItem[]>
 export const defaultUserState: userPayload = {
     user: {},
     photos: [],
@@ -461,6 +485,27 @@ const reducer = (state: userPayload = defaultUserState, action: userAction): use
         case userActionTypes.FETCH_SETTING_FAILURE:
             action = <ErrorAction>action
             Alert.alert('Error', action.payload.message)
+            return state
+        case userActionTypes.FETCH_RECENT_SEARCH_SUCCESS:
+            action = <SuccessAction<SearchItem[]>>action
+            state = {
+                ...state, user: {
+                    ...state.user,
+                    userInfo: {
+                        ...state.user.userInfo,
+                        searchRecent: action.payload
+                    }
+                }
+            }
+            return state
+        case userActionTypes.UPDATE_EXTRA_INFO_SUCCESS:
+            action = <SuccessAction<ExtraInfoPayload>>action
+            state = {
+                ...state, currentStory: [...action.payload.currentStory],
+                extraInfo: { ...action.payload.extraInfo },
+                photos: [...action.payload.photos],
+                tagPhotos: [...action.payload.tagPhotos]
+            }
             return state
         default:
             return state

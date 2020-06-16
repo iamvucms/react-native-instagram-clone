@@ -2,7 +2,7 @@ import { auth, firestore, storage } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { DEFAULT_PHOTO_URI } from '../constants';
 import { navigate } from "../navigations/rootNavigation";
-import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting } from '../reducers/userReducer';
+import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting, HashTag, SearchItem } from '../reducers/userReducer';
 import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
 import { store } from '../store';
 import { generateUsernameKeywords, uriToBlob, Timestamp } from '../utils';
@@ -39,8 +39,8 @@ export const LoginRequest = (user: userLoginWithEmail):
                                 requestedList,
                                 notificationSetting,
                                 privacySetting,
-                                notificationStoryList,
-                                notificationPostList,
+                                postNotificationList,
+                                storyNotificationList,
                                 unSuggestList
                             } = rq.docs[0].data()
                             const result: userPayload = {
@@ -59,8 +59,8 @@ export const LoginRequest = (user: userLoginWithEmail):
                                         searchRecent: searchRecent || [],
                                         username,
                                         website,
-                                        notificationStoryList,
-                                        notificationPostList,
+                                        storyNotificationList,
+                                        postNotificationList,
                                         requestedList,
                                         unSuggestList
                                     }
@@ -117,8 +117,8 @@ export const RegisterRequest = (userData: RegisterParams):
                         followings: [userData.username],
                         requestedList: [],
                         searchRecent: [],
-                        notificationStoryList: [],
-                        notificationPostList: [],
+                        storyNotificationList: [],
+                        postNotificationList: [],
                         website: '',
                         avatarURL: DEFAULT_PHOTO_URI,
                         privacySetting: {
@@ -256,6 +256,19 @@ export const FetchExtraInfoSuccess = (extraInfo: ExtraInfoPayload):
         payload: extraInfo
     }
 }
+//update extra info
+export const UpdateExtraInfoRequest = (data: ExtraInfoPayload):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            dispatch(FetchExtraInfoSuccess(data))
+        } catch (e) {
+            console.warn(e)
+            dispatch(FetchExtraInfoFailure())
+        }
+    }
+}
+//
 export const FollowContactsRequest = (phoneList: string[]):
     ThunkAction<Promise<void>, {}, {}, userAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
@@ -778,6 +791,94 @@ export const UnSuggestionRequest = (username: string):
                 })
             }
             dispatch(FetchExtraInfoRequest())
+        } else {
+            Alert.alert('Error', 'Please check your network!')
+        }
+    }
+}
+// change search recent list
+export const FetchRecentSearchRequest = ():
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, SuccessAction<SearchItem[]>>) => {
+        const me = store.getState().user.user.userInfo
+        const ref = firestore()
+        const rq = await ref.collection('users')
+            .doc(me?.username).get()
+        if (rq.exists) {
+            const myUserData: UserInfo = rq.data() || {}
+            const recentSearchList: SearchItem[] = myUserData.searchRecent || []
+            dispatch({
+                type: userActionTypes.FETCH_RECENT_SEARCH_SUCCESS,
+                payload: recentSearchList
+            })
+        } else {
+            Alert.alert('Error', 'Please check your network!')
+        }
+    }
+}
+export const PushRecentSearchRequest = (hashtag: SearchItem):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        const me = store.getState().user.user.userInfo
+        const ref = firestore()
+        const rq = await ref.collection('users')
+            .doc(me?.username).get()
+        if (rq.exists) {
+            const myUserData: UserInfo = rq.data() || {}
+            const recentSearchList: SearchItem[] = myUserData.searchRecent || []
+            const temp = [...recentSearchList]
+            const check = temp.every((item, index) => {
+                if ((item.username === hashtag.username && hashtag.type === 1
+                    && item.type === 1)
+                    || (item.hashtag === hashtag.hashtag && hashtag.type === 2
+                        && item.type === 2)
+                    || (item.address === hashtag.address && hashtag.type === 3
+                        && item.type === 3)
+                ) {
+                    recentSearchList.splice(index, 1)
+                    recentSearchList.push(hashtag)
+                    return false
+                }
+                return true
+            })
+            if (check) {
+                recentSearchList.push(hashtag)
+            }
+            rq.ref.update({
+                searchRecent: recentSearchList
+            })
+        } else {
+            Alert.alert('Error', 'Please check your network!')
+        }
+    }
+}
+export const RemoveRecentSearchRequest = (hashtag: SearchItem):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        const me = store.getState().user.user.userInfo
+        const ref = firestore()
+        const rq = await ref.collection('users')
+            .doc(me?.username).get()
+        if (rq.exists) {
+            const myUserData: UserInfo = rq.data() || {}
+            const recentSearchList: SearchItem[] = myUserData.searchRecent || []
+            const temp = [...recentSearchList]
+            temp.every((item, index) => {
+                if ((item.username === hashtag.username && hashtag.type === 1
+                    && item.type === 1)
+                    || (item.hashtag === hashtag.hashtag && hashtag.type === 2
+                        && item.type === 2)
+                    || (item.address === hashtag.address && hashtag.type === 3
+                        && item.type === 3)
+                ) {
+                    recentSearchList.splice(index, 1)
+                    return false
+                }
+                return true
+            })
+            rq.ref.update({
+                searchRecent: recentSearchList
+            })
         } else {
             Alert.alert('Error', 'Please check your network!')
         }

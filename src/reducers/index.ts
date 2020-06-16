@@ -8,19 +8,22 @@ import storyReducer, { StoryList } from './storyReducer'
 import postReducer, { PostList } from './postReducer'
 import commentReducer, { CommentExtraList } from './commentReducer'
 import notificationReducer, { NotificationList } from './notificationReducer'
+import profileXReducer, { ProfileX } from './profileXReducer'
 export type AppState = {
     user: userPayload,
     storyList: StoryList,
     postList: PostList,
     comment: CommentExtraList,
-    notifications: NotificationList
+    notifications: NotificationList,
+    profileX: ProfileX
 }
 const rootReducer = combineReducers<AppState>({
     user: userReducer,
     storyList: storyReducer,
     postList: postReducer,
     comment: commentReducer,
-    notifications: notificationReducer
+    notifications: notificationReducer,
+    profileX: profileXReducer
 })
 export const useSelector:
     TypedUseSelectorHook<ReturnType<typeof rootReducer>> = useReduxSelector

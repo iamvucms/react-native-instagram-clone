@@ -16,6 +16,9 @@ import { navigationRef } from './rootNavigation';
 import RootTab from './RootTab';
 import DiscoverPeople from '../screens/Home/Account/DiscoverPeople';
 import PostDetail from '../screens/Home/PostDetail';
+import { ProfileX } from '../reducers/profileXReducer';
+import ProfileOptions from '../screens/Others/ProfileOptions';
+import ProfileInteractionOptions from '../screens/Others/ProfileInteractionOptions';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -45,6 +48,13 @@ export type SuperRootStackParamList = {
     DiscoverPeople: undefined,
     PostDetail: {
         postId: number
+    },
+    ProfileOptions: {
+        userX: ProfileX
+    },
+    ProfileInteractionOptions: {
+        userX: ProfileX,
+        setFollowType: React.Dispatch<React.SetStateAction<number>>
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -64,6 +74,10 @@ const index = (): JSX.Element => {
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="PostOptions" component={PostOptions} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="ProfileOptions" component={ProfileOptions} />
                 <RootStack.Screen options={{
                     animationEnabled: false,
                     cardStyle: { backgroundColor: 'transparent' }
@@ -85,6 +99,10 @@ const index = (): JSX.Element => {
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="MuteOptions" component={MuteOptions} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="ProfileInteractionOptions" component={ProfileInteractionOptions} />
                 <RootStack.Screen component={DiscoverPeople} name="DiscoverPeople" />
                 <RootStack.Screen component={PostDetail} name="PostDetail" />
 

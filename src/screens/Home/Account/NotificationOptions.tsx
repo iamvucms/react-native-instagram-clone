@@ -91,7 +91,7 @@ const NotificationOptions = ({ route }: NotificationOptionsProps) => {
         }
     }: PanGestureHandlerGestureEvent) => {
         if (state === State.END) {
-            if (translationY > ref.current.bottomSheetHeight * 0.8) {
+            if (translationY > ref.current.bottomSheetHeight * 0.5) {
                 Animated.timing(_bottomSheetOffsetY, {
                     toValue: ref.current.bottomSheetHeight,
                     useNativeDriver: true,

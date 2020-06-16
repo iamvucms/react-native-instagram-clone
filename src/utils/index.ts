@@ -4,6 +4,7 @@ import { store } from "../store"
 import { MAPBOX_ACCESS_TOKEN } from "../constants"
 import Share, { Options } from "react-native-share"
 import { ExtraPost } from "../reducers/postReducer"
+import { ProfileX } from "../reducers/profileXReducer"
 
 export const timestampToString = (create_at: number, suffix?: boolean): string => {
     let diffTime: string | number = (new Date().getTime() - (create_at || 0)) / 1000
@@ -52,18 +53,13 @@ export const uriToBlob = (uri: string) => {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.onload = function () {
-            // return the blob
             resolve(xhr.response);
         };
-
         xhr.onerror = function () {
-            // something went wrong
             reject(new Error('uriToBlob failed'));
         };
-        // this helps us get a blob
         xhr.responseType = 'blob';
         xhr.open('GET', uri, true);
-
         xhr.send(null);
     });
 }
@@ -73,7 +69,7 @@ export type MapBoxAddress = {
 }
 export const searchLocation = (query: string): Promise<MapBoxAddress[]> => {
     return new Promise((resolve, reject) => {
-        fetch(`http://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURI(query)}.json?access_token=${MAPBOX_ACCESS_TOKEN}`)
+        fetch(`http://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURI(query.trim())}.json?access_token=${MAPBOX_ACCESS_TOKEN}`)
             .then(res => res.json())
             .then(data => {
                 const address: MapBoxAddress[] = []
@@ -135,6 +131,56 @@ export const sharePost = (post: ExtraPost) => {
                 linkMetadata: {
                     title: `${post.ownUser?.username} has been posted a image`,
                     icon: `https://img.favpng.com/9/25/24/computer-icons-instagram-logo-sticker-png-favpng-LZmXr3KPyVbr8LkxNML458QV3.jpg`
+                }
+            },
+        ],
+    }
+    Share.open(options)
+}
+export const shareProfile = (user: ProfileX) => {
+    const options: Options = {
+        activityItemSources: [
+            { // For sharing url with custom title.
+                placeholderItem: {
+                    type: 'url',
+                    content: user.avatarURL || ''
+                },
+                item: {
+                    default: { type: 'url', content: user.avatarURL || '' },
+                },
+                subject: {
+                    default: user.username || '',
+                },
+                linkMetadata: {
+                    originalUrl: user.avatarURL || '',
+                    url: user.avatarURL || '',
+                    // title: post.content
+                },
+            },
+            { // For sharing text.
+                placeholderItem: { type: 'text', content: user.username || "" },
+                item: {
+                    default: { type: 'text', content: `${user.username} on Instagram` },
+                    message: null, // Specify no text to share via Messages app.
+                },
+                linkMetadata: { // For showing app icon on share preview.
+                    title: `https://img.favpng.com/9/25/24/computer-icons-instagram-logo-sticker-png-favpng-LZmXr3KPyVbr8LkxNML458QV3.jpg`
+                },
+            },
+            { // For using custom icon instead of default text icon at share preview when sharing with message.
+                placeholderItem: {
+                    type: 'url',
+                    content: user.avatarURL || ''
+                },
+                item: {
+                    default: {
+                        type: 'text',
+                        content: `${user.username} on Instagram`
+                    },
+                },
+                linkMetadata: {
+                    title: `${user.username} on Instagram`,
+                    icon: user.avatarURL
                 }
             },
         ],

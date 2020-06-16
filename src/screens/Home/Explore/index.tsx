@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { StyleSheet, Text, TouchableOpacity, TextInput, View, SafeAreaView, ScrollView } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { SCREEN_WIDTH } from '../../../constants'
+import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../constants'
+import SearchResult from '../../../components/SearchResult'
+import { getTabBarHeight } from '../../../components/BottomTabBar'
 
 const index = () => {
     const [query, setQuery] = useState<string>('')
     const [typing, setTyping] = useState<boolean>(false)
     const inputRef = useRef<TextInput>(null)
-    useEffect(() => {
-        if (query.length > 0) {
-
-        }
-    }, [query])
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.searchWrapper}>
@@ -44,7 +41,11 @@ const index = () => {
                 {!typing && <TouchableOpacity style={styles.squareBtn}>
                     <Icon name="qrcode-scan" size={20} />
                 </TouchableOpacity>}
-
+                {typing &&
+                    <View style={styles.searchResultWrapper}>
+                        <SearchResult query={query} />
+                    </View>
+                }
             </View>
             <ScrollView
                 horizontal={true}
@@ -138,6 +139,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff'
     },
     searchWrapper: {
+        zIndex: 1,
         width: '100%',
         height: 44,
         flexDirection: 'row',
@@ -168,5 +170,13 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: 'center',
         marginHorizontal: 5,
+    },
+    searchResultWrapper: {
+        height: SCREEN_HEIGHT - 44 - STATUS_BAR_HEIGHT - getTabBarHeight(),
+        zIndex: 1,
+        position: 'absolute',
+        top: 44,
+        left: 0,
+        width: "100%"
     }
 })
