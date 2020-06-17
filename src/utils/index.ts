@@ -193,3 +193,8 @@ export const Timestamp = () => {
     const nanosecond = curDate.getTime() - second * 1000
     return new firestore.Timestamp(second, nanosecond)
 }
+export const convertToFirebaseDatabasePathName = (text: string) => {
+    return text.replace(/\./g, "1").replace(/#/g, "2")
+        .replace(/\$/g, "3").replace(/\[/g, "4")
+        .replace(/\]/g, "5")
+}

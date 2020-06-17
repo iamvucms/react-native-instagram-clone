@@ -5,6 +5,7 @@ import { UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
 import { Post, ExtraPost } from '../reducers/postReducer';
 import { Comment } from '../reducers/commentReducer';
+import { convertToFirebaseDatabasePathName } from '../utils';
 
 export const FetchNotificationListRequest = ():
     ThunkAction<Promise<void>, {}, {}, NotificationAction> => {
@@ -13,7 +14,7 @@ export const FetchNotificationListRequest = ():
             const me = store.getState().user.user.userInfo
             const ref = firestore()
             const rq = await ref.collection('notifications')
-                .where('userId', 'array-contains', me?.username)
+                .where('userId', 'array-contains', me?.username || '')
                 .orderBy('create_at', 'desc')
                 .get()
             const notificationTasks: Promise<ExtraNotification>[] = rq.docs
@@ -121,7 +122,7 @@ export const CreateNotificationRequest = (notification: PostingNotification):
                     if (index < 0) {
                         currentFroms.push(notification.from || "")
                         notification.userId?.map(usr => {
-                            dbRef.ref(`/notifications/${usr}`).set(true)
+                            dbRef.ref(`/notifications/${convertToFirebaseDatabasePathName(usr)}`).set(true)
                         })
                     } else if (index > -1 && notification.isUndo) {
                         currentFroms.splice(index, 1)
@@ -148,7 +149,7 @@ export const CreateNotificationRequest = (notification: PostingNotification):
                                 create_at: new Date()
                             })
                         notification.userId?.map(usr => {
-                            dbRef.ref(`/notifications/${usr}`).set(true)
+                            dbRef.ref(`/notifications/${convertToFirebaseDatabasePathName(usr)}`).set(true)
                         })
                     }
                 }
@@ -183,7 +184,7 @@ export const CreateNotificationRequest = (notification: PostingNotification):
                             seen: seenTypes.NOTSEEN,
                         })
                     notification.userId?.map(usr => {
-                        dbRef.ref(`/notifications/${usr}`).set(true)
+                        dbRef.ref(`/notifications/${convertToFirebaseDatabasePathName(usr)}`).set(true)
                     })
                 }
             }

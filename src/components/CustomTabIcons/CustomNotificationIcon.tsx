@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native'
-import { useDispatch } from 'react-redux'
 import { database } from 'firebase'
-import { FetchNotificationListRequest } from '../../actions/notificationActions'
+import React, { useEffect } from 'react'
+import { Animated, StyleSheet, Text, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { useRoute } from '@react-navigation/native'
+import { useDispatch } from 'react-redux'
+import { FetchNotificationListRequest } from '../../actions/notificationActions'
 import { store } from '../../store'
+import { convertToFirebaseDatabasePathName } from '../../utils'
 export interface CustomNotificationIconProps {
     focused: boolean
 }
@@ -15,14 +15,15 @@ const CustomNotificationIcon = ({ focused }: CustomNotificationIconProps) => {
     const _animBellOpacity = React.useMemo(() => new Animated.Value(1), [])
     const _animBellY = React.useMemo(() => new Animated.Value(0), [])
     useEffect(() => {
-        database().ref('/notifications/' + myUsername).on('value', rs => {
-            const shouldRefreshNotifications = rs.val()
-            if (shouldRefreshNotifications) {
-                _onAnimate()
-                database().ref('/notifications/' + myUsername).set(false)
-                dispatch(FetchNotificationListRequest())
-            }
-        })
+        database().ref('/notifications/' + convertToFirebaseDatabasePathName(`${myUsername}`))
+            .on('value', rs => {
+                const shouldRefreshNotifications = rs.val()
+                if (shouldRefreshNotifications) {
+                    _onAnimate()
+                    database().ref('/notifications/' + myUsername).set(false)
+                    dispatch(FetchNotificationListRequest())
+                }
+            })
     }, [])
     useEffect(() => {
         if (focused) {

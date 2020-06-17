@@ -54,6 +54,7 @@ export type SuperRootStackParamList = {
     },
     ProfileInteractionOptions: {
         userX: ProfileX,
+        followType: 1 | 2 | 3,
         setFollowType: React.Dispatch<React.SetStateAction<number>>
     }
 };

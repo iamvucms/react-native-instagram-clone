@@ -164,7 +164,18 @@ export const UnfollowRequest = (username: string):
                     targetUser.ref.update({
                         followings
                     })
+                    dispatch(CreateNotificationRequest({
+                        isUndo: true,
+                        postId: 0,
+                        replyId: 0,
+                        commentId: 0,
+                        userId: [username],
+                        from: me.username,
+                        create_at: Timestamp(),
+                        type: notificationTypes.FOLLOW_ME
+                    }))
                 }
+
                 const rq2 = await targetUser.ref.get()
                 me = rq2.data() || {}
                 dispatch(UnfollowSuccess(me))
@@ -335,14 +346,14 @@ export const ToggleFollowUserRequest = (username: string, refreshExtraInfo: bool
                 const userData: UserInfo = myUser.data() || {}
                 const currentFollowings = userData.followings || []
                 const index = currentFollowings.indexOf(username)
-                if (index < 0) {
-                    const targetUserData: {
-                        privacySetting?: {
-                            accountPrivacy: {
-                                private: boolean
-                            }
+                const targetUserData: {
+                    privacySetting?: {
+                        accountPrivacy: {
+                            private: boolean
                         }
-                    } = targetUser.data() || {}
+                    }
+                } = targetUser.data() || {}
+                if (index < 0) {
                     if (targetUserData.privacySetting?.accountPrivacy.private) {
                         dispatch(ToggleSendFollowRequest(username))
                     } else currentFollowings.push(username)
@@ -354,7 +365,7 @@ export const ToggleFollowUserRequest = (username: string, refreshExtraInfo: bool
                 })
 
                 //add notification
-                if (index < 0) {
+                if (index < 0 && !!!targetUserData.privacySetting?.accountPrivacy.private) {
                     dispatch(CreateNotificationRequest({
                         postId: 0,
                         replyId: 0,
@@ -364,7 +375,7 @@ export const ToggleFollowUserRequest = (username: string, refreshExtraInfo: bool
                         create_at: Timestamp(),
                         type: notificationTypes.FOLLOW_ME
                     }))
-                } else {
+                } else if (index > -1 && !!!targetUserData.privacySetting?.accountPrivacy.private) {
                     dispatch(CreateNotificationRequest({
                         isUndo: true,
                         postId: 0,

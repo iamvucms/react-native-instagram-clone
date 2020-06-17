@@ -8,7 +8,7 @@ import { SuperRootStackParamList } from '../../navigations'
 import { goBack, navigate } from '../../navigations/rootNavigation'
 import { useSelector } from '../../reducers'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { UnfollowRequest } from '../../actions/userActions'
+import { UnfollowRequest, ToggleFollowUserRequest } from '../../actions/userActions'
 type ProfileInteractionOptionsRouteProp = RouteProp<SuperRootStackParamList, 'ProfileInteractionOptions'>
 
 
@@ -17,7 +17,7 @@ type ProfileInteractionOptionsProps = {
 }
 const ProfileInteractionOptions = ({ route }: ProfileInteractionOptionsProps) => {
     const dispatch = useDispatch()
-    const { setFollowType, userX } = route.params
+    const { setFollowType, userX, followType } = route.params
     const setting = useSelector(state => state.user.setting)
 
     const _bottomSheetOffsetY = React.useMemo(() => new Animated.Value(0), [])
@@ -59,9 +59,14 @@ const ProfileInteractionOptions = ({ route }: ProfileInteractionOptionsProps) =>
         }
     }
     const _onUnFollow = () => {
+        goBack()
         setFollowType(2)
         dispatch(UnfollowRequest(userX.username || ''))
+    }
+    const _onUnRequest = () => {
         goBack()
+        dispatch(ToggleFollowUserRequest(userX.username || ''))
+        setFollowType(2)
     }
     return (
         <SafeAreaView>
@@ -100,7 +105,22 @@ const ProfileInteractionOptions = ({ route }: ProfileInteractionOptionsProps) =>
                             fontWeight: '600'
                         }}>{userX.username}</Text>
                     </View>
-                    <View style={{
+                    {followType === 3 &&
+                        <View style={{
+                            backgroundColor: '#000'
+                        }}>
+                            <TouchableOpacity
+                                onPress={_onUnRequest}
+                                activeOpacity={0.9}
+                                style={styles.optionItem}>
+
+                                <Text style={{
+                                    color: 'red',
+                                    fontSize: 16
+                                }}>Cancel Follow Request</Text>
+                            </TouchableOpacity>
+                        </View>}
+                    {followType === 1 && <View style={{
                         backgroundColor: '#000'
                     }}>
                         <TouchableOpacity
@@ -159,7 +179,7 @@ const ProfileInteractionOptions = ({ route }: ProfileInteractionOptionsProps) =>
                                 fontSize: 16
                             }}>Unfollow</Text>
                         </TouchableOpacity>
-                    </View>
+                    </View>}
                 </Animated.View>
             </PanGestureHandler>
         </SafeAreaView>

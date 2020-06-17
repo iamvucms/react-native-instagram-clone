@@ -33,7 +33,7 @@ const ProfileX = ({ route }: ProfileXProps) => {
     const scrollVRef = useRef<ScrollView>(null)
     const scrollTabRef = useRef<ScrollView>(null)
     const _headerTabOpacity = React.useMemo(() => new Animated.Value(-1), [])
-    const [followType, setFollowType] = useState<number>(userX.requestedList && userX.requestedList.indexOf(me?.username || '') > -1
+    const [followType, setFollowType] = useState<number>((userX.requestedList && userX.requestedList.indexOf(me?.username || '') > -1)
         ? 3 : (
             me?.followings && me.followings.indexOf(userXname) > -1 ? 1 : 2
         ))
@@ -276,6 +276,7 @@ const ProfileX = ({ route }: ProfileXProps) => {
             // setFollowType(2)
             navigate('ProfileInteractionOptions', {
                 userX,
+                followType,
                 setFollowType
             })
         } else if (followType === 2) {
@@ -287,8 +288,11 @@ const ProfileX = ({ route }: ProfileXProps) => {
                 setFollowType(1)
             }
         } else {
-            dispatch(ToggleSendFollowRequest(userXname))
-            setFollowType(2)
+            navigate('ProfileInteractionOptions', {
+                userX,
+                followType,
+                setFollowType
+            })
         }
     }
     return (
@@ -481,8 +485,10 @@ const ProfileX = ({ route }: ProfileXProps) => {
                                         followType === 2 ? 'Follow' : 'Requested'
                                     )
                                         }</Text>
-                                    {followType === 1 &&
-                                        <Icon name="chevron-down" size={20} />
+                                    {(followType === 1 || followType === 3) &&
+                                        <Icon name="chevron-down" size={20} style={{
+                                            marginLeft: 5
+                                        }} />
                                     }
                                 </TouchableOpacity>
                                 <TouchableOpacity style={{
