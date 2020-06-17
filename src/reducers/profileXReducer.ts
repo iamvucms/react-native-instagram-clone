@@ -17,6 +17,7 @@ export interface ProfileX {
     tagPhotos?: Post[],
     followings?: string[],
     followers?: string[],
+    mutualFollowings?: string[],
     searchRecent?: SearchItem[],
     fullname?: string,
     phone?: string,

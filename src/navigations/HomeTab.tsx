@@ -22,6 +22,7 @@ import CustomAccountIcon from '../components/CustomTabIcons/CustomAccountIcon'
 import Location from '../screens/Home/Explore/Location'
 import Hashtag from '../screens/Home/Explore/Hashtag'
 import ProfileX from '../screens/Home/Explore/ProfileX'
+import ProfileXFollow from '../screens/Home/Explore/ProfileXFollow'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -41,6 +42,7 @@ const AccountStack = () => {
         }}>
             <Stack.Screen component={Account} name="AccountIndex" />
             <Stack.Screen name="ProfileX" component={ProfileX} />
+            <Stack.Screen name="ProfileXFollow" component={ProfileXFollow} />
             <Stack.Screen component={Setting} name="Setting" />
             <Stack.Screen options={{
                 ...TransitionPresets.ModalSlideFromBottomIOS,
@@ -97,6 +99,7 @@ const ExploreStack = () => {
             <Stack.Screen name="Location" component={Location} />
             <Stack.Screen name="Hashtag" component={Hashtag} />
             <Stack.Screen name="ProfileX" component={ProfileX} />
+            <Stack.Screen name="ProfileXFollow" component={ProfileXFollow} />
         </Stack.Navigator>
     )
 }
@@ -108,6 +111,7 @@ const HomeStack = () => {
         }}>
             <Stack.Screen component={HomeIndex} name="HomeIndex" />
             <Stack.Screen name="ProfileX" component={ProfileX} />
+            <Stack.Screen name="ProfileXFollow" component={ProfileXFollow} />
         </Stack.Navigator>
     )
 }

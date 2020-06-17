@@ -87,6 +87,7 @@ export const CreateNotificationRequest = (notification: PostingNotification):
             const ref = firestore()
             const uid = new Date().getTime()
             const postNotification = { ...notification }
+
             let query = ref.collection('notifications')
                 .where('postId', '==', notification.postId)
                 .where('userId', '==', notification.userId)

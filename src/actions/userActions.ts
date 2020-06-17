@@ -395,7 +395,6 @@ export const ToggleFollowUserRequest = (username: string, refreshExtraInfo: bool
             } else {
                 dispatch(FollowUserFailure())
             }
-
         } catch (e) {
             console.warn(e)
             dispatch(FollowUserFailure())

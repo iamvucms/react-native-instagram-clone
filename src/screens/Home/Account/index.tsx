@@ -417,7 +417,7 @@ const index = () => {
                             position: 'absolute',
                             left: 0,
                             top: '100%',
-                            backgroundColor: 'rgb(247,248,252)',
+                            backgroundColor: 'rgb(250,250,250)',
                             opacity: _headerTabOpacity,
                         }}>
                             <TouchableOpacity
@@ -750,7 +750,7 @@ export default index
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#f7f8fc',
+        backgroundColor: 'rgb(250,250,250)',
         width: '100%',
         height: '100%'
     },

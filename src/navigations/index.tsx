@@ -62,7 +62,10 @@ const RootStack = createStackNavigator<SuperRootStackParamList>()
 const index = (): JSX.Element => {
     const navigationOptions: StackNavigationOptions = {
         headerShown: false,
-        gestureEnabled: false
+        gestureEnabled: false,
+        cardStyle: {
+            backgroundColor: 'red'
+        }
     }
     return (
         <NavigationContainer ref={navigationRef}>

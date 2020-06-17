@@ -7,7 +7,7 @@ import { useDispatch } from 'react-redux'
 import { FetchProfileXRequest, ResetProfileXRequest } from '../../../actions/profileXActions'
 import AccountGallery from '../../../components/AccountGallery'
 import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../../constants'
-import { goBack, navigate } from '../../../navigations/rootNavigation'
+import { goBack, navigate, push } from '../../../navigations/rootNavigation'
 import { useSelector } from '../../../reducers'
 import { Post } from '../../../reducers/postReducer'
 import { getStatusBarHeight } from 'react-native-status-bar-height'
@@ -62,11 +62,14 @@ const ProfileX = ({ route }: ProfileXProps) => {
         })()
     }
     useEffect(() => {
+        if (me?.username === userXname) {
+            return navigate('AccountIndex')
+        }
         dispatch(FetchProfileXRequest(userXname))
         return () => {
             dispatch(ResetProfileXRequest())
         }
-    }, [])
+    }, [userXname])
     const _scrollToPosts = () => {
         scrollVRef.current?.scrollTo({
             x: 0,
@@ -295,6 +298,12 @@ const ProfileX = ({ route }: ProfileXProps) => {
             })
         }
     }
+    const _onShowSuggestion = () => {
+        //wait for post's label
+    }
+    const _onViewFollow = () => {
+
+    }
     return (
         <SafeAreaView style={styles.container}>
             {selectedPhoto.source && <View
@@ -436,7 +445,7 @@ const ProfileX = ({ route }: ProfileXProps) => {
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
-                                            navigate('Follow', { type: 1 })
+                                            push('ProfileXFollow', { userX, type: 1 })
                                         }}
                                         style={{
                                             justifyContent: 'center',
@@ -450,7 +459,7 @@ const ProfileX = ({ route }: ProfileXProps) => {
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
-                                            navigate('Follow', { type: 2 })
+                                            push('ProfileXFollow', { userX, type: 2 })
                                         }}
                                         style={{
                                             justifyContent: 'center',
@@ -499,11 +508,13 @@ const ProfileX = ({ route }: ProfileXProps) => {
                                         fontWeight: '600'
                                     }}>Message</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={{
-                                    ...styles.btnAction,
-                                    borderWidth: 1,
-                                    width: 30
-                                }}>
+                                <TouchableOpacity
+                                    onPress={_onShowSuggestion}
+                                    style={{
+                                        ...styles.btnAction,
+                                        borderWidth: 1,
+                                        width: 30
+                                    }}>
                                     <Icon name="chevron-down" size={20} />
                                 </TouchableOpacity>
                             </View>
@@ -564,7 +575,7 @@ export default ProfileX
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#f7f8fc',
+        backgroundColor: 'rgb(250,250,250)',
         width: '100%',
         height: '100%'
     },

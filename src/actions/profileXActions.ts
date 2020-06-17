@@ -28,6 +28,11 @@ export const FetchProfileXRequest = (username: string):
                 const followers = await ref.collection('users')
                     .where('followings', 'array-contains', username).get()
                 data.followers = followers.docs.map(x => x.data().username) || []
+                data.mutualFollowings = (data.followings || []).filter(usr =>
+                    (myUserData.followings || []).indexOf(usr) > -1
+                    && usr !== myUsername
+                    && usr !== username
+                )
                 dispatch(FetchProfileXSuccess(data))
             } else dispatch(FetchProfileXFailure())
         } catch (e) {
