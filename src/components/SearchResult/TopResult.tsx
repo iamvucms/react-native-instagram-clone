@@ -1,34 +1,37 @@
-import React, { useState, useEffect } from 'react'
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
-import { UserInfo, HashTag } from '../../reducers/userReducer'
-import { useSelector } from '../../reducers'
 import { firestore } from 'firebase'
+import React, { useEffect, useState } from 'react'
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import FastImage from 'react-native-fast-image'
-import { MapBoxAddress, searchLocation } from '../../utils'
-import { useDispatch } from 'react-redux'
-import { FetchRecentSearchRequest } from '../../actions/userActions'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useDispatch } from 'react-redux'
+import { FetchRecentSearchRequest, RemoveRecentSearchRequest, PushRecentSearchRequest } from '../../actions/userActions'
 import { navigate } from '../../navigations/rootNavigation'
-type MixedUserInfo = UserInfo & {
-    followType?: 1 | 2 | 3
+import { useSelector } from '../../reducers'
+import { HashTag, SearchItem } from '../../reducers/userReducer'
+import { MixedProfileX } from '../../screens/Home/Explore/FollowTab/ProfileXMutual'
+import { MapBoxAddress, searchLocation } from '../../utils'
+
+export interface TopResult {
+    resultData: (MixedProfileX | HashTag | MapBoxAddress)[]
 }
-const TopResult = () => {
+const TopResult = ({ resultData }: TopResult) => {
     const dispatch = useDispatch()
     const user = useSelector(state => state.user.user.userInfo)
     const myUsername = user?.username || ''
     const history = useSelector(state =>
         state.user.user.userInfo?.searchRecent) || []
-    const [recentList, setRecentList] = useState<(MixedUserInfo | MapBoxAddress | HashTag)[]>([])
-
+    const [recentList, setRecentList] = useState<(MixedProfileX | HashTag | MapBoxAddress)[]>([])
     useEffect(() => {
         dispatch(FetchRecentSearchRequest())
     }, [])
+
     useEffect(() => {
         if (history) {
+            history.reverse()
             const ref = firestore()
-            const fetchRecentTasks: Promise<MixedUserInfo | MapBoxAddress | HashTag>[] = history.map(async item => {
+            const fetchRecentTasks: Promise<MixedProfileX | HashTag | MapBoxAddress>[] = history.map(async item => {
                 let rq = null
-                let data: MixedUserInfo | MapBoxAddress | HashTag = {}
+                let data: MixedProfileX & HashTag | MapBoxAddress = {}
                 if (item.type === 1) {
                     rq = await ref.collection('users').doc(item.username).get()
                     data = rq.data() || {}
@@ -45,10 +48,9 @@ const TopResult = () => {
             })
             Promise.all(fetchRecentTasks).then(result => {
                 result = result.map(item => {
-                    if (item.hasOwnProperty('username')) {
-                        item = item as MixedUserInfo
-                        if (item.requestedList && item.requestedList.indexOf(myUsername) > -1) {
-                            item.followType = 3
+                    if ('username' in item) {
+                        if ((item as MixedProfileX).requestedList && ((item as MixedProfileX).requestedList || []).indexOf(myUsername) > -1) {
+                            (item as MixedProfileX).followType = 3
                             return item
                         }
                         if (user?.followings && user.followings.indexOf(item.username || '') > -1) {
@@ -62,110 +64,52 @@ const TopResult = () => {
             })
         }
     }, [history])
-    const _onViewResultDetail = (item: MixedUserInfo | MapBoxAddress | HashTag) => {
-        if (item.hasOwnProperty('username')) {
-            navigate('ProfileX', {
-                username: (item as MixedUserInfo).username
-            })
-        } else if (item.hasOwnProperty('place_name')) {
-            navigate('Location', {
-                location: item
-            })
-        } else {
-            navigate('Hashtag', {
-                hashtag: item
-            })
 
-        }
-    }
     return (
         <View style={styles.container}>
-            <View>
-                <Text style={{
-                    margin: 15,
-                    fontWeight: '700',
-                    fontSize: 16
-                }}>Recent</Text>
-            </View>
-            {recentList.map((item, index) => (
-                <TouchableOpacity
-                    onPress={() =>
-                        _onViewResultDetail(item)
+
+            {resultData.length === 0 &&
+                <FlatList
+                    ListHeaderComponent={
+                        <View>
+                            <Text style={{
+                                margin: 15,
+                                fontWeight: '700',
+                                fontSize: 16
+                            }}>Recent</Text>
+                        </View>}
+                    data={recentList}
+                    renderItem={({ item, index }) =>
+                        <ResultItem showRemoveBtn={true}
+                            searchItem={history[index]}
+                            item={item}
+                            key={index} />
                     }
-                    key={index} style={styles.userItem}>
-                    <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                    }}>
-                        {item.hasOwnProperty('username') ? (
-                            <FastImage style={styles.avatar}
-                                source={{
-                                    uri: (item as MixedUserInfo).avatarURL,
-                                }}
-                            />
-                        ) : (
-                                <>
-                                    {item.hasOwnProperty('place_name') ? (
-                                        <View style={styles.circle}>
-                                            <Icon name="map-marker-outline" size={30} />
-                                        </View>
-                                    ) : (
-                                            <View style={styles.circle}>
-                                                <Text style={{
-                                                    fontSize: 30
-                                                }}>#</Text>
-                                            </View>
-                                        )}
-                                </>
-                            )}
-                        <View style={{ marginLeft: 10 }}>
-                            {item.hasOwnProperty('username') ? (
-                                <>
-                                    <Text style={{
-                                        fontWeight: '600'
-                                    }}>{(item as MixedUserInfo).username}</Text>
-                                    <Text style={{
-                                        color: "#666",
-                                        fontWeight: '500'
-                                    }}>{(item as MixedUserInfo).fullname}<Text>
-                                            {(item as MixedUserInfo).followType === 1 ? ' • Following' : (
-                                                (item as MixedUserInfo).followType === 3 ? ' • Requested' : ''
-                                            )
-                                            }
-                                        </Text>
-                                    </Text>
-                                </>
-                            ) : (
-                                    <>
-                                        {item.hasOwnProperty('place_name') ? (
-                                            <>
-                                                <Text style={{
-                                                    fontWeight: '600'
-                                                }}>{(item as MapBoxAddress).place_name}</Text>
-                                            </>
-                                        ) : (
-                                                <>
-                                                    <Text style={{
-                                                        fontWeight: '600'
-                                                    }}>{(item as HashTag).name}</Text>
-                                                    <Text style={{
-                                                        color: "#666",
-                                                        fontWeight: '500'
-                                                    }}>{(item as HashTag).sources && (item as HashTag).sources?.length} posts
-                                                    </Text>
-                                                </>
-                                            )}
-                                    </>
-                                )}
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            ))}
+                    keyExtractor={(item, index) => `${index}`}
+                />
+            }
+            {resultData.length > 0 &&
+                <FlatList
+                    ListHeaderComponent={
+                        <View>
+                            <Text style={{
+                                margin: 15,
+                                fontWeight: '700',
+                                fontSize: 16
+                            }}>Results</Text>
+                        </View>}
+                    data={resultData}
+                    renderItem={({ item, index }) =>
+                        <ResultItem item={item} key={index} />
+                    }
+                    keyExtractor={(item, index) => `${index}`}
+                />
+            }
         </View>
     )
 }
 
-export default TopResult
+export default React.memo(TopResult)
 
 const styles = StyleSheet.create({
     container: {
@@ -195,5 +139,130 @@ const styles = StyleSheet.create({
         borderColor: '#666',
         justifyContent: 'center',
         alignItems: 'center'
+    },
+    centerBtn: {
+        width: 44,
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 })
+export interface ResultItemProps {
+    item: MixedProfileX & HashTag | MapBoxAddress,
+    showRemoveBtn?: boolean,
+    searchItem?: SearchItem
+}
+export const ResultItem = React.memo(
+    ({ showRemoveBtn, searchItem, item }: ResultItemProps) => {
+        const dispatch = useDispatch()
+        const _onViewResultDetail = (item: MixedProfileX & HashTag | MapBoxAddress) => {
+            if (item.hasOwnProperty('username')) {
+                navigate('ProfileX', {
+                    username: (item as MixedProfileX).username
+                })
+                dispatch(PushRecentSearchRequest({
+                    type: 1,
+                    username: (item as MixedProfileX).username
+                }))
+            } else if (item.hasOwnProperty('place_name')) {
+                navigate('Location', {
+                    location: item
+                })
+                dispatch(PushRecentSearchRequest({
+                    type: 3,
+                    address: (item as MapBoxAddress).id
+                }))
+            } else {
+                navigate('Hashtag', {
+                    hashtag: (item as HashTag).name
+                })
+                dispatch(PushRecentSearchRequest({
+                    type: 2,
+                    hashtag: (item as HashTag).name
+                }))
+            }
+        }
+        const _onRemoveRecent = () => {
+            if (searchItem) dispatch(RemoveRecentSearchRequest(searchItem))
+        }
+        return (
+            <TouchableOpacity
+                onPress={() =>
+                    _onViewResultDetail(item)
+                } style={styles.userItem}>
+                <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                }}>
+                    {item.hasOwnProperty('username') ? (
+                        <FastImage style={styles.avatar}
+                            source={{
+                                uri: (item as MixedProfileX).avatarURL,
+                            }}
+                        />
+                    ) : (
+                            <>
+                                {item.hasOwnProperty('place_name') ? (
+                                    <View style={styles.circle}>
+                                        <Icon name="map-marker-outline" size={30} />
+                                    </View>
+                                ) : (
+                                        <View style={styles.circle}>
+                                            <Text style={{
+                                                fontSize: 30
+                                            }}>#</Text>
+                                        </View>
+                                    )}
+                            </>
+                        )}
+                    <View style={{ marginLeft: 10 }}>
+                        {item.hasOwnProperty('username') ? (
+                            <>
+                                <Text style={{
+                                    fontWeight: '600'
+                                }}>{(item as MixedProfileX).username}</Text>
+                                <Text style={{
+                                    color: "#666",
+                                    fontWeight: '500'
+                                }}>{(item as MixedProfileX).fullname}<Text>
+                                        {(item as MixedProfileX).followType === 1 ? ' • Following' : (
+                                            (item as MixedProfileX).followType === 3 ? ' • Requested' : ''
+                                        )
+                                        }
+                                    </Text>
+                                </Text>
+                            </>
+                        ) : (
+                                <>
+                                    {item.hasOwnProperty('place_name') ? (
+                                        <>
+                                            <Text style={{
+                                                fontWeight: '600'
+                                            }}>{(item as MapBoxAddress).place_name}</Text>
+                                        </>
+                                    ) : (
+                                            <>
+                                                <Text style={{
+                                                    fontWeight: '600'
+                                                }}>{(item as HashTag).name}</Text>
+                                                <Text style={{
+                                                    color: "#666",
+                                                    fontWeight: '500'
+                                                }}>{(item as HashTag).sources && (item as HashTag).sources?.length} posts
+                                                        </Text>
+                                            </>
+                                        )}
+                                </>
+                            )}
+                    </View>
+                </View>
+                {showRemoveBtn && <TouchableOpacity
+                    onPress={_onRemoveRecent}
+                    style={styles.centerBtn}>
+                    <Text>✕</Text>
+                </TouchableOpacity>}
+
+            </TouchableOpacity>
+        )
+    }
+)

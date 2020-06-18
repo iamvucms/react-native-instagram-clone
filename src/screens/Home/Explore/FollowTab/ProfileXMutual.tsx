@@ -8,12 +8,12 @@ import FastImage from 'react-native-fast-image'
 import { push, navigate } from '../../../../navigations/rootNavigation'
 import { useDispatch } from 'react-redux'
 import { ToggleFollowUserRequest, ToggleSendFollowRequest } from '../../../../actions/userActions'
-import { useSuggestion } from '../../../../hooks/useSuggestion'
+import { useSuggestion, ExtraSuggestionUserInfo } from '../../../../hooks/useSuggestion'
 export interface ProfileXMutualProps {
     userX: ProfileX
 }
 export type MixedProfileX = ProfileX & {
-    followType?: 1 | 2 | 3
+    followType?: 1 | 2 | 3,
 }
 const ProfileXMutual = ({ userX }: ProfileXMutualProps) => {
     const dispatch = useDispatch()
@@ -21,6 +21,7 @@ const ProfileXMutual = ({ userX }: ProfileXMutualProps) => {
     const [mutualUsers, setMutualUsers] = useState<MixedProfileX[]>([])
     const [mySuggestion, setMySuggestion] = useSuggestion(20)
     useEffect(() => {
+        console.warn("reload")
         if (userX.mutualFollowings) {
             const mutualFollowings = [...userX.mutualFollowings]
             const ref = firestore()
@@ -134,7 +135,7 @@ const ProfileXMutual = ({ userX }: ProfileXMutualProps) => {
     )
 }
 
-export default ProfileXMutual
+export default React.memo(ProfileXMutual)
 
 const styles = StyleSheet.create({
     container: {
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     },
 })
 interface UserItemProps {
-    userX: MixedProfileX,
+    userX: MixedProfileX | ExtraSuggestionUserInfo,
     onToggleFollow: (index: number) => void,
     index: number,
     myUsername?: string

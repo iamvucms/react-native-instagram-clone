@@ -110,7 +110,7 @@ const ProfileXFollower = ({ userX }: ProfileXMutualProps) => {
     )
 }
 
-export default ProfileXFollower
+export default React.memo(ProfileXFollower)
 
 const styles = StyleSheet.create({
     container: {

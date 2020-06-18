@@ -1,7 +1,10 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-
-const ProfileXSuggestion = () => {
+import { ProfileX } from '../../../../reducers/profileXReducer'
+export interface ProfileXSuggestionProps {
+    userX: ProfileX
+}
+const ProfileXSuggestion = ({ userX }: ProfileXSuggestionProps) => {
     return (
         <View>
             <Text></Text>

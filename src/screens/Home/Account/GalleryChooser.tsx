@@ -14,7 +14,7 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../../constan
 import { SuperRootStackParamList } from '../../../navigations'
 import { goBack, navigate } from '../../../navigations/rootNavigation'
 import Switcher from '../../../components/Switcher'
-import { MapBoxAddress, uriToBlob, Timestamp } from '../../../utils'
+import { MapBoxAddress, uriToBlob, Timestamp, generateUsernameKeywords } from '../../../utils'
 import { Post, PostImage } from '../../../reducers/postReducer'
 import { firestore, storage } from 'firebase'
 import { store } from '../../../store'
@@ -432,7 +432,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                         }))
                     }
                 })
-                Promise.all(tasks).then(resultList => {
+                Promise.all(tasks).then(async resultList => {
                     let tagUsername: string[] = []
                     resultList.map(img => {
                         img.tags.map(tag => tagUsername.push(tag.username))
@@ -451,7 +451,10 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                         likes: [],
                         tagUsername,
                         source: resultList,
-                        address: { ...address },
+                        address: {
+                            ...address,
+                            keyword: generateUsernameKeywords(address.place_name || '')
+                        },
                         userId: user?.username
                     }
                     dispatch(CreatePostRequest(postData))
@@ -938,7 +941,7 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                                 ...styles.postOptionItem,
 
                             }}>
-                            {address.place_name.length > 0 &&
+                            {(address.place_name || "").length > 0 &&
                                 <View style={{
                                     marginRight: 5,
                                     width: 30,
@@ -953,15 +956,15 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                                 numberOfLines={2}
                                 style={{
                                     fontSize: 16,
-                                    color: address.place_name.length > 0
+                                    color: (address.place_name || "").length > 0
                                         ? '#318bfb' : '#000',
                                     width: SCREEN_WIDTH - 30 - 30 - 30
                                 }}>
-                                {address.place_name.length > 0
+                                {(address.place_name || "").length > 0
                                     ? address.place_name
                                     : 'Add Location'}
                             </Text>
-                            {address.place_name.length > 0 &&
+                            {(address.place_name || "").length > 0 &&
                                 <TouchableOpacity
                                     onPress={() => {
                                         setAddress({

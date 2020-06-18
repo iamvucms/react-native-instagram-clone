@@ -68,7 +68,7 @@ const ProfileX = ({ route }: ProfileXProps) => {
         dispatch(FetchProfileXRequest(userXname))
         return () => {
             dispatch(ResetProfileXRequest())
-        }
+        }   
     }, [userXname])
     const _scrollToPosts = () => {
         scrollVRef.current?.scrollTo({

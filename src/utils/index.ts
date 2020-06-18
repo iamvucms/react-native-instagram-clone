@@ -64,8 +64,9 @@ export const uriToBlob = (uri: string) => {
     });
 }
 export type MapBoxAddress = {
-    id: string,
-    place_name: string,
+    id?: string,
+    place_name?: string,
+    keyword?: string[],
 }
 export const searchLocation = (query: string): Promise<MapBoxAddress[]> => {
     return new Promise((resolve, reject) => {
@@ -194,7 +195,7 @@ export const Timestamp = () => {
     return new firestore.Timestamp(second, nanosecond)
 }
 export const convertToFirebaseDatabasePathName = (text: string) => {
-    return text.replace(/\./g, "1").replace(/#/g, "2")
-        .replace(/\$/g, "3").replace(/\[/g, "4")
-        .replace(/\]/g, "5")
+    return text.replace(/\./g, "!").replace(/#/g, "@")
+        .replace(/\$/g, "%").replace(/\[/g, "&")
+        .replace(/\]/g, "*")
 }

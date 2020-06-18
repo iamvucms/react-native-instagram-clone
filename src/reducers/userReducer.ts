@@ -1,6 +1,6 @@
 import { firestore } from 'firebase'
 import { Alert } from 'react-native'
-import { Post } from './postReducer'
+import { Post, PostImage } from './postReducer'
 import { Story } from './storyReducer'
 import { MapBoxAddress } from '../utils'
 export const userActionTypes = {
@@ -42,17 +42,18 @@ export const userActionTypes = {
  * 3:place
  */
 export type SearchItem = {
-    type: 1 | 2 | 3,
+    type?: 1 | 2 | 3,
     username?: string,
     address?: string,
-    hashtag?: number
+    hashtag?: string
 }
 export type HashTag = {
     name?: string,
     followers?: string[],
     relatedTags?: string[],
     sources?: number[],
-    uid?: number
+    uid?: number,
+    avatar?: PostImage
 }
 export type UserInfo = {
     email?: string,

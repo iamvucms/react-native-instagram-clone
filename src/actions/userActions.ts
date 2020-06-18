@@ -826,7 +826,7 @@ export const FetchRecentSearchRequest = ():
         }
     }
 }
-export const PushRecentSearchRequest = (hashtag: SearchItem):
+export const PushRecentSearchRequest = (searchItem: SearchItem):
     ThunkAction<Promise<void>, {}, {}, userAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
         const me = store.getState().user.user.userInfo
@@ -838,31 +838,32 @@ export const PushRecentSearchRequest = (hashtag: SearchItem):
             const recentSearchList: SearchItem[] = myUserData.searchRecent || []
             const temp = [...recentSearchList]
             const check = temp.every((item, index) => {
-                if ((item.username === hashtag.username && hashtag.type === 1
+                if ((item.username === searchItem.username && searchItem.type === 1
                     && item.type === 1)
-                    || (item.hashtag === hashtag.hashtag && hashtag.type === 2
+                    || (item.hashtag === searchItem.hashtag && searchItem.type === 2
                         && item.type === 2)
-                    || (item.address === hashtag.address && hashtag.type === 3
+                    || (item.address === searchItem.address && searchItem.type === 3
                         && item.type === 3)
                 ) {
                     recentSearchList.splice(index, 1)
-                    recentSearchList.push(hashtag)
+                    recentSearchList.push(searchItem)
                     return false
                 }
                 return true
             })
             if (check) {
-                recentSearchList.push(hashtag)
+                recentSearchList.push(searchItem)
             }
             rq.ref.update({
                 searchRecent: recentSearchList
             })
+            dispatch(FetchRecentSearchRequest())
         } else {
             Alert.alert('Error', 'Please check your network!')
         }
     }
 }
-export const RemoveRecentSearchRequest = (hashtag: SearchItem):
+export const RemoveRecentSearchRequest = (searchItem: SearchItem):
     ThunkAction<Promise<void>, {}, {}, userAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
         const me = store.getState().user.user.userInfo
@@ -874,11 +875,11 @@ export const RemoveRecentSearchRequest = (hashtag: SearchItem):
             const recentSearchList: SearchItem[] = myUserData.searchRecent || []
             const temp = [...recentSearchList]
             temp.every((item, index) => {
-                if ((item.username === hashtag.username && hashtag.type === 1
+                if ((item.username === searchItem.username && searchItem.type === 1
                     && item.type === 1)
-                    || (item.hashtag === hashtag.hashtag && hashtag.type === 2
+                    || (item.hashtag === searchItem.hashtag && searchItem.type === 2
                         && item.type === 2)
-                    || (item.address === hashtag.address && hashtag.type === 3
+                    || (item.address === searchItem.address && searchItem.type === 3
                         && item.type === 3)
                 ) {
                     recentSearchList.splice(index, 1)
@@ -889,6 +890,7 @@ export const RemoveRecentSearchRequest = (hashtag: SearchItem):
             rq.ref.update({
                 searchRecent: recentSearchList
             })
+            dispatch(FetchRecentSearchRequest())
         } else {
             Alert.alert('Error', 'Please check your network!')
         }

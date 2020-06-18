@@ -1,14 +1,13 @@
 import { firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { ExtraComment } from '../reducers/commentReducer';
+import { notificationTypes } from '../reducers/notificationReducer';
 import { ExtraPost, LIMIT_POSTS_PER_LOADING, Post, PostAction, postActionTypes, PostErrorAction, PostList, PostSuccessAction } from '../reducers/postReducer';
-import { UserInfo } from '../reducers/userReducer';
+import { HashTag, UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
+import { generateUsernameKeywords, Timestamp } from '../utils';
 import { LoadMoreCommentListSuccess } from './commentActions';
 import { CreateNotificationRequest } from './notificationActions';
-import { Timestamp } from '../utils';
-import { seenTypes } from '../reducers/storyReducer';
-import { notificationTypes } from '../reducers/notificationReducer';
 
 export const FetchPostListRequest = ():
     ThunkAction<Promise<void>, {}, {}, PostAction> => {
@@ -128,8 +127,9 @@ export const LoadMorePostListRequest = ():
 
                 let ownInfos: UserInfo[] = []
                 while (userIds.length > 0) {
+                    const usernames = userIds.splice(0, 10)
                     const rs = await firestore().collection('users')
-                        .where('username', 'in', userIds.splice(0, 10))
+                        .where('username', 'in', usernames)
                         .get()
                     const temp = rs.docs.map(doc => {
                         return doc.data()
@@ -138,7 +138,7 @@ export const LoadMorePostListRequest = ():
                 }
                 const extraPostList: PostList = collection.map((post, index) => {
                     const extraPost: ExtraPost = Object.assign(post, {
-                        ownUser: ownInfos[index]
+                        ownUser: ownInfos.filter(x => x.username === post.userId)[0]
                     })
                     return extraPost
                 })
@@ -352,9 +352,9 @@ export const CreatePostRequest = (postData: Post):
             const ref = firestore()
             const rq = await ref.collection('users')
                 .where('username', '==', me?.username).get()
+            const uid = new Date().getTime()
             if (rq.size > 0) {
                 const poster: UserInfo = rq.docs[0].data()
-                const uid = new Date().getTime()
                 ref.collection('posts').doc(`${uid}`).set({
                     ...postData,
                     uid
@@ -363,6 +363,57 @@ export const CreatePostRequest = (postData: Post):
             } else {
                 dispatch(CreatePostFailure())
             }
+            const regex = /\#\w+/gm
+            const str = postData.content || ''
+            let m
+            let hashTagList: string[] = []
+            while ((m = regex.exec(str)) !== null) {
+                if (m.index === regex.lastIndex) {
+                    regex.lastIndex++
+                }
+                m.forEach((match, groupIndex) => {
+                    hashTagList.push(match)
+                })
+            }
+            hashTagList = Array.from(new Set(hashTagList))
+            hashTagList.map(async hashtag => {
+                const rq = await ref.collection('hashtags')
+                    .where('name', '==', hashtag).get()
+                if (rq.size > 0) {
+                    const targetHashtag = rq.docs[0]
+                    const data: HashTag = targetHashtag.data() || {}
+                    const sources = (data.sources || [])
+                    sources.push(uid)
+                    targetHashtag.ref.update({
+                        sources
+                    })
+                } else {
+                    const keyword = generateUsernameKeywords(hashtag)
+                    keyword.splice(0, 1)
+                    const fetchRelatedTags: Promise<string[]>[] = keyword.map(async character => {
+                        const rq = await ref.collection('hashtags').
+                            where('keyword', 'array-contains', character).get()
+                        const data: HashTag[] = rq.docs.map(x => x.data() || {})
+                        return data.map(x => x.name || '')
+                    })
+                    Promise.all(fetchRelatedTags).then(rs => {
+                        let relatedTags: string[] = []
+                        rs.map(lv1 => {
+                            lv1.map(x => relatedTags.push(x))
+                        })
+                        relatedTags = Array.from(new Set(relatedTags))
+                        const hashtagUid = new Date().getTime()
+                        ref.collection('hashtags').doc(hashtag).set({
+                            name: hashtag,
+                            followers: [],
+                            keyword,
+                            relatedTags,
+                            sources: [uid],
+                            uid: hashtagUid
+                        })
+                    })
+                }
+            })
         } catch (e) {
             dispatch(CreatePostFailure())
         }
