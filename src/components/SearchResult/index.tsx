@@ -4,24 +4,69 @@ import React, { useEffect, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { HashTag } from '../../reducers/userReducer'
 import { MixedUserInfo } from '../../screens/Home/Account/Follow'
-import { MapBoxAddress } from '../../utils'
+import { MapBoxAddress, searchLocation } from '../../utils'
 import Accounts from './Accounts'
 import Places from './Places'
 import Tags from './Tags'
 import TopResult from './TopResult'
 import { MixedProfileX } from '../../screens/Home/Explore/FollowTab/ProfileXMutual'
 import { Post } from '../../reducers/postReducer'
+import { useSelector } from '../../reducers'
 export interface SearchResultProps {
     query: string
 }
 const Tab = createMaterialTopTabNavigator()
 const SearchResult = ({ query }: SearchResultProps) => {
     const [resultData, setResultData] = useState<(MixedProfileX | HashTag | MapBoxAddress)[]>([])
+    const [recentList, setRecentList] = useState<(MixedProfileX | HashTag | MapBoxAddress)[]>([])
+    const history = useSelector(state =>
+        state.user.user.userInfo?.searchRecent) || []
+    const user = useSelector(state => state.user.user.userInfo)
+    const myUsername = user?.username || ''
     const ref = useRef<{
         timeout: NodeJS.Timeout
     }>({
         timeout: setTimeout(() => { }, 0)
     })
+    useEffect(() => {
+        if (history) {
+            history.reverse()
+            const ref = firestore()
+            const fetchRecentTasks: Promise<MixedProfileX | HashTag | MapBoxAddress>[] = history.map(async item => {
+                let rq = null
+                let data: MixedProfileX & HashTag | MapBoxAddress = {}
+                if (item.type === 1) {
+                    rq = await ref.collection('users').doc(item.username).get()
+                    data = rq.data() || {}
+                } else if (item.type === 2) {
+                    rq = await ref.collection('hashtags').doc(`${item.hashtag}`).get()
+                    data = rq.data() || {}
+                } else {
+                    const rs = await searchLocation(item.address || '')
+                    if (rs.length > 0) {
+                        data = rs[0]
+                    }
+                }
+                return data
+            })
+            Promise.all(fetchRecentTasks).then(result => {
+                result = result.map(item => {
+                    if ('username' in item) {
+                        if ((item as MixedProfileX).requestedList && ((item as MixedProfileX).requestedList || []).indexOf(myUsername) > -1) {
+                            (item as MixedProfileX).followType = 3
+                            return item
+                        }
+                        if (user?.followings && user.followings.indexOf(item.username || '') > -1) {
+                            item.followType = 1
+                        }
+                        else item.followType = 2
+                        return item
+                    } else return item
+                })
+                setRecentList(result)
+            })
+        }
+    }, [history])
     useEffect(() => {
         clearTimeout(ref.current.timeout)
         if (query.length > 0) {
@@ -57,7 +102,7 @@ const SearchResult = ({ query }: SearchResultProps) => {
     }, [query])
     return (
         <View style={styles.container}>
-            <SearchTab resultData={resultData} />
+            <SearchTab searching={query.length > 0} {...{ resultData, recentList }} />
         </View>
     )
 }
@@ -71,14 +116,41 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff"
     }
 })
-const SearchTab = ({ resultData }: { resultData: (MixedProfileX | HashTag | MapBoxAddress)[] }) => {
-    resultData[0]
+interface SearchTabProps {
+    resultData: (MixedProfileX | HashTag | MapBoxAddress)[],
+    recentList: (MixedProfileX | HashTag | MapBoxAddress)[],
+    searching?: boolean
+}
+const SearchTab = ({ resultData, recentList, searching }: SearchTabProps) => {
+    const filter = (list: (MixedProfileX | HashTag | MapBoxAddress)[]
+        , field: string[]) => [...list.filter(x => field.every(f => `${f}` in x))]
+    const filteredAccountResults = filter(resultData || [], ['username'])
+    const filteredAccountRecents = filter(recentList || [], ['username'])
+    const filteredHashtagResults = filter(resultData || [], ['name', 'sources'])
+    const filteredHashtagRecents = filter(recentList || [], ['name', 'sources'])
+    const filteredPlaceResults = filter(resultData || [], ['place_name'])
+    const filteredPlaceRecents = filter(recentList || [], ['place_name'])
     return (
         <Tab.Navigator>
-            <Tab.Screen children={() => <TopResult resultData={resultData} />} name="Top" />
-            <Tab.Screen children={() => <Accounts resultData={resultData} />} name="Accounts" />
-            <Tab.Screen children={() => <Tags resultData={resultData} />} name="Tags" />
-            <Tab.Screen children={() => <Places resultData={resultData} />} name="Places" />
+            <Tab.Screen children={() => <TopResult {...{ resultData, recentList, searching }} />}
+                name="Top" />
+            <Tab.Screen children={() => <Accounts
+                searching={searching}
+                recentList={filteredAccountRecents}
+                resultData={filteredAccountResults} />}
+                name="Accounts" />
+            <Tab.Screen children={() => <Tags
+                searching={searching}
+                recentList={filteredHashtagRecents}
+                resultData={filteredHashtagResults}
+            />}
+                name="Tags" />
+            <Tab.Screen children={() => <Places
+                searching={searching}
+                recentList={filteredPlaceRecents}
+                resultData={filteredPlaceResults}
+            />}
+                name="Places" />
         </Tab.Navigator>
     )
 }

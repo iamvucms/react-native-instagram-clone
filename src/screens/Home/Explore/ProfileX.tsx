@@ -33,10 +33,7 @@ const ProfileX = ({ route }: ProfileXProps) => {
     const scrollVRef = useRef<ScrollView>(null)
     const scrollTabRef = useRef<ScrollView>(null)
     const _headerTabOpacity = React.useMemo(() => new Animated.Value(-1), [])
-    const [followType, setFollowType] = useState<number>((userX.requestedList && userX.requestedList.indexOf(me?.username || '') > -1)
-        ? 3 : (
-            me?.followings && me.followings.indexOf(userXname) > -1 ? 1 : 2
-        ))
+    const [followType, setFollowType] = useState<number>(2)
     const ref = useRef<{
         currentGalleryTab: number,
         headerHeight: number,
@@ -62,13 +59,19 @@ const ProfileX = ({ route }: ProfileXProps) => {
         })()
     }
     useEffect(() => {
+        setFollowType((userX.requestedList && userX.requestedList.indexOf(me?.username || '') > -1)
+            ? 3 : (
+                (me?.followings && me.followings.indexOf(userXname) > -1) ? 1 : 2
+            ))
+    }, [userX])
+    useEffect(() => {
         if (me?.username === userXname) {
             return navigate('AccountIndex')
         }
         dispatch(FetchProfileXRequest(userXname))
         return () => {
             dispatch(ResetProfileXRequest())
-        }   
+        }
     }, [userXname])
     const _scrollToPosts = () => {
         scrollVRef.current?.scrollTo({

@@ -10,65 +10,29 @@ import { useSelector } from '../../reducers'
 import { HashTag, SearchItem } from '../../reducers/userReducer'
 import { MixedProfileX } from '../../screens/Home/Explore/FollowTab/ProfileXMutual'
 import { MapBoxAddress, searchLocation } from '../../utils'
+import { STATUS_BAR_HEIGHT, SCREEN_HEIGHT } from '../../constants'
+import { getTabBarHeight } from '../BottomTabBar'
 
 export interface TopResult {
-    resultData: (MixedProfileX | HashTag | MapBoxAddress)[]
+    resultData: (MixedProfileX | HashTag | MapBoxAddress)[],
+    recentList: (MixedProfileX | HashTag | MapBoxAddress)[],
+    searching?: boolean
 }
-const TopResult = ({ resultData }: TopResult) => {
+const TopResult = ({ resultData, recentList, searching }: TopResult) => {
     const dispatch = useDispatch()
     const user = useSelector(state => state.user.user.userInfo)
     const myUsername = user?.username || ''
     const history = useSelector(state =>
         state.user.user.userInfo?.searchRecent) || []
-    const [recentList, setRecentList] = useState<(MixedProfileX | HashTag | MapBoxAddress)[]>([])
     useEffect(() => {
         dispatch(FetchRecentSearchRequest())
     }, [])
 
-    useEffect(() => {
-        if (history) {
-            history.reverse()
-            const ref = firestore()
-            const fetchRecentTasks: Promise<MixedProfileX | HashTag | MapBoxAddress>[] = history.map(async item => {
-                let rq = null
-                let data: MixedProfileX & HashTag | MapBoxAddress = {}
-                if (item.type === 1) {
-                    rq = await ref.collection('users').doc(item.username).get()
-                    data = rq.data() || {}
-                } else if (item.type === 2) {
-                    rq = await ref.collection('hashtags').doc(`${item.hashtag}`).get()
-                    data = rq.data() || {}
-                } else {
-                    const rs = await searchLocation(item.address || '')
-                    if (rs.length > 0) {
-                        data = rs[0]
-                    }
-                }
-                return data
-            })
-            Promise.all(fetchRecentTasks).then(result => {
-                result = result.map(item => {
-                    if ('username' in item) {
-                        if ((item as MixedProfileX).requestedList && ((item as MixedProfileX).requestedList || []).indexOf(myUsername) > -1) {
-                            (item as MixedProfileX).followType = 3
-                            return item
-                        }
-                        if (user?.followings && user.followings.indexOf(item.username || '') > -1) {
-                            item.followType = 1
-                        }
-                        else item.followType = 2
-                        return item
-                    } else return item
-                })
-                setRecentList(result)
-            })
-        }
-    }, [history])
 
     return (
         <View style={styles.container}>
 
-            {resultData.length === 0 &&
+            {!searching &&
                 <FlatList
                     ListHeaderComponent={
                         <View>
@@ -88,7 +52,7 @@ const TopResult = ({ resultData }: TopResult) => {
                     keyExtractor={(item, index) => `${index}`}
                 />
             }
-            {resultData.length > 0 &&
+            {searching &&
                 <FlatList
                     ListHeaderComponent={
                         <View>

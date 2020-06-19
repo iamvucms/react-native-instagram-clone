@@ -2,7 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, StackNavigationOptions, TransitionPresets } from '@react-navigation/stack';
 import React from 'react';
 import { ExtraPost } from '../reducers/postReducer';
-import { UserInfo } from '../reducers/userReducer';
+import { UserInfo, HashTag } from '../reducers/userReducer';
 import EditProfile from '../screens/Home/Account/EditProfile';
 import GalleryChooser, { ProcessedImage } from '../screens/Home/Account/GalleryChooser';
 import LocationChooser from '../screens/Home/Account/LocationChooser';
@@ -19,6 +19,7 @@ import PostDetail from '../screens/Home/PostDetail';
 import { ProfileX } from '../reducers/profileXReducer';
 import ProfileOptions from '../screens/Others/ProfileOptions';
 import ProfileInteractionOptions from '../screens/Others/ProfileInteractionOptions';
+import FeedbackOptions from '../screens/Others/FeedbackOptions';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -56,6 +57,9 @@ export type SuperRootStackParamList = {
         userX: ProfileX,
         followType: 1 | 2 | 3,
         setFollowType: React.Dispatch<React.SetStateAction<number>>
+    },
+    FeedbackOptions: {
+        hashtag: HashTag
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -103,6 +107,10 @@ const index = (): JSX.Element => {
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="MuteOptions" component={MuteOptions} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="FeedbackOptions" component={FeedbackOptions} />
                 <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }
