@@ -109,6 +109,7 @@ const HomeStack = () => {
             headerShown: false,
             gestureEnabled: false
         }}>
+            <Stack.Screen name="Hashtag" component={Hashtag} />
             <Stack.Screen component={HomeIndex} name="HomeIndex" />
             <Stack.Screen name="ProfileX" component={ProfileX} />
             <Stack.Screen name="ProfileXFollow" component={ProfileXFollow} />

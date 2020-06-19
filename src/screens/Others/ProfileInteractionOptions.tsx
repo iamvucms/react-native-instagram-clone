@@ -1,14 +1,17 @@
 
 import { RouteProp } from '@react-navigation/native'
-import React, { useEffect, useRef } from 'react'
-import { Animated, LayoutChangeEvent, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import { Animated, Image, LayoutChangeEvent, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { PanGestureHandler, PanGestureHandlerGestureEvent, State } from 'react-native-gesture-handler'
 import { useDispatch } from 'react-redux'
 import { SuperRootStackParamList } from '../../navigations'
 import { goBack, navigate } from '../../navigations/rootNavigation'
 import { useSelector } from '../../reducers'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { UnfollowRequest, ToggleFollowUserRequest } from '../../actions/userActions'
+import { UnfollowRequest, ToggleFollowUserRequest, UpdatePrivacySettingsRequest } from '../../actions/userActions'
+import { store } from '../../store'
+import { firestore } from 'firebase'
+import { ProfileX } from '../../reducers/profileXReducer'
 type ProfileInteractionOptionsRouteProp = RouteProp<SuperRootStackParamList, 'ProfileInteractionOptions'>
 
 
@@ -18,8 +21,9 @@ type ProfileInteractionOptionsProps = {
 const ProfileInteractionOptions = ({ route }: ProfileInteractionOptionsProps) => {
     const dispatch = useDispatch()
     const { setFollowType, userX, followType } = route.params
-    const setting = useSelector(state => state.user.setting)
-
+    const myUsername = store.getState().user.user.userInfo?.username || ''
+    const setting = store.getState().user.setting
+    const [closeFriends, setCloseFriends] = useState<string[]>(setting?.privacy?.closeFriends?.closeFriends || [])
     const _bottomSheetOffsetY = React.useMemo(() => new Animated.Value(0), [])
     const ref = useRef<{
         bottomSheetHeight: number
@@ -67,6 +71,33 @@ const ProfileInteractionOptions = ({ route }: ProfileInteractionOptionsProps) =>
         goBack()
         dispatch(ToggleFollowUserRequest(userX.username || ''))
         setFollowType(2)
+    }
+    const _toggleCloseFriend = async () => {
+        const temp = [...closeFriends]
+        const index = temp.indexOf(userX.username || '')
+        if (index > -1) {
+            temp.splice(index, 1)
+        } else {
+            temp.push(userX.username || '')
+        }
+        setCloseFriends(temp)
+        const ref = firestore()
+        const rq = await ref.collection('users').doc(`${myUsername}`).get()
+        if (rq.exists) {
+            const data: ProfileX = rq.data() || {}
+            const currentCloseFriends = data.privacySetting?.closeFriends?.closeFriends || []
+            const index2 = currentCloseFriends.indexOf(userX.username || '')
+            if (index2 > -1) {
+                currentCloseFriends.splice(index2, 1)
+            } else {
+                currentCloseFriends.push(userX.username || '')
+            }
+            dispatch(UpdatePrivacySettingsRequest({
+                closeFriends: {
+                    closeFriends: currentCloseFriends
+                }
+            }))
+        }
     }
     return (
         <SafeAreaView>
@@ -124,12 +155,15 @@ const ProfileInteractionOptions = ({ route }: ProfileInteractionOptionsProps) =>
                         backgroundColor: '#000'
                     }}>
                         <TouchableOpacity
+                            onPress={_toggleCloseFriend}
                             activeOpacity={0.9}
                             style={styles.optionItem}>
                             <Text style={{
                                 fontSize: 16
                             }}>Add to Close Friend List</Text>
-                            <Icon name="chevron-right" size={24} color="#666" />
+                            <Image style={styles.closeFriendIcon}
+                                source={closeFriends.indexOf(userX.username || '') > -1
+                                    ? require("../../assets/icons/close-friend.png") : require("../../assets/icons/unclose-friend.png")} />
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => {
@@ -222,5 +256,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 15,
         alignItems: 'center'
+    },
+    closeFriendIcon: {
+        width: 24,
+        height: 24
     }
 })

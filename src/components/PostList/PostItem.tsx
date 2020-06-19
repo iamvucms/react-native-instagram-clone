@@ -4,12 +4,13 @@ import FastImage from 'react-native-fast-image'
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useDispatch } from 'react-redux'
 import { ToggleLikePostRequest } from '../../actions/postActions'
-import { navigation } from '../../navigations/rootNavigation'
+import { navigation, navigate } from '../../navigations/rootNavigation'
 import { useSelector } from '../../reducers'
 import { ExtraPost } from '../../reducers/postReducer'
 import { sharePost, timestampToString } from '../../utils'
 import CirclePagination from '../CirclePagination'
 import PhotoShower from './PhotoShower'
+import { store } from '../../store'
 export interface PostItemProps {
     item: ExtraPost,
     showCommentInput?: (id: number, prefix?: string) => void,
@@ -259,11 +260,12 @@ const styles = StyleSheet.create({
     },
 })
 export function createFilterContent(content: string): JSX.Element[] {
+    const myUsername = store.getState().user.user.userInfo?.username || ''
     const matchedGroups: {
         match: string,
         index: number
     }[] = []
-    content?.replace(/@[a-zA-Z0-9._]{4,}/g,
+    content?.replace(/@[a-zA-Z0-9._]{4,}|\#\w+/g,
         (match, index) => {
             matchedGroups.push({ match, index })
             return match
@@ -274,7 +276,21 @@ export function createFilterContent(content: string): JSX.Element[] {
     matchedGroups.map((match) => {
         splitedContent.splice(match.index - i + 1, match.match.length - 1)
         splitedContent[match.index - i] =
-            <TouchableOpacity key={match.index - i}>
+            <TouchableOpacity onPress={() => {
+                const targetName = match.match.slice(-(match.match.length - 1))
+                if (match.match[0] === '@') {
+                    if (myUsername !== targetName) {
+                        navigate('ProfileX', {
+                            username: targetName
+                        })
+                    } else navigate('Account')
+                } else if (match.match[0] === '#') {
+                    navigate('Hashtag', {
+                        hashtag: match.match
+                    })
+                }
+            }
+            } key={`${match.match}${match.index}`}>
                 <Text style={{
                     color: '#318bfb',
                     fontWeight: '500'

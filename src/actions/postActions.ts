@@ -353,16 +353,7 @@ export const CreatePostRequest = (postData: Post):
             const rq = await ref.collection('users')
                 .where('username', '==', me?.username).get()
             const uid = new Date().getTime()
-            if (rq.size > 0) {
-                const poster: UserInfo = rq.docs[0].data()
-                ref.collection('posts').doc(`${uid}`).set({
-                    ...postData,
-                    uid
-                })
-                dispatch(FetchPostListRequest())
-            } else {
-                dispatch(CreatePostFailure())
-            }
+            //Regex Hashtags
             const regex = /\#\w+/gm
             const str = postData.content || ''
             let m
@@ -376,44 +367,56 @@ export const CreatePostRequest = (postData: Post):
                 })
             }
             hashTagList = Array.from(new Set(hashTagList))
-            hashTagList.map(async hashtag => {
-                const rq = await ref.collection('hashtags')
-                    .where('name', '==', hashtag).get()
-                if (rq.size > 0) {
-                    const targetHashtag = rq.docs[0]
-                    const data: HashTag = targetHashtag.data() || {}
-                    const sources = (data.sources || [])
-                    sources.push(uid)
-                    targetHashtag.ref.update({
-                        sources
-                    })
-                } else {
-                    const keyword = generateUsernameKeywords(hashtag)
-                    keyword.splice(0, 1)
-                    const fetchRelatedTags: Promise<string[]>[] = keyword.map(async character => {
-                        const rq = await ref.collection('hashtags').
-                            where('keyword', 'array-contains', character).get()
-                        const data: HashTag[] = rq.docs.map(x => x.data() || {})
-                        return data.map(x => x.name || '')
-                    })
-                    Promise.all(fetchRelatedTags).then(rs => {
-                        let relatedTags: string[] = []
-                        rs.map(lv1 => {
-                            lv1.map(x => relatedTags.push(x))
+            postData.hashtags = [...hashTagList]
+            if (rq.size > 0) {
+                const poster: UserInfo = rq.docs[0].data()
+                ref.collection('posts').doc(`${uid}`).set({
+                    ...postData,
+                    uid
+                })
+                dispatch(FetchPostListRequest())
+                hashTagList.map(async hashtag => {
+                    const rq = await ref.collection('hashtags')
+                        .where('name', '==', hashtag).get()
+                    if (rq.size > 0) {
+                        const targetHashtag = rq.docs[0]
+                        const data: HashTag = targetHashtag.data() || {}
+                        const sources = (data.sources || [])
+                        sources.push(uid)
+                        targetHashtag.ref.update({
+                            sources
                         })
-                        relatedTags = Array.from(new Set(relatedTags))
-                        const hashtagUid = new Date().getTime()
-                        ref.collection('hashtags').doc(hashtag).set({
-                            name: hashtag,
-                            followers: [],
-                            keyword,
-                            relatedTags,
-                            sources: [uid],
-                            uid: hashtagUid
+                    } else {
+                        const keyword = generateUsernameKeywords(hashtag)
+                        keyword.splice(0, 1)
+                        const fetchRelatedTags: Promise<string[]>[] = keyword.map(async character => {
+                            const rq = await ref.collection('hashtags').
+                                where('keyword', 'array-contains', character).get()
+                            const data: HashTag[] = rq.docs.map(x => x.data() || {})
+                            return data.map(x => x.name || '')
                         })
-                    })
-                }
-            })
+                        Promise.all(fetchRelatedTags).then(rs => {
+                            let relatedTags: string[] = []
+                            rs.map(lv1 => {
+                                lv1.map(x => relatedTags.push(x))
+                            })
+                            relatedTags = Array.from(new Set(relatedTags))
+                            const hashtagUid = new Date().getTime()
+                            ref.collection('hashtags').doc(hashtag).set({
+                                name: hashtag,
+                                followers: [],
+                                keyword,
+                                relatedTags,
+                                sources: [uid],
+                                uid: hashtagUid
+                            })
+                        })
+                    }
+                })
+            } else {
+                dispatch(CreatePostFailure())
+            }
+
         } catch (e) {
             dispatch(CreatePostFailure())
         }

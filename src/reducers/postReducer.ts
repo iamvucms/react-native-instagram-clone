@@ -54,6 +54,7 @@ export type Post = {
     notificationUsers?: string[],
     altText?: string,
     address?: MapBoxAddress,
+    hashtags?: string[]
 }
 export type ExtraPost = Post & {
     ownUser?: UserInfo
