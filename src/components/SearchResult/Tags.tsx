@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, FlatList } from 'react-native'
 import { MixedProfileX } from '../../screens/Home/Explore/FollowTab/ProfileXMutual'
 import { HashTag } from '../../reducers/userReducer'
 import { MapBoxAddress } from '../../utils'
-import { ResultItem } from './TopResult'
+import { ResultItem, listStyle } from './TopResult'
 
 export interface TagsProps {
     resultData: (MixedProfileX | HashTag | MapBoxAddress)[],
@@ -15,6 +15,7 @@ const Tags = ({ resultData, recentList, searching }: TagsProps) => {
         <View style={styles.container}>
             {!searching &&
                 <FlatList
+                    style={listStyle}
                     ListHeaderComponent={
                         <View>
                             <Text style={{
@@ -34,6 +35,7 @@ const Tags = ({ resultData, recentList, searching }: TagsProps) => {
             }
             {searching &&
                 <FlatList
+                    style={listStyle}
                     ListHeaderComponent={
                         <View>
                             <Text style={{

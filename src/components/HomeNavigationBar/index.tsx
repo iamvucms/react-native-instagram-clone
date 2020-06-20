@@ -5,7 +5,7 @@ import { SCREEN_WIDTH } from '../../constants'
 import { navigation } from '../../navigations/rootNavigation'
 
 const index = () => {
-   
+
     return (
         <TouchableOpacity
             activeOpacity={1}
@@ -21,7 +21,12 @@ const index = () => {
             <TouchableOpacity
                 onPress={() => navigation.navigate('Direct')}
                 style={styles.btnMessenger}>
-                <Icon name="send" size={24} />
+                <Image
+                    style={{
+                        height: 24,
+                        width: 24
+                    }}
+                    source={require('../../assets/icons/send.png')} />
             </TouchableOpacity>
         </TouchableOpacity >
     )

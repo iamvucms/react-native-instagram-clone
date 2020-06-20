@@ -34,6 +34,7 @@ const TopResult = ({ resultData, recentList, searching }: TopResult) => {
 
             {!searching &&
                 <FlatList
+                    style={listStyle}
                     ListHeaderComponent={
                         <View>
                             <Text style={{
@@ -54,6 +55,7 @@ const TopResult = ({ resultData, recentList, searching }: TopResult) => {
             }
             {searching &&
                 <FlatList
+                    style={listStyle}
                     ListHeaderComponent={
                         <View>
                             <Text style={{
@@ -74,7 +76,9 @@ const TopResult = ({ resultData, recentList, searching }: TopResult) => {
 }
 
 export default React.memo(TopResult)
-
+export const listStyle = {
+    maxHeight: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - getTabBarHeight() - 100
+}
 const styles = StyleSheet.create({
     container: {
         height: '100%',
@@ -130,7 +134,7 @@ export const ResultItem = React.memo(
                 }))
             } else if (item.hasOwnProperty('place_name')) {
                 navigate('Location', {
-                    location: item
+                    address: item
                 })
                 dispatch(PushRecentSearchRequest({
                     type: 3,

@@ -52,6 +52,7 @@ export type HashTag = {
     followers?: string[],
     relatedTags?: string[],
     sources?: number[],
+    storySources?: number[],
     uid?: number,
     avatar?: PostImage
 }

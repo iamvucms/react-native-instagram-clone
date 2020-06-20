@@ -1,16 +1,15 @@
 import { RouteProp } from '@react-navigation/native'
 import { firestore } from 'firebase'
-import React, { useEffect, useState } from 'react'
-import { FlatList, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import { Animated, FlatList, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import FastImage from 'react-native-fast-image'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import NavigationBar from '../../../components/NavigationBar'
 import { SCREEN_WIDTH } from '../../../constants'
-import { goBack, push, navigate } from '../../../navigations/rootNavigation'
+import { goBack, navigate, push } from '../../../navigations/rootNavigation'
 import { Post } from '../../../reducers/postReducer'
 import { HashTag } from '../../../reducers/userReducer'
 import { store } from '../../../store'
-import AccountGallery from '../../../components/AccountGallery'
-import FastImage from 'react-native-fast-image'
 type HashtagRouteProp = RouteProp<{
     Hashtag: {
         hashtag: string
@@ -25,6 +24,9 @@ const Hashtag = ({ route }: HashtagProps) => {
     const { hashtag } = route.params
     const [hashtagInfo, setHashtagInfo] = useState<HashTag>({})
     const [hashtagPosts, setHashtagPosts] = useState<Post[]>([])
+    const _scrollRef = useRef<ScrollView>(null)
+    const [currentTab, setCurrentTab] = useState<1 | 2>(1)
+    const _activeLineOffsetX = React.useMemo(() => new Animated.Value(0), [])
     useEffect(() => {
         fetchHashtagInfo(hashtag, setHashtagInfo, setHashtagPosts)
     }, [hashtag])
@@ -57,6 +59,26 @@ const Hashtag = ({ route }: HashtagProps) => {
             ...hashtagInfo,
             followers: currentFollowers
         })
+    }
+    const _onSwitchTab = (tab: 1 | 2) => {
+        if (tab === 1 && currentTab !== 1) {
+            _scrollRef.current?.scrollTo({
+                x: 0,
+                y: 0,
+                animated: false
+            })
+            _activeLineOffsetX.setValue(0)
+            setCurrentTab(1)
+        } else if (tab === 2 && currentTab !== 2) {
+            _scrollRef.current?.scrollTo({
+                x: SCREEN_WIDTH,
+                y: 0,
+                animated: false
+            })
+            _activeLineOffsetX.setValue(SCREEN_WIDTH / 2)
+            setCurrentTab(2)
+        }
+
     }
     return (
         <SafeAreaView style={styles.container}>
@@ -146,17 +168,69 @@ const Hashtag = ({ route }: HashtagProps) => {
                     }
                     keyExtractor={(item, index) => `${index}`}
                 />
-                <FlatList
-                    style={{
-                        height: "100%"
-                    }}
-                    data={hashtagPosts}
-                    renderItem={({ item, index }) =>
-                        <PhotoItem {...{ item, index }} key={index} />
-                    }
-                    numColumns={3}
-                    keyExtractor={(item, index) => `${index}`}
-                />
+                <View style={styles.hashtagTabWrapper}>
+                    <TouchableOpacity
+                        onPress={_onSwitchTab.bind(null, 1)}
+                        style={styles.hashtagTab}>
+                        <Text style={{
+                            fontWeight: '500',
+                            color: currentTab === 1 ? '#000' : '#666'
+                        }}>Top</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={_onSwitchTab.bind(null, 2)}
+                        style={styles.hashtagTab}>
+                        <Text style={{
+                            fontWeight: '500',
+                            color: currentTab === 2 ? '#000' : '#666'
+                        }}>Recent</Text>
+                    </TouchableOpacity>
+                    <Animated.View style={{
+                        height: 2,
+                        width: SCREEN_WIDTH / 2,
+                        backgroundColor: "#000",
+                        position: 'absolute',
+                        bottom: 2,
+                        transform: [{
+                            translateX: _activeLineOffsetX
+                        }],
+                        zIndex: 1,
+                    }} />
+                </View>
+                <ScrollView
+                    ref={_scrollRef}
+                    scrollEnabled={false}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                >
+                    <FlatList
+                        style={{
+                            width: SCREEN_WIDTH,
+                            height: "100%"
+                        }}
+                        data={[...hashtagPosts].sort((a, b) =>
+                            -((a.likes || []).length + (a.commentList || []).length)
+                            + (b.likes || []).length + (b.commentList || []).length
+                        )}
+                        renderItem={({ item, index }) =>
+                            <PhotoItem {...{ item, index }} key={index} />
+                        }
+                        numColumns={3}
+                        keyExtractor={(item, index) => `${index}`}
+                    />
+                    <FlatList
+                        style={{
+                            width: SCREEN_WIDTH,
+                            height: "100%"
+                        }}
+                        data={hashtagPosts}
+                        renderItem={({ item, index }) =>
+                            <PhotoItem {...{ item, index }} key={index} />
+                        }
+                        numColumns={3}
+                        keyExtractor={(item, index) => `${index}`}
+                    />
+                </ScrollView>
             </View>
         </SafeAreaView >
     )
@@ -221,20 +295,33 @@ const styles = StyleSheet.create({
         borderTopWidth: 0.5,
         borderBottomColor: '#ddd',
         borderBottomWidth: 0.5,
-        marginVertical: 15
+        marginTop: 15
     },
     relatedItem: {
         paddingHorizontal: 10,
         height: 44,
+        lineHeight: 44,
         justifyContent: 'center',
         alignItems: 'center'
     },
     hashtagTxt: {
         color: '#318bfb'
     },
+    hashtagTabWrapper: {
+        height: 44,
+        width: SCREEN_WIDTH,
+        flexDirection: 'row'
+    },
+    hashtagTab: {
+        height: '100%',
+        width: '50%',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
     photoItemContainer: {
         width: (SCREEN_WIDTH - 5) / 3,
-        height: (SCREEN_WIDTH - 5) / 3
+        height: (SCREEN_WIDTH - 5) / 3,
+        marginVertical: 1.25
     },
     multipleIcon: {
         position: 'absolute',
@@ -257,33 +344,35 @@ interface PhotoItemProps {
     item: Post,
     index: number
 }
-const PhotoItem = ({ item, index }: PhotoItemProps) => {
-    return (
-        <TouchableOpacity
-            onPress={() => navigate('PostDetail', {
-                postId: item.uid
-            })}
-            style={{
-                ...styles.photoItemContainer,
-                marginHorizontal: (index - 1) % 3 === 0 ? 2.5 : 0
-            }}>
-            <FastImage
+export const PhotoItem = React.memo(
+    ({ item, index }: PhotoItemProps) => {
+        return (
+            <TouchableOpacity
+                onPress={() => navigate('PostDetail', {
+                    postId: item.uid
+                })}
                 style={{
-                    width: '100%',
-                    height: '100%'
-                }}
-                source={{
-                    uri: item.source && item.source[0].uri
-                }}
-            />
-            {(item.source && item.source.length > 1) &&
-                <View style={styles.multipleIcon}>
-                    <Icon name="layers-outline" size={30} color="#fff" />
-                </View>
-            }
-        </TouchableOpacity>
-    )
-}
+                    ...styles.photoItemContainer,
+                    marginHorizontal: (index - 1) % 3 === 0 ? 2.5 : 0
+                }}>
+                <FastImage
+                    style={{
+                        width: '100%',
+                        height: '100%'
+                    }}
+                    source={{
+                        uri: item.source && item.source[0].uri
+                    }}
+                />
+                {(item.source && item.source.length > 1) &&
+                    <View style={styles.multipleIcon}>
+                        <Icon name="layers-outline" size={30} color="#fff" />
+                    </View>
+                }
+            </TouchableOpacity>
+        )
+    }
+)
 
 async function fetchHashtagInfo(hashtag: string, setHashtagInfo: React.Dispatch<React.SetStateAction<HashTag>>, setHashtagPosts: React.Dispatch<React.SetStateAction<Post[]>>) {
 

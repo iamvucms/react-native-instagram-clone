@@ -18,7 +18,7 @@ const StoryPreviewItem = ({ item: { ownUser, storyList } }: StoryPreviewItemProp
         setPreloadingImage(true)
         let preFetchTasks: Promise<any>[] = [];
         storyList.forEach((story) => {
-            preFetchTasks.push(Image.prefetch(story.source || ''));
+            preFetchTasks.push(Image.prefetch(story.source?.uri || ''));
         });
         const startAt: number = new Date().getTime()
         Promise.all(preFetchTasks).then((results) => {

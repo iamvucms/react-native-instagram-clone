@@ -118,7 +118,6 @@ const HomeStack = () => {
 }
 const Tab = createBottomTabNavigator<HomeTabParamList>()
 const HomeTab = () => {
-
     const tabBarOptions: BottomTabBarOptions = {
         showLabel: false,
     }

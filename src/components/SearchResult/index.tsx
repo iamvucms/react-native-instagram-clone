@@ -2,16 +2,15 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import { firestore } from 'firebase'
 import React, { useEffect, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
+import { useSelector } from '../../reducers'
+import { Post } from '../../reducers/postReducer'
 import { HashTag } from '../../reducers/userReducer'
-import { MixedUserInfo } from '../../screens/Home/Account/Follow'
+import { MixedProfileX } from '../../screens/Home/Explore/FollowTab/ProfileXMutual'
 import { MapBoxAddress, searchLocation } from '../../utils'
 import Accounts from './Accounts'
 import Places from './Places'
 import Tags from './Tags'
 import TopResult from './TopResult'
-import { MixedProfileX } from '../../screens/Home/Explore/FollowTab/ProfileXMutual'
-import { Post } from '../../reducers/postReducer'
-import { useSelector } from '../../reducers'
 export interface SearchResultProps {
     query: string
 }

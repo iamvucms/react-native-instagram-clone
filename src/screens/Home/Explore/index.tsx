@@ -6,6 +6,7 @@ import SearchResult from '../../../components/SearchResult'
 import { getTabBarHeight } from '../../../components/BottomTabBar'
 
 const index = () => {
+
     const [query, setQuery] = useState<string>('')
     const [typing, setTyping] = useState<boolean>(false)
     const inputRef = useRef<TextInput>(null)
@@ -173,7 +174,6 @@ const styles = StyleSheet.create({
     },
     searchResultWrapper: {
         height: SCREEN_HEIGHT - 44 - STATUS_BAR_HEIGHT - getTabBarHeight(),
-        zIndex: 1,
         position: 'absolute',
         top: 44,
         left: 0,

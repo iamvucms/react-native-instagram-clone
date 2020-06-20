@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import FastImage from 'react-native-fast-image'
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useDispatch } from 'react-redux'
 import { ToggleLikePostRequest } from '../../actions/postActions'
-import { navigation, navigate } from '../../navigations/rootNavigation'
+import { navigate, navigation } from '../../navigations/rootNavigation'
 import { useSelector } from '../../reducers'
 import { ExtraPost } from '../../reducers/postReducer'
-import { sharePost, timestampToString } from '../../utils'
+import { store } from '../../store'
+import { timestampToString } from '../../utils'
 import CirclePagination from '../CirclePagination'
 import PhotoShower from './PhotoShower'
-import { store } from '../../store'
 export interface PostItemProps {
     item: ExtraPost,
     showCommentInput?: (id: number, prefix?: string) => void,
@@ -79,8 +79,15 @@ const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
                         <TouchableOpacity onPress={_onViewAllComments}>
                             <Icons name="comment-outline" size={24} />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => sharePost(item)}>
-                            <Icons name="share-variant" size={24} />
+                        <TouchableOpacity onPress={() => navigate('ShareToDirect', {
+                            item: { ...item }
+                        })}>
+                            <Image
+                                style={{
+                                    height: 24,
+                                    width: 24
+                                }}
+                                source={require('../../assets/icons/send.png')} />
                         </TouchableOpacity>
                     </View>
                     {item.source && item.source.length > 1 && <CirclePagination

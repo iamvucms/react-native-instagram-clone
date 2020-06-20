@@ -1,6 +1,8 @@
 import { Alert } from 'react-native'
 import { firestore } from 'firebase'
 import { UserInfo } from './userReducer'
+import { MapBoxAddress } from '../utils'
+import { PostImage } from './postReducer'
 export const seenTypes = {
     NOTSEEN: 0,
     SEEN: 1,
@@ -10,15 +12,35 @@ export const storyActionTypes = {
     FETCH_STORY_LIST_SUCCESS: 'FETCH_STORY_LIST_SUCCESS',
     FETCH_STORY_LIST_FAILURE: 'FETCH_STORY_LIST_FAILURE',
 }
+export type StoryImage = PostImage & {
+    location?: {
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        id: string,
+        place_name: string
+    },
+    hashtags?: {
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        hashtag: string
+    }[],
+}
 export type Story = {
     userId?: string,
     uid?: number,
     type?: number,
     permission?: number,
     create_at?: firestore.Timestamp,
-    source?: string,
+    source?: StoryImage,
     seen?: number,
-    seenList?: string[]
+    seenList?: string[],
+
+    address?: MapBoxAddress,
+
 }
 export type ExtraStory = {
     storyList: Story[],

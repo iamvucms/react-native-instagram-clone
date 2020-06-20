@@ -401,6 +401,16 @@ export const CreatePostRequest = (postData: Post):
                                 lv1.map(x => relatedTags.push(x))
                             })
                             relatedTags = Array.from(new Set(relatedTags))
+                            relatedTags.map(async tag => {
+                                const rq = await ref.collection('hashtags').doc(`${tag}`).get()
+                                if (rq.exists) {
+                                    const currentRelatedTags = (rq.data() || {}).relatedTags || []
+                                    currentRelatedTags.push(hashtag)
+                                    rq.ref.update({
+                                        relatedTags: currentRelatedTags
+                                    })
+                                }
+                            })
                             const hashtagUid = new Date().getTime()
                             ref.collection('hashtags').doc(hashtag).set({
                                 name: hashtag,

@@ -67,6 +67,10 @@ export type MapBoxAddress = {
     id?: string,
     place_name?: string,
     keyword?: string[],
+    avatarURI?: string,
+    sources?: number[],
+    storySources?: number[],
+    center?: [number, number]
 }
 export const searchLocation = (query: string): Promise<MapBoxAddress[]> => {
     return new Promise((resolve, reject) => {
@@ -80,7 +84,8 @@ export const searchLocation = (query: string): Promise<MapBoxAddress[]> => {
                 result.features.map(feature => {
                     address.push({
                         id: feature.id,
-                        place_name: feature.place_name
+                        place_name: feature.place_name,
+                        center: feature.center
                     })
                 })
                 resolve(address)

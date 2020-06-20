@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, StackNavigationOptions, TransitionPresets } from '@react-navigation/stack';
 import React from 'react';
-import { ExtraPost } from '../reducers/postReducer';
+import { ExtraPost, Post } from '../reducers/postReducer';
 import { UserInfo, HashTag } from '../reducers/userReducer';
 import EditProfile from '../screens/Home/Account/EditProfile';
 import GalleryChooser, { ProcessedImage } from '../screens/Home/Account/GalleryChooser';
@@ -20,6 +20,7 @@ import { ProfileX } from '../reducers/profileXReducer';
 import ProfileOptions from '../screens/Others/ProfileOptions';
 import ProfileInteractionOptions from '../screens/Others/ProfileInteractionOptions';
 import FeedbackOptions from '../screens/Others/FeedbackOptions';
+import ShareToDirect from '../screens/Others/ShareToDirect';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -60,6 +61,9 @@ export type SuperRootStackParamList = {
     },
     FeedbackOptions: {
         hashtag: HashTag
+    },
+    ShareToDirect: {
+        item: MapBoxAddress | ExtraPost
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -111,6 +115,10 @@ const index = (): JSX.Element => {
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="FeedbackOptions" component={FeedbackOptions} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="ShareToDirect" component={ShareToDirect} />
                 <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }
