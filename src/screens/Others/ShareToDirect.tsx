@@ -189,7 +189,8 @@ const ShareToDirect = ({ route }: ShareToDirectProps) => {
                             <View style={styles.searchBtn}>
                                 <Icon name="magnify" size={20} color="#666" />
                             </View>
-                            <TextInput style={styles.searchInput}
+                            <TextInput
+                                style={styles.searchInput}
                                 onFocus={_onTxtInputFocus}
                                 value={query}
                                 onChangeText={setQuery}

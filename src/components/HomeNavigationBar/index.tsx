@@ -11,7 +11,7 @@ const index = () => {
             activeOpacity={1}
             style={styles.navigationBar}>
             <TouchableOpacity
-                onPress={() => navigation.navigate('PhotoTaker')}
+                onPress={() => navigation.navigate('StoryTaker')}
                 style={styles.btnBack}>
                 <Icon name="camera" size={24} />
             </TouchableOpacity>

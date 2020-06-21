@@ -49,220 +49,226 @@ const StoryPravicy = (): JSX.Element => {
         }))
     }, [saveToArchive, saveToGallery, allowSharing, allowMessageReplies, allowResharing, shareYourStoryToFacebook])
     return (
-        <SafeAreaView style={styles.container}>
-            <NavigationBar title={(currNavigation as { name: string }).name} callback={() => {
-                navigation.goBack()
-            }} />
-            <ScrollView
-                style={{
-                    height: SCREEN_HEIGHT -
-                        STATUS_BAR_HEIGHT - getTabBarHeight() - 44
-                }}
-                bounces={false}
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={{
-                    paddingHorizontal: 15,
-                    justifyContent: 'center',
-                    paddingVertical: 10,
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#ddd'
-                }}>
-                    <Text style={{
-                        marginVertical: 15,
-                        fontSize: 16,
-                        fontWeight: '500'
+        <View style={{
+            height: "100%",
+            width: '100%',
+            backgroundColor: '#fff'
+        }}>
+            <View style={styles.container}>
+                <NavigationBar title={(currNavigation as { name: string }).name} callback={() => {
+                    navigation.goBack()
+                }} />
+                <ScrollView
+                    style={{
+                        height: SCREEN_HEIGHT -
+                            STATUS_BAR_HEIGHT - getTabBarHeight() - 44
+                    }}
+                    bounces={false}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={{
+                        paddingHorizontal: 15,
+                        justifyContent: 'center',
+                        paddingVertical: 10,
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: '#ddd'
                     }}>
-                        Hide Story From
-                    </Text>
-                    <TouchableOpacity
-                        onPress={() => navigate('HideStoryFrom')}
-                        style={{
-                            marginVertical: 10,
+                        <Text style={{
+                            marginVertical: 15,
+                            fontSize: 16,
+                            fontWeight: '500'
                         }}>
-                        <Text style={{ fontSize: 16 }}>{story?.hideStoryFrom?.length || 0} People</Text>
-                    </TouchableOpacity>
-                    <Text style={{
-                        color: '#666',
-                        fontSize: 12
-                    }}>
-                        Hide your story and live videos from specific people.
+                            Hide Story From
                     </Text>
-                </View>
-                <View style={{
-                    paddingHorizontal: 15,
-                    justifyContent: 'center',
-                    paddingVertical: 10,
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#ddd'
-                }}>
-                    <Text style={{
-                        marginVertical: 15,
-                        fontSize: 16,
-                        fontWeight: '500'
-                    }}>
-                        Close Friends
-                    </Text>
-                    <TouchableOpacity
-                        onPress={() => navigate('CloseFriends')}
-                        style={{
-                            marginVertical: 10,
+                        <TouchableOpacity
+                            onPress={() => navigate('HideStoryFrom')}
+                            style={{
+                                marginVertical: 10,
+                            }}>
+                            <Text style={{ fontSize: 16 }}>{story?.hideStoryFrom?.length || 0} People</Text>
+                        </TouchableOpacity>
+                        <Text style={{
+                            color: '#666',
+                            fontSize: 12
                         }}>
-                        <Text style={{ fontSize: 16 }}>{useSelector(state => state.user.setting?.privacy?.closeFriends?.closeFriends)?.length || 0} People</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={{
-                    justifyContent: 'center',
-                    paddingVertical: 10,
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#ddd'
-                }}>
-                    <Text style={{
-                        margin: 15,
-                        fontSize: 16,
-                        fontWeight: '500'
-                    }}>
-                        Allow Message Replies
+                            Hide your story and live videos from specific people.
                     </Text>
-                    <Radio
-                        labels={["Your Followers", "Followers You Follow Back", "Off"]}
-                        values={[0, 1, 2]}
-                        onChange={setAllowMessageReplies}
-                        defaultSelected={allowMessageReplies}
-                    />
-                    <Text style={{
-                        marginHorizontal: 15,
-                        color: '#666',
-                        fontSize: 12
-                    }}>
-                        Choose who can reply to your story.
-                    </Text>
-                </View>
-                <View style={{
-                    justifyContent: 'center',
-                    paddingVertical: 10,
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#ddd'
-                }}>
-                    <Text style={{
-                        margin: 15,
-                        fontSize: 16,
-                        fontWeight: '500'
-                    }}>
-                        Saving
-                    </Text>
+                    </View>
                     <View style={{
-                        marginVertical: 10,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        paddingHorizontal: 15
+                        paddingHorizontal: 15,
+                        justifyContent: 'center',
+                        paddingVertical: 10,
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: '#ddd'
                     }}>
                         <Text style={{
-                            fontSize: 16
-                        }}>Save to Gallery</Text>
-                        <Switcher on={saveToGallery}
-                            onTurnOff={setSaveToGallery.bind(null, false)}
-                            onTurnOn={setSaveToGallery.bind(null, true)}
+                            marginVertical: 15,
+                            fontSize: 16,
+                            fontWeight: '500'
+                        }}>
+                            Close Friends
+                    </Text>
+                        <TouchableOpacity
+                            onPress={() => navigate('CloseFriends')}
+                            style={{
+                                marginVertical: 10,
+                            }}>
+                            <Text style={{ fontSize: 16 }}>{useSelector(state => state.user.setting?.privacy?.closeFriends?.closeFriends)?.length || 0} People</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={{
+                        justifyContent: 'center',
+                        paddingVertical: 10,
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: '#ddd'
+                    }}>
+                        <Text style={{
+                            margin: 15,
+                            fontSize: 16,
+                            fontWeight: '500'
+                        }}>
+                            Allow Message Replies
+                    </Text>
+                        <Radio
+                            labels={["Your Followers", "Followers You Follow Back", "Off"]}
+                            values={[0, 1, 2]}
+                            onChange={setAllowMessageReplies}
+                            defaultSelected={allowMessageReplies}
                         />
+                        <Text style={{
+                            marginHorizontal: 15,
+                            color: '#666',
+                            fontSize: 12
+                        }}>
+                            Choose who can reply to your story.
+                    </Text>
                     </View>
                     <View style={{
-                        marginVertical: 10,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        paddingHorizontal: 15
+                        justifyContent: 'center',
+                        paddingVertical: 10,
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: '#ddd'
                     }}>
                         <Text style={{
-                            fontSize: 16
-                        }}>Save to Archive</Text>
-                        <Switcher on={saveToArchive}
-                            onTurnOff={setSaveToArchive.bind(null, false)}
-                            onTurnOn={setSaveToArchive.bind(null, true)} />
+                            margin: 15,
+                            fontSize: 16,
+                            fontWeight: '500'
+                        }}>
+                            Saving
+                    </Text>
+                        <View style={{
+                            marginVertical: 10,
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            paddingHorizontal: 15
+                        }}>
+                            <Text style={{
+                                fontSize: 16
+                            }}>Save to Gallery</Text>
+                            <Switcher on={saveToGallery}
+                                onTurnOff={setSaveToGallery.bind(null, false)}
+                                onTurnOn={setSaveToGallery.bind(null, true)}
+                            />
+                        </View>
+                        <View style={{
+                            marginVertical: 10,
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            paddingHorizontal: 15
+                        }}>
+                            <Text style={{
+                                fontSize: 16
+                            }}>Save to Archive</Text>
+                            <Switcher on={saveToArchive}
+                                onTurnOff={setSaveToArchive.bind(null, false)}
+                                onTurnOn={setSaveToArchive.bind(null, true)} />
+                        </View>
+                        <Text style={{
+                            marginHorizontal: 15,
+                            color: '#666',
+                            fontSize: 12
+                        }}>
+                            Automatically save photos and videos in your archive so you don't have to save them on our phone. Only you can see them after they disappear from your story.
+                    </Text>
                     </View>
-                    <Text style={{
-                        marginHorizontal: 15,
-                        color: '#666',
-                        fontSize: 12
-                    }}>
-                        Automatically save photos and videos in your archive so you don't have to save them on our phone. Only you can see them after they disappear from your story.
-                    </Text>
-                </View>
-                <View style={{
-                    justifyContent: 'center',
-                    paddingVertical: 10,
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: '#ddd'
-                }}>
-                    <Text style={{
-                        margin: 15,
-                        fontSize: 16,
-                        fontWeight: '500'
-                    }}>
-                        Sharing
-                    </Text>
                     <View style={{
-                        marginVertical: 10,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        paddingHorizontal: 15
+                        justifyContent: 'center',
+                        paddingVertical: 10,
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: '#ddd'
                     }}>
                         <Text style={{
-                            fontSize: 16
-                        }}>Allow Resharing to Stories</Text>
-                        <Switcher on={allowResharing}
-                            onTurnOff={setAllowResharing.bind(null, false)}
-                            onTurnOn={setAllowResharing.bind(null, true)}
-                        />
-                    </View>
-                    <Text style={{
-                        marginHorizontal: 15,
-                        color: '#666',
-                        fontSize: 12
-                    }}>
-                        Other people can add your feed posts and IGTV videos to their stories. Your username will always show with your post.
+                            margin: 15,
+                            fontSize: 16,
+                            fontWeight: '500'
+                        }}>
+                            Sharing
                     </Text>
-                    <View style={{
-                        marginVertical: 10,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        paddingHorizontal: 15
-                    }}>
+                        <View style={{
+                            marginVertical: 10,
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            paddingHorizontal: 15
+                        }}>
+                            <Text style={{
+                                fontSize: 16
+                            }}>Allow Resharing to Stories</Text>
+                            <Switcher on={allowResharing}
+                                onTurnOff={setAllowResharing.bind(null, false)}
+                                onTurnOn={setAllowResharing.bind(null, true)}
+                            />
+                        </View>
                         <Text style={{
-                            fontSize: 16
-                        }}>Allow Sharing</Text>
-                        <Switcher on={allowSharing}
-                            onTurnOff={setAllowSharing.bind(null, false)}
-                            onTurnOn={setAllowSharing.bind(null, true)} />
-                    </View>
-                    <Text style={{
-                        marginHorizontal: 15,
-                        color: '#666',
-                        fontSize: 12
-                    }}>
-                        Let your followers share photos and videos from your story as messages. Only you followers ca see what's shared.
+                            marginHorizontal: 15,
+                            color: '#666',
+                            fontSize: 12
+                        }}>
+                            Other people can add your feed posts and IGTV videos to their stories. Your username will always show with your post.
                     </Text>
-                    <View style={{
-                        marginVertical: 10,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        paddingHorizontal: 15
-                    }}>
+                        <View style={{
+                            marginVertical: 10,
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            paddingHorizontal: 15
+                        }}>
+                            <Text style={{
+                                fontSize: 16
+                            }}>Allow Sharing</Text>
+                            <Switcher on={allowSharing}
+                                onTurnOff={setAllowSharing.bind(null, false)}
+                                onTurnOn={setAllowSharing.bind(null, true)} />
+                        </View>
                         <Text style={{
-                            fontSize: 16
-                        }}>Share Your Story To Facebook</Text>
-                        <Switcher on={shareYourStoryToFacebook}
-                            onTurnOff={setShareYourStoryToFacebook.bind(null, false)}
-                            onTurnOn={setShareYourStoryToFacebook.bind(null, true)} />
-                    </View>
-                    <Text style={{
-                        marginHorizontal: 15,
-                        color: '#666',
-                        fontSize: 12
-                    }}>
-                        Automatically share photos and videos from your story to your Facebook story
+                            marginHorizontal: 15,
+                            color: '#666',
+                            fontSize: 12
+                        }}>
+                            Let your followers share photos and videos from your story as messages. Only you followers ca see what's shared.
                     </Text>
-                </View>
-            </ScrollView>
-        </SafeAreaView>
+                        <View style={{
+                            marginVertical: 10,
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            paddingHorizontal: 15
+                        }}>
+                            <Text style={{
+                                fontSize: 16
+                            }}>Share Your Story To Facebook</Text>
+                            <Switcher on={shareYourStoryToFacebook}
+                                onTurnOff={setShareYourStoryToFacebook.bind(null, false)}
+                                onTurnOn={setShareYourStoryToFacebook.bind(null, true)} />
+                        </View>
+                        <Text style={{
+                            marginHorizontal: 15,
+                            color: '#666',
+                            fontSize: 12
+                        }}>
+                            Automatically share photos and videos from your story to your Facebook story
+                    </Text>
+                    </View>
+                </ScrollView>
+            </View>
+        </View>
     )
 }
 
@@ -270,7 +276,10 @@ export default StoryPravicy
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#fff'
+        marginTop: 44,
+        backgroundColor: '#fff',
+        height: '100%',
+        paddingBottom: 50
     },
     settingItem: {
         height: 50,

@@ -21,6 +21,9 @@ import ProfileOptions from '../screens/Others/ProfileOptions';
 import ProfileInteractionOptions from '../screens/Others/ProfileInteractionOptions';
 import FeedbackOptions from '../screens/Others/FeedbackOptions';
 import ShareToDirect from '../screens/Others/ShareToDirect';
+import StoryPravicy from '../screens/Home/Account/Setting/Privacy/Story';
+import CloseFriends from '../screens/Home/Account/Setting/Privacy/CloseFriends';
+import HideStoryFrom from '../screens/Home/Account/Setting/Privacy/HideStoryFrom';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -64,7 +67,10 @@ export type SuperRootStackParamList = {
     },
     ShareToDirect: {
         item: MapBoxAddress | ExtraPost
-    }
+    },
+    StoryPrivacy: undefined,
+    CloseFriends: undefined,
+    HideStoryFrom: undefined
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
 const index = (): JSX.Element => {
@@ -72,7 +78,6 @@ const index = (): JSX.Element => {
         headerShown: false,
         gestureEnabled: false,
         cardStyle: {
-            backgroundColor: 'red'
         }
     }
     return (
@@ -125,7 +130,9 @@ const index = (): JSX.Element => {
                 }} name="ProfileInteractionOptions" component={ProfileInteractionOptions} />
                 <RootStack.Screen component={DiscoverPeople} name="DiscoverPeople" />
                 <RootStack.Screen component={PostDetail} name="PostDetail" />
-
+                <RootStack.Screen component={StoryPravicy} name="StoryPrivacy" />
+                <RootStack.Screen component={CloseFriends} name="CloseFriends" />
+                <RootStack.Screen component={HideStoryFrom} name="HideStoryFrom" />
             </RootStack.Navigator>
         </NavigationContainer>
     )

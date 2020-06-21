@@ -2,13 +2,13 @@ import { createMaterialTopTabNavigator, MaterialTopTabBarOptions, MaterialTopTab
 import React from 'react';
 import { useSelector } from '../reducers';
 import Direct from '../screens/Others/Direct';
-import PhotoTaker from '../screens/Others/PhotoTaker';
+import StoryTaker from '../screens/Others/StoryTaker';
 import AuthStack, { AuthStackParamList } from './AuthStack';
 import HomeTab, { HomeTabParamList } from './HomeTab';
 export type rootStackParamList = {
     AuthStack: undefined;
     HomeTab: undefined,
-    PhotoTaker: undefined,
+    StoryTaker: undefined,
     Direct: undefined,
 };
 export type commonParamList = AuthStackParamList & HomeTabParamList & rootStackParamList
@@ -35,7 +35,7 @@ const index = (): JSX.Element => {
             }
             {user.logined &&
                 <>
-                    <RootTab.Screen name="PhotoTaker" component={PhotoTaker} />
+                    <RootTab.Screen name="StoryTaker" component={StoryTaker} />
                     <RootTab.Screen name="HomeTab" component={HomeTab} />
                     <RootTab.Screen name="Direct" component={Direct} />
                 </>

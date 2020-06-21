@@ -2,6 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Instagram want to use your location</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Instagram want to use your speech</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Instagram want to use your microphone</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Instagram want to use your camera</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>some string</string>
 	<key>NSLocationUsageDescription</key>
