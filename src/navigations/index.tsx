@@ -24,6 +24,8 @@ import ShareToDirect from '../screens/Others/ShareToDirect';
 import StoryPravicy from '../screens/Home/Account/Setting/Privacy/Story';
 import CloseFriends from '../screens/Home/Account/Setting/Privacy/CloseFriends';
 import HideStoryFrom from '../screens/Home/Account/Setting/Privacy/HideStoryFrom';
+import StoryProcessor from '../screens/Others/StoryProcessor';
+import { StoryImageSpec } from '../screens/Others/StoryTaker';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -71,6 +73,9 @@ export type SuperRootStackParamList = {
     StoryPrivacy: undefined,
     CloseFriends: undefined,
     HideStoryFrom: undefined
+    StoryProcessor: {
+        images: StoryImageSpec[]
+    }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
 const index = (): JSX.Element => {
@@ -126,6 +131,9 @@ const index = (): JSX.Element => {
                 }} name="ShareToDirect" component={ShareToDirect} />
                 <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
+                }} component={StoryProcessor} name="StoryProcessor" />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="ProfileInteractionOptions" component={ProfileInteractionOptions} />
                 <RootStack.Screen component={DiscoverPeople} name="DiscoverPeople" />
@@ -133,6 +141,7 @@ const index = (): JSX.Element => {
                 <RootStack.Screen component={StoryPravicy} name="StoryPrivacy" />
                 <RootStack.Screen component={CloseFriends} name="CloseFriends" />
                 <RootStack.Screen component={HideStoryFrom} name="HideStoryFrom" />
+
             </RootStack.Navigator>
         </NavigationContainer>
     )

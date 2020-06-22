@@ -2,11 +2,13 @@ import React from 'react'
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
 import { useSelector } from '../../reducers'
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
+import { navigate } from '../../navigations/rootNavigation'
 
 const StoryAdderItem = () => {
     const user = useSelector(state => state.user)
     return (
         <TouchableOpacity
+            onPress={() => navigate('StoryTaker')}
             activeOpacity={0.8}
             style={styles.container}>
             <Image style={styles.avatar} source={{

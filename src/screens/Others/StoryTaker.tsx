@@ -1,6 +1,6 @@
 import { useIsFocused } from '@react-navigation/native'
 import React, { useRef, useState, useEffect } from 'react'
-import { Image, StyleSheet, Text, TouchableOpacity, View, Animated, FlatList } from 'react-native'
+import { Image, StyleSheet, Text, TouchableOpacity, View, Animated, FlatList, ScrollView } from 'react-native'
 import { RNCamera } from 'react-native-camera'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../constants'
@@ -8,9 +8,18 @@ import { goBack, navigate } from '../../navigations/rootNavigation'
 import CameraRoll from '@react-native-community/cameraroll'
 import { PanGestureHandler, PanGestureHandlerGestureEvent, State } from 'react-native-gesture-handler'
 import NavigationBar from '../../components/NavigationBar'
+
+
+export type StoryImageSpec = {
+    width: number,
+    height: number,
+    uri: string,
+    base64: string
+}
 const StoryTaker = () => {
     const focused = useIsFocused()
     const [page, setPage] = useState<number>(1)
+    const [showGallery, setShowGallery] = useState<boolean>(false)
     const [front, setFront] = useState<boolean>(true)
     const [flash, setFlash] = useState<boolean>(false)
     const [groups, setGroups] = useState<string[]>([])
@@ -22,6 +31,7 @@ const StoryTaker = () => {
     const _cameraRef = useRef<RNCamera>(null)
     const _galleryOffsetY = React.useMemo(() => new Animated.Value(0), [])
     const _groupsOffsetX = React.useMemo(() => new Animated.Value(0), [])
+    const _hScrollRef = useRef<ScrollView>(null)
     const ref = useRef<{
         preGalleryOffsetY: number,
         showGroups: boolean
@@ -57,8 +67,21 @@ const StoryTaker = () => {
         }
     }, [selectedGroupIndex, page])
     const _onTakePhoto = async () => {
-        const photo = await _cameraRef.current?.takePictureAsync()
-        console.warn(photo)
+        const photo = await _cameraRef.current?.takePictureAsync({
+            width: 100,
+            quality: 1,
+            base64: true
+        })
+        const images: StoryImageSpec[] = []
+        images.push({
+            width: photo?.width as number,
+            height: photo?.height as number,
+            uri: photo?.uri as string,
+            base64: photo?.base64 || ""
+        })
+        navigate('StoryProcessor', {
+            images
+        })
     }
     const _onGestureEvent = ({ nativeEvent: {
         translationY
@@ -78,14 +101,18 @@ const StoryTaker = () => {
                     duration: 200,
                     toValue: -SCREEN_HEIGHT + 170,
                     useNativeDriver: true
-                }).start()
+                }).start(() => {
+                    if (!showGallery) setShowGallery(true)
+                })
                 ref.current.preGalleryOffsetY = -SCREEN_HEIGHT + 170
             } else {
                 Animated.timing(_galleryOffsetY, {
                     duration: 200,
                     toValue: 0,
                     useNativeDriver: true
-                }).start()
+                }).start(() => {
+                    if (showGallery) setShowGallery(false)
+                })
                 ref.current.preGalleryOffsetY = 0
             }
         }
@@ -105,6 +132,17 @@ const StoryTaker = () => {
                 temp.push(index)
                 setSelectedPhotos(temp)
             }
+        } else {
+            const images: StoryImageSpec[] = []
+            images.push({
+                width: photos[index].node.image.width,
+                height: photos[index].node.image.height,
+                uri: photos[index].node.image.uri,
+                base64: ''
+            })
+            navigate('StoryProcessor', {
+                images
+            })
         }
     }
     const _onShowGroups = () => {
@@ -123,6 +161,26 @@ const StoryTaker = () => {
         ref.current.showGroups = !ref.current.showGroups
 
     }
+    const _onShowGallery = () => {
+        Animated.timing(_galleryOffsetY, {
+            duration: 200,
+            toValue: -SCREEN_HEIGHT + 170,
+            useNativeDriver: true
+        }).start(() => {
+            if (!showGallery) setShowGallery(true)
+        })
+        ref.current.preGalleryOffsetY = -SCREEN_HEIGHT + 170
+    }
+    const _onHideGallery = () => {
+        Animated.timing(_galleryOffsetY, {
+            duration: 200,
+            toValue: 0,
+            useNativeDriver: true
+        }).start(() => {
+            if (showGallery) setShowGallery(false)
+        })
+        ref.current.preGalleryOffsetY = 0
+    }
     const _onSelectGroup = (index: number) => {
         setSelectedGroupIndex(index)
         Animated.timing(_groupsOffsetX, {
@@ -132,6 +190,17 @@ const StoryTaker = () => {
         }).start()
         ref.current.showGroups = !ref.current.showGroups
     }
+    const _onDoneMultiSelect = () => {
+        const images: StoryImageSpec[] = [...selectedPhotos].map(photoIndex => ({
+            width: photos[photoIndex].node.image.width,
+            height: photos[photoIndex].node.image.height,
+            uri: photos[photoIndex].node.image.uri,
+            base64: ''
+        }))
+        navigate('StoryProcessor', {
+            images
+        })
+    }
     return (
         <>
             <PanGestureHandler
@@ -140,14 +209,10 @@ const StoryTaker = () => {
             >
                 <View style={styles.container}>
                     {focused && <RNCamera
+                        ratio="16:9"
+                        pictureSize="3840x2160"
+                        captureAudio={false}
                         ref={_cameraRef}
-                        androidCameraPermissionOptions={{
-                            title: 'Permission to use camera',
-                            message: 'We need your permission to use your camera',
-                            buttonPositive: 'Ok',
-                            buttonNegative: 'Cancel',
-                        }}
-
                         style={styles.cameraContainer}
                         type={front ? 'front' : 'back'}
                         flashMode={flash ? 'on' : 'off'}
@@ -179,18 +244,20 @@ const StoryTaker = () => {
                         transform: [{
                             translateY: _galleryOffsetY
                         }],
+                        zIndex: showGallery ? 0 : 2,
                         opacity: _galleryOffsetY.interpolate({
                             inputRange: [-SCREEN_HEIGHT + 170, 0],
                             outputRange: [0, 1]
                         })
                     }}>
                         <TouchableOpacity
+                            onPress={_onShowGallery}
                             activeOpacity={0.8}
                             style={styles.btnLastPhoto}>
                             <Image
                                 style={styles.lastPhoto}
                                 source={{
-                                    uri: [...photos].pop()?.node.image.uri
+                                    uri: [...photos][0]?.node.image.uri
                                 }} />
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -226,7 +293,7 @@ const StoryTaker = () => {
                             outputRange: [1, 0]
                         })
                     }}>
-                        <NavigationBar title="Your Gallery" callback={() => { }} />
+                        <NavigationBar title="Your Gallery" callback={_onHideGallery} />
                         <View style={styles.galleryOptionsWrapper}>
                             <TouchableOpacity
                                 onPress={_onShowGroups}
@@ -272,22 +339,20 @@ const StoryTaker = () => {
                             }],
 
                         }}>
-                            <PanGestureHandler>
-                                <FlatList
-                                    data={groups}
-                                    renderItem={({ item, index }) =>
-                                        <TouchableOpacity
-                                            onPress={_onSelectGroup.bind(null, index)}
-                                            style={styles.btnGroup}>
-                                            <Text style={{
-                                                fontWeight: index === selectedGroupIndex ? '600' : '500',
-                                                color: index === selectedGroupIndex ? '#000' : '#666'
-                                            }}>{item}</Text>
-                                        </TouchableOpacity>
-                                    }
-                                    keyExtractor={(item, index) => `${index}`}
-                                />
-                            </PanGestureHandler>
+                            <FlatList
+                                data={groups}
+                                renderItem={({ item, index }) =>
+                                    <TouchableOpacity
+                                        onPress={_onSelectGroup.bind(null, index)}
+                                        style={styles.btnGroup}>
+                                        <Text style={{
+                                            fontWeight: index === selectedGroupIndex ? '600' : '500',
+                                            color: index === selectedGroupIndex ? '#000' : '#666'
+                                        }}>{item}</Text>
+                                    </TouchableOpacity>
+                                }
+                                keyExtractor={(item, index) => `${index}`}
+                            />
                         </Animated.View>
                     </Animated.View>
                     <Animated.View style={{
@@ -350,6 +415,46 @@ const StoryTaker = () => {
                             numColumns={3}
                             keyExtractor={(item, index) => `${index}`}
                         />
+                        {multiple &&
+                            <View
+                                style={{
+                                    ...styles.selectedImageWrapper,
+                                }}>
+                                <ScrollView
+                                    ref={_hScrollRef}
+                                    onContentSizeChange={() => {
+                                        _hScrollRef.current?.scrollToEnd()
+                                    }}
+                                    style={{
+                                        maxWidth: SCREEN_WIDTH - 100
+                                    }}
+                                    bounces={false}
+                                    horizontal={true}
+                                >
+                                    {selectedPhotos.map((photoIndex: number, index: number) => (
+                                        <Image
+                                            key={index}
+                                            source={{
+                                                uri: photos[photoIndex].node.image.uri
+                                            }}
+                                            style={styles.previewMultiImage} />
+                                    ))}
+                                </ScrollView>
+                                <TouchableOpacity
+                                    disabled={selectedPhotos.length < 1}
+                                    onPress={_onDoneMultiSelect}
+                                    activeOpacity={0.8}
+                                    style={styles.btnNext}>
+                                    <Text style={{
+                                        fontWeight: '600'
+                                    }}>Next</Text>
+                                    <Icon
+                                        name="chevron-right"
+                                        size={20}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        }
                     </Animated.View>
                 </View>
             </PanGestureHandler>
@@ -477,5 +582,35 @@ const styles = StyleSheet.create({
         height: 44,
         paddingHorizontal: 15,
         justifyContent: 'center'
+    },
+    selectedImageWrapper: {
+        paddingHorizontal: 5,
+        bottom: 170,
+        left: 0,
+        position: 'absolute',
+        width: '100%',
+        height: 100,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        zIndex: 10
+    },
+    previewMultiImage: {
+        height: 54,
+        width: 32,
+        resizeMode: 'cover',
+        borderRadius: 5,
+        marginHorizontal: 5
+    },
+    btnNext: {
+        marginRight: 10,
+        width: 80,
+        height: 44,
+        backgroundColor: "#fff",
+        borderRadius: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row'
     }
 })
