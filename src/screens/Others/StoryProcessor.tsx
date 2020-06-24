@@ -251,7 +251,7 @@ const StoryProcessor = ({ route }: StoryProcessorProps) => {
             }
             ref.current.processImages[currentImageIndex].texts.push(storyText)
         }
-        setState({})
+        setMode(1)
     }
     //Label translate processor
     const _onTextLabelTranslateHandler = (index: number,
