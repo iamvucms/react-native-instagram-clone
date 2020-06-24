@@ -24,8 +24,9 @@ import ShareToDirect from '../screens/Others/ShareToDirect';
 import StoryPravicy from '../screens/Home/Account/Setting/Privacy/Story';
 import CloseFriends from '../screens/Home/Account/Setting/Privacy/CloseFriends';
 import HideStoryFrom from '../screens/Home/Account/Setting/Privacy/HideStoryFrom';
-import StoryProcessor from '../screens/Others/StoryProcessor';
+import StoryProcessor, { StoryProcessedImage } from '../screens/Others/StoryProcessor';
 import { StoryImageSpec } from '../screens/Others/StoryTaker';
+import PreUploadSuperImage from '../screens/Others/PreUploadSuperImage';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -43,7 +44,7 @@ export type SuperRootStackParamList = {
         onDone?: (images: ProcessedImage[]) => void
     },
     LocationChooser: {
-        address: MapBoxAddress,
+        address?: MapBoxAddress,
         onDone?: (address: MapBoxAddress) => void
     },
     NotificationOptions: {
@@ -75,6 +76,9 @@ export type SuperRootStackParamList = {
     HideStoryFrom: undefined
     StoryProcessor: {
         images: StoryImageSpec[]
+    },
+    PreUploadSuperImage: {
+        images: StoryProcessedImage
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -132,6 +136,7 @@ const index = (): JSX.Element => {
                 <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
                 }} component={StoryProcessor} name="StoryProcessor" />
+                <RootStack.Screen component={PreUploadSuperImage} name="PreUploadSuperImage" />
                 <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }

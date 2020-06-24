@@ -10,17 +10,13 @@ import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 type LocationChooserRouteProp = RouteProp<SuperRootStackParamList, 'LocationChooser'>
 
-type LocationChooserNavigationProp = StackNavigationProp<SuperRootStackParamList, 'LocationChooser'>
 
 type LocationChooserProps = {
-    navigation: LocationChooserNavigationProp,
     route: LocationChooserRouteProp
 }
-export default function LocationChooser({ navigation, route }: LocationChooserProps) {
+export default function LocationChooser({ route }: LocationChooserProps) {
     const onDone = route.params.onDone
-    const [query, setQuery] = useState<string>(
-        route.params.address.place_name.length > 0
-            ? route.params.address.place_name : '')
+    const [query, setQuery] = useState<string>(route.params?.address?.place_name || '')
     const [address, setAddress] = useState<MapBoxAddress>({ ...route.params.address })
     const [result, setResult] = useState<MapBoxAddress[]>([])
     const ref = useRef<{ timeout: NodeJS.Timeout }>({
