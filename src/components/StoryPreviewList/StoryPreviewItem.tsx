@@ -3,6 +3,7 @@ import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react
 import LinearGradient from 'react-native-linear-gradient'
 import { ExtraStory, seenTypes } from '../../reducers/storyReducer'
 import FastImage from 'react-native-fast-image'
+import { firestore } from 'firebase'
 export interface StoryPreviewItemProps {
     item: ExtraStory
 }
@@ -15,10 +16,15 @@ const StoryPreviewItem = ({ item: { ownUser, storyList } }: StoryPreviewItemProp
     }, [])
     const [preloadingImage, setPreloadingImage] = useState<boolean>(false)
     const _onShowStory = () => {
+        const ref = firestore()
         setPreloadingImage(true)
         let preFetchTasks: Promise<any>[] = [];
         storyList.forEach((story) => {
-            preFetchTasks.push(Image.prefetch(story.source?.uri || ''));
+            preFetchTasks.push((async () => {
+                const rq = await ref.collection('superimages').doc(`${story.source}`).get()
+                const data = rq.data() || {}
+                return await Image.prefetch(data.uri || '')
+            })());
         });
         const startAt: number = new Date().getTime()
         Promise.all(preFetchTasks).then((results) => {

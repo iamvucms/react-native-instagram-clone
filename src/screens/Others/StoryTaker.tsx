@@ -14,7 +14,8 @@ export type StoryImageSpec = {
     width: number,
     height: number,
     uri: string,
-    base64: string
+    base64: string,
+    extension: string
 }
 const StoryTaker = () => {
     const focused = useIsFocused()
@@ -70,14 +71,14 @@ const StoryTaker = () => {
         const photo = await _cameraRef.current?.takePictureAsync({
             width: 100,
             quality: 1,
-            base64: true
         })
         const images: StoryImageSpec[] = []
         images.push({
             width: photo?.width as number,
             height: photo?.height as number,
             uri: photo?.uri as string,
-            base64: photo?.base64 || ""
+            base64: photo?.base64 || "",
+            extension: (photo?.uri || '').split('.').pop() || 'jpg'
         })
         navigate('StoryProcessor', {
             images
@@ -138,7 +139,8 @@ const StoryTaker = () => {
                 width: photos[index].node.image.width,
                 height: photos[index].node.image.height,
                 uri: photos[index].node.image.uri,
-                base64: ''
+                base64: '',
+                extension: photos[index].node.image.filename.split('.').pop() || 'jpg'
             })
             navigate('StoryProcessor', {
                 images
@@ -195,7 +197,8 @@ const StoryTaker = () => {
             width: photos[photoIndex].node.image.width,
             height: photos[photoIndex].node.image.height,
             uri: photos[photoIndex].node.image.uri,
-            base64: ''
+            base64: '',
+            extension: photos[photoIndex].node.image.filename.split('.').pop() || 'jpg'
         }))
         navigate('StoryProcessor', {
             images

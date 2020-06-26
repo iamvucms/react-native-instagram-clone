@@ -1,18 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { StyleSheet, Text, Animated, View, Image, ImageBackground, ScrollView, NativeSyntheticEvent, NativeScrollEvent, TouchableOpacity, KeyboardAvoidingView, Keyboard, MaskedViewIOS } from 'react-native'
+import { BlurView } from "@react-native-community/blur"
 import { RouteProp } from '@react-navigation/native'
-import { SuperRootStackParamList } from '../../navigations'
-import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../constants'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { goBack, navigate } from '../../navigations/rootNavigation'
-import { RotationGestureHandler, PinchGestureHandler, PinchGestureHandlerGestureEvent, RotationGestureHandlerGestureEvent, State, PanGestureHandler, PanGestureHandlerGestureEvent, TextInput } from 'react-native-gesture-handler'
-import { useKeyboardStatus } from '../../hooks/useKeyboardStatus'
-import { useSelector } from '../../reducers'
+import React, { useEffect, useRef, useState } from 'react'
+import { Animated, Image, ImageBackground, Keyboard, KeyboardAvoidingView, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import FastImage from 'react-native-fast-image'
-import { BlurView } from "@react-native-community/blur";
-import MaskedView from '@react-native-community/masked-view';
-import { LinearGradient } from 'react-native-linear-gradient'
+import { PanGestureHandler, PanGestureHandlerGestureEvent, PinchGestureHandler, PinchGestureHandlerGestureEvent, RotationGestureHandler, RotationGestureHandlerGestureEvent, State, TextInput } from 'react-native-gesture-handler'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import TextGradient from '../../components/TextGradient'
+import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../constants'
+import { useKeyboardStatus } from '../../hooks/useKeyboardStatus'
+import { SuperRootStackParamList } from '../../navigations'
+import { goBack, navigate } from '../../navigations/rootNavigation'
+import { useSelector } from '../../reducers'
 import { MapBoxAddress } from '../../utils'
 type StoryProcessorRouteProp = RouteProp<SuperRootStackParamList, 'StoryProcessor'>
 type StoryProcessorProps = {
@@ -36,6 +34,7 @@ type StoryText = {
 }
 export type StoryLabel = {
     type: 'address' | 'people' | 'hashtag' | 'emoji',
+    address_id?: string,
     text: string,
     x: number,
     y: number,
@@ -50,6 +49,7 @@ export type StoryLabel = {
 }
 export type StoryProcessedImage = {
     uri: string,
+    extension: string,
     width: number,
     height: number,
     base64: string,
@@ -109,6 +109,7 @@ const StoryProcessor = ({ route }: StoryProcessorProps) => {
         processImages: [...images].map(img => {
             return {
                 base64: img.base64,
+                extension: img.extension,
                 uri: img.uri,
                 width: img.width,
                 height: img.height,
@@ -442,6 +443,7 @@ const StoryProcessor = ({ route }: StoryProcessorProps) => {
         maxlabelZindex = maxlabelZindex !== -Infinity ? maxlabelZindex : 0
         const addressLabel: StoryLabel = {
             zIndex: maxlabelZindex + 1,
+            address_id: address.id,
             animRatio: new Animated.Value(1),
             animX: new Animated.Value((SCREEN_WIDTH - 350) / 2),
             animY: new Animated.Value((SCREEN_HEIGHT - 60) / 2),
@@ -480,7 +482,30 @@ const StoryProcessor = ({ route }: StoryProcessorProps) => {
         setState({})
     }
     const _onDoneLabel = () => {
-
+        if (text.length < 2) return setMode(1)
+        const textZindexList = ref.current.processImages[currentImageIndex].texts.map(x => x.zIndex)
+        const labelZindexList = ref.current.processImages[currentImageIndex].labels.map(x => x.zIndex)
+        let maxlabelZindex = Math.max(...textZindexList.concat(labelZindexList)) || 0
+        maxlabelZindex = maxlabelZindex !== -Infinity ? maxlabelZindex : 0
+        const label: StoryLabel = {
+            zIndex: maxlabelZindex + 1,
+            animRatio: new Animated.Value(1),
+            animX: new Animated.Value((SCREEN_WIDTH - (ref.current.textWidth + 10)) / 2),
+            animY: new Animated.Value((SCREEN_HEIGHT - 64) / 2),
+            x: (SCREEN_WIDTH - (ref.current.textWidth + 10)) / 2,
+            y: (SCREEN_HEIGHT - 64) / 2,
+            fontSize: 40,
+            height: 64,
+            width: ref.current.textWidth + 10,
+            ratio: 1,
+            text,
+            type: 'people'
+        }
+        if (mode === 4) {
+            label.type = 'hashtag'
+        }
+        ref.current.processImages[currentImageIndex].labels.push(label)
+        setMode(1)
     }
     const _onSelectLabel = (type: 'address' | 'people' | 'hashtag' | 'emoji', value?: string) => {
         switch (type) {
@@ -517,6 +542,9 @@ const StoryProcessor = ({ route }: StoryProcessorProps) => {
         navigate('PreUploadSuperImage', {
             images: ref.current.processImages
         })
+    }
+    const _onFastUpload = () => {
+
     }
     return (
         <PanGestureHandler
@@ -804,7 +832,6 @@ const StoryProcessor = ({ route }: StoryProcessorProps) => {
                                         <Animated.View style={{
                                             zIndex: label.zIndex,
                                             backgroundColor: label.type === 'emoji' ? 'rgba(0,0,0,0)' : '#fff',
-                                            padding: 5,
                                             borderRadius: 5,
                                             position: 'absolute',
                                             width: label.width,

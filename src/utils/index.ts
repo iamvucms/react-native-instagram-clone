@@ -1,10 +1,11 @@
-import { firestore } from "firebase"
+import { firestore, storage } from "firebase"
 import { UserInfo } from "../reducers/userReducer"
 import { store } from "../store"
 import { MAPBOX_ACCESS_TOKEN } from "../constants"
 import Share, { Options } from "react-native-share"
 import { ExtraPost } from "../reducers/postReducer"
 import { ProfileX } from "../reducers/profileXReducer"
+import { StoryProcessedImage } from "../screens/Others/StoryProcessor"
 
 export const timestampToString = (create_at: number, suffix?: boolean): string => {
     let diffTime: string | number = (new Date().getTime() - (create_at || 0)) / 1000
@@ -203,4 +204,37 @@ export const convertToFirebaseDatabasePathName = (text: string) => {
     return text.replace(/\./g, "!").replace(/#/g, "@")
         .replace(/\$/g, "%").replace(/\[/g, "&")
         .replace(/\]/g, "*")
+}
+export const uploadSuperImages = (images: StoryProcessedImage[]): Promise<number>[] => {
+    const ref = firestore()
+    const myUsername = store.getState().user.user.userInfo?.username || ''
+    return images.map(async (img, index) => {
+        let uid = new Date().getTime() + index
+        img.texts = img.texts.map(txt => {
+            delete txt.animRatio
+            delete txt.animX
+            delete txt.animY
+            return txt
+        })
+        img.labels = img.labels.map(label => {
+            delete label.animRatio
+            delete label.animX
+            delete label.animY
+            return label
+        })
+        const blob = await uriToBlob(img.uri)
+        const rq = await storage()
+            .ref(`story/${myUsername || 'others'}/${new Date().getTime() + Math.random()}.${img.extension.toLowerCase()}`)
+            .put(blob as Blob, {
+                contentType: `image/${img.extension.toLowerCase()}`
+            })
+        const downloadUri = await rq.ref.getDownloadURL()
+        ref.collection('superimages').doc(`${uid}`).set({
+            ...img,
+            uri: downloadUri,
+            uid,
+            userId: myUsername
+        })
+        return uid
+    })
 }

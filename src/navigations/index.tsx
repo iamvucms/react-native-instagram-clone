@@ -78,7 +78,7 @@ export type SuperRootStackParamList = {
         images: StoryImageSpec[]
     },
     PreUploadSuperImage: {
-        images: StoryProcessedImage
+        images: StoryProcessedImage[]
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()

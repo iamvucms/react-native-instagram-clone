@@ -3,6 +3,7 @@ import { firestore } from 'firebase'
 import { UserInfo } from './userReducer'
 import { MapBoxAddress } from '../utils'
 import { PostImage } from './postReducer'
+import { StoryProcessedImage } from '../screens/Others/StoryProcessor'
 export const seenTypes = {
     NOTSEEN: 0,
     SEEN: 1,
@@ -12,35 +13,20 @@ export const storyActionTypes = {
     FETCH_STORY_LIST_SUCCESS: 'FETCH_STORY_LIST_SUCCESS',
     FETCH_STORY_LIST_FAILURE: 'FETCH_STORY_LIST_FAILURE',
 }
-export type StoryImage = PostImage & {
-    location?: {
-        x: number,
-        y: number,
-        width: number,
-        height: number,
-        id: string,
-        place_name: string
-    },
-    hashtags?: {
-        x: number,
-        y: number,
-        width: number,
-        height: number,
-        hashtag: string
-    }[],
+export const storyPermissions = {
+    ALL: 1,
+    CLOSE_FRIENDS: 2
 }
 export type Story = {
     userId?: string,
     uid?: number,
-    type?: number,
     permission?: number,
     create_at?: firestore.Timestamp,
-    source?: StoryImage,
-    seen?: number,
+    source?: number,
+    seen?: 0 | 1,
     seenList?: string[],
-
-    address?: MapBoxAddress,
-
+    reactions?: string[],
+    messagesList?: string[]
 }
 export type ExtraStory = {
     storyList: Story[],
