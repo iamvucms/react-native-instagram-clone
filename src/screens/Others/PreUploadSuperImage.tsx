@@ -32,16 +32,19 @@ const PreUploadSuperImage = ({ route }: PreUploadSuperImageProps) => {
     useEffect(() => {
         fetchSuggestionList()
     }, [])
-    const _onShareToStory = async () => {
-        const superImagesIdList = await Promise.all(uploadSuperImages(images))
-        const storyImages: Story[] = superImagesIdList.map(sourceId => ({
-            permission: storyPermissions.ALL,
+    const _onShareToStory = async (type: number) => {
+        const superImagesList = await Promise.all(uploadSuperImages(images))
+        const storyImages: Story[] = superImagesList.map(source => ({
+            permission: type,
             create_at: Timestamp(),
             seenList: [],
-            source: sourceId,
+            source: source.sourceId,
             userId: myUsername,
             messagesList: [],
             reactions: [],
+            hashtags: source.hashtags,
+            address: source.address,
+            mention: source.mention
         }))
         dispatch(PostStoryRequest(storyImages))
     }
@@ -166,7 +169,7 @@ const PreUploadSuperImage = ({ route }: PreUploadSuperImageProps) => {
                                 }}>Your Story</Text>
                             </View>
                             <TouchableOpacity
-                                onPress={_onShareToStory}
+                                onPress={_onShareToStory.bind(null, storyPermissions.ALL)}
                                 style={styles.btnUpload}>
                                 <Text style={{
                                     fontWeight: '600',
@@ -197,7 +200,9 @@ const PreUploadSuperImage = ({ route }: PreUploadSuperImageProps) => {
                                     </TouchableOpacity>
                                 </View>
                             </View>
-                            <TouchableOpacity style={styles.btnUpload}>
+                            <TouchableOpacity
+                                onPress={_onShareToStory.bind(null, storyPermissions.CLOSE_FRIENDS)}
+                                style={styles.btnUpload}>
                                 <Text style={{
                                     fontWeight: '600',
                                     color: '#fff'

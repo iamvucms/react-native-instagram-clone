@@ -16,7 +16,6 @@ import { navigationRef } from './rootNavigation';
 import RootTab from './RootTab';
 import DiscoverPeople from '../screens/Home/Account/DiscoverPeople';
 import PostDetail from '../screens/Home/PostDetail';
-import { ProfileX } from '../reducers/profileXReducer';
 import ProfileOptions from '../screens/Others/ProfileOptions';
 import ProfileInteractionOptions from '../screens/Others/ProfileInteractionOptions';
 import FeedbackOptions from '../screens/Others/FeedbackOptions';
@@ -27,6 +26,13 @@ import HideStoryFrom from '../screens/Home/Account/Setting/Privacy/HideStoryFrom
 import StoryProcessor, { StoryProcessedImage } from '../screens/Others/StoryProcessor';
 import { StoryImageSpec } from '../screens/Others/StoryTaker';
 import PreUploadSuperImage from '../screens/Others/PreUploadSuperImage';
+import StoryFullView from '../screens/Root/StoryFullView';
+import ProfileXScreen from '../screens/Home/Explore/ProfileX';
+import { ProfileX } from '../reducers/profileXReducer';
+import HashtagScreen from '../screens/Home/Explore/Hashtag';
+import LocationScreen from '../screens/Home/Explore/Location';
+import AccountScreen from '../screens/Home/Account/index'
+import ProfileXFollow from '../screens/Home/Explore/ProfileXFollow';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -79,7 +85,15 @@ export type SuperRootStackParamList = {
     },
     PreUploadSuperImage: {
         images: StoryProcessedImage[]
-    }
+    },
+    StoryFullView: {
+        storyIndex: number
+    },
+    ProfileX: undefined,
+    Hashtag: undefined,
+    Location: undefined,
+    AccountIndex: undefined,
+    ProfileXFollow: undefined
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
 const index = (): JSX.Element => {
@@ -141,6 +155,16 @@ const index = (): JSX.Element => {
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="ProfileInteractionOptions" component={ProfileInteractionOptions} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    gestureEnabled: true,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="StoryFullView" component={StoryFullView} />
+                <RootStack.Screen name="ProfileX" component={ProfileXScreen} />
+                <RootStack.Screen name="Hashtag" component={HashtagScreen} />
+                <RootStack.Screen name="Location" component={LocationScreen} />
+                <RootStack.Screen name="ProfileXFollow" component={ProfileXFollow} />
+
                 <RootStack.Screen component={DiscoverPeople} name="DiscoverPeople" />
                 <RootStack.Screen component={PostDetail} name="PostDetail" />
                 <RootStack.Screen component={StoryPravicy} name="StoryPrivacy" />

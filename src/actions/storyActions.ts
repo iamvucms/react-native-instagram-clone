@@ -1,9 +1,10 @@
 import { firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { seenTypes, storyActionTypes, ExtraStory, Story, StoryAction, StoryErrorAction, StoryList, StorySuccessAction } from '../reducers/storyReducer';
-import { UserInfo } from '../reducers/userReducer';
+import { UserInfo, HashTag } from '../reducers/userReducer';
 import { store } from "../store";
 import { StoryProcessedImage } from '../screens/Others/StoryProcessor';
+import { generateUsernameKeywords } from '../utils';
 
 export const FetchStoryListRequest = ():
     ThunkAction<Promise<void>, {}, {}, StoryAction> => {
@@ -27,7 +28,6 @@ export const FetchStoryListRequest = ():
                         .where('create_at', '>=',
                             new Date(new Date().getTime() - 24 * 3600 * 1000))
                         .orderBy('create_at', 'desc')
-                        .orderBy('seen', 'asc')
                         .get()
                     const temp: Story[] = result.docs.map(doc => {
                         const data: Story = doc.data() || {}
@@ -98,9 +98,59 @@ export const PostStoryRequest = (images: Story[]):
                     await ref.collection('stories').doc(`${uid}`).set({
                         ...img,
                         uid
+                    });
+                    (img.hashtags || []).map(async hashtag => {
+                        const rq = await ref.collection('hashtags')
+                            .where('name', '==', hashtag).get()
+                        if (rq.size > 0) {
+                            const targetHashtag = rq.docs[0]
+                            const data: HashTag = targetHashtag.data() || {}
+                            const stories = (data.stories || [])
+                            stories.push(uid)
+                            targetHashtag.ref.update({
+                                stories
+                            })
+                        } else {
+                            const keyword = generateUsernameKeywords(hashtag)
+                            keyword.splice(0, 1)
+                            const fetchRelatedTags: Promise<string[]>[] = keyword.map(async character => {
+                                const rq = await ref.collection('hashtags').
+                                    where('keyword', 'array-contains', character).get()
+                                const data: HashTag[] = rq.docs.map(x => x.data() || {})
+                                return data.map(x => x.name || '')
+                            })
+                            Promise.all(fetchRelatedTags).then(rs => {
+                                let relatedTags: string[] = []
+                                rs.map(lv1 => {
+                                    lv1.map(x => relatedTags.push(x))
+                                })
+                                relatedTags = Array.from(new Set(relatedTags))
+                                relatedTags.map(async tag => {
+                                    const rq = await ref.collection('hashtags').doc(`${tag}`).get()
+                                    if (rq.exists) {
+                                        const currentRelatedTags = (rq.data() || {}).relatedTags || []
+                                        currentRelatedTags.push(hashtag)
+                                        rq.ref.update({
+                                            relatedTags: currentRelatedTags
+                                        })
+                                    }
+                                })
+                                const hashtagUid = new Date().getTime()
+                                ref.collection('hashtags').doc(hashtag).set({
+                                    name: hashtag,
+                                    followers: [],
+                                    keyword,
+                                    relatedTags,
+                                    sources: [],
+                                    stories: [uid],
+                                    uid: hashtagUid
+                                })
+                            })
+                        }
                     })
                 }
             }
+
         } catch (e) {
             dispatch({
                 type: storyActionTypes.FETCH_STORY_LIST_FAILURE,

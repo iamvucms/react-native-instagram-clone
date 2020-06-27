@@ -23,9 +23,13 @@ export type Story = {
     permission?: number,
     create_at?: firestore.Timestamp,
     source?: number,
+    superImage?: StoryProcessedImage,
     seen?: 0 | 1,
     seenList?: string[],
     reactions?: string[],
+    hashtags?: string[],
+    address?: MapBoxAddress[],
+    mention?: string[],
     messagesList?: string[]
 }
 export type ExtraStory = {

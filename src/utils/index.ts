@@ -205,7 +205,12 @@ export const convertToFirebaseDatabasePathName = (text: string) => {
         .replace(/\$/g, "%").replace(/\[/g, "&")
         .replace(/\]/g, "*")
 }
-export const uploadSuperImages = (images: StoryProcessedImage[]): Promise<number>[] => {
+export const uploadSuperImages = (images: StoryProcessedImage[]): Promise<{
+    sourceId: number,
+    hashtags: string[],
+    mention: string[],
+    address: MapBoxAddress[]
+}>[] => {
     const ref = firestore()
     const myUsername = store.getState().user.user.userInfo?.username || ''
     return images.map(async (img, index) => {
@@ -235,6 +240,17 @@ export const uploadSuperImages = (images: StoryProcessedImage[]): Promise<number
             uid,
             userId: myUsername
         })
-        return uid
+        return {
+            sourceId: uid,
+            hashtags: Array.from(new Set(img.labels
+                .filter(x => x.type === 'hashtag').map(x => x.text))),
+            mention: Array.from(new Set(img.labels
+                .filter(x => x.type === 'people').map(x => x.text.slice(1)))),
+            address: Array.from(new Set(img.labels
+                .filter(x => x.type === 'address').map(x => ({
+                    place_name: x.text,
+                    id: x.address_id
+                })))),
+        }
     })
 }

@@ -4,6 +4,7 @@ import LinearGradient from 'react-native-linear-gradient'
 import { ExtraStory, seenTypes } from '../../reducers/storyReducer'
 import FastImage from 'react-native-fast-image'
 import { firestore } from 'firebase'
+import { navigate } from '../../navigations/rootNavigation'
 export interface StoryPreviewItemProps {
     item: ExtraStory
 }
@@ -58,6 +59,9 @@ const StoryPreviewItem = ({ item: { ownUser, storyList } }: StoryPreviewItemProp
     }
     const _onCompletedLoadingImage = () => {
         setPreloadingImage(false)
+        navigate('StoryFullView', {
+
+        })
     }
     return (
         <View style={styles.container}>
