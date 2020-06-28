@@ -52,7 +52,7 @@ const index = () => {
             >
                 <StoryAdderItem />
                 {storyList.map((story, index) => (
-                    <StoryPreviewItem item={story} key={index} />
+                    <StoryPreviewItem index={index} item={story} key={index} />
                 ))}
             </ScrollView>
         </View>

@@ -1,30 +1,40 @@
-import React, { useState } from 'react'
-import { StyleSheet, Text, View, Animated, NativeSyntheticEvent, NativeScrollEvent, Platform } from 'react-native'
-import { Story, ExtraStory } from '../../reducers/storyReducer'
+import React, { useState, useRef, useEffect } from 'react'
+import { Animated, ScrollView, Keyboard, NativeScrollEvent, NativeSyntheticEvent, Platform, StyleSheet, View, YellowBox } from 'react-native'
+import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../../constants'
+import { useKeyboardStatus } from '../../hooks/useKeyboardStatus'
+import { ExtraStory, seenTypes } from '../../reducers/storyReducer'
 import StoryItem from './StoryItem'
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../../constants'
-import { ScrollView } from 'react-native-gesture-handler'
+import { goBack } from '../../navigations/rootNavigation'
 //constant
 const perspective = 500
 const A = Math.atan(perspective / (SCREEN_WIDTH / 2))
 const ratio = Platform.OS === 'ios' ? 2 : 1.2;
 export interface StoryViewProps {
-    data: ExtraStory[]
+    data: ExtraStory[],
+    groupIndex: number
 }
 export type StoryController = {
     currentGroupIndex: number,
-    currentChildIndex: number
 }
-const StoryView = ({ data }: StoryViewProps) => {
-    const [storyControllers, setStoryControllers] = useState<StoryController[]>(
-        data.map(() => ({
-            currentGroupIndex: 0,
-            currentChildIndex: 0
-        })))
+
+const StoryView = ({ groupIndex, data }: StoryViewProps) => {
+    const [loading, setLoading] = useState<boolean>(true)
+    const [storyControllers, setStoryControllers] = useState<StoryController[]>([])
+    const keyboard = useKeyboardStatus()
     const animX = React.useMemo(() => new Animated.Value(1), [])
+    const _scrollRef = useRef<ScrollView>(null)
+    // YellowBox.ignoreWarnings([''])
+    useEffect(() => {
+        const controllerList = data.map(() => ({
+            currentGroupIndex: groupIndex,
+        }))
+        setStoryControllers(controllerList)
+        setLoading(false)
+    }, [])
     const _onScrollHandler = ({ nativeEvent: {
         contentOffset: { x }
     } }: NativeSyntheticEvent<NativeScrollEvent>) => {
+
         animX.setValue(x)
     }
     const _onScrollEndHandler = ({ nativeEvent: {
@@ -32,16 +42,21 @@ const StoryView = ({ data }: StoryViewProps) => {
     } }: NativeSyntheticEvent<NativeScrollEvent>) => {
         const nextIndex = Math.floor(x / SCREEN_WIDTH)
         const preIndex = storyControllers[0].currentGroupIndex
-        const temp = [...storyControllers]
-        temp[preIndex] = { ...temp[preIndex] }
-        temp[nextIndex] = { ...temp[nextIndex] }
-        for (let x of temp) {
-            x.currentGroupIndex = nextIndex
+        if (nextIndex !== preIndex) {
+            const temp = [...storyControllers]
+            temp[preIndex] = { ...temp[preIndex] }
+            temp[nextIndex] = { ...temp[nextIndex] }
+            for (let x of temp) {
+                x.currentGroupIndex = nextIndex
+            }
+            setStoryControllers(temp)
         }
-        setStoryControllers(temp)
+        if (keyboard) Keyboard.dismiss()
     }
     const _getStoryStyle = (index: number) => {
-        //William Instagram Stories code.
+        /**
+         * @author William Candillon - Instagram Stories Cube Transition
+         *  */
         const offset = index * SCREEN_WIDTH
         const inputRange = [offset - SCREEN_WIDTH, offset + SCREEN_WIDTH];
         const translateX = animX.interpolate({
@@ -78,16 +93,54 @@ const StoryView = ({ data }: StoryViewProps) => {
             ],
         }
     }
+    const _setController = (preGroupIndex: number, nextGroupIndex: number) => {
+
+        if (nextGroupIndex > -1 && nextGroupIndex < data.length) {
+            const temp = [...storyControllers]
+            temp[nextGroupIndex] = { ...temp[nextGroupIndex] }
+            temp[preGroupIndex] = { ...temp[preGroupIndex] }
+            for (let x of temp) {
+                x.currentGroupIndex = nextGroupIndex
+            }
+            _scrollRef.current?.scrollTo({
+                x: nextGroupIndex * SCREEN_WIDTH,
+                y: 0,
+                animated: true
+            })
+            setStoryControllers(temp)
+        } else {
+            // goBack()
+        }
+
+    }
+    // const getNextIndex = (nextGroupIndex: number): number => {
+    //     let nextIndex = 0
+    //     data[nextGroupIndex].storyList.every((story, storyIndex) => {
+    //         if (story.seen === seenTypes.NOTSEEN) {
+    //             nextIndex = storyIndex
+    //             return false
+    //         }
+    //         return true
+    //     })
+    //     return nextIndex
+    // }
+    if (loading) return null
     return (
         <View style={styles.container}>
             <ScrollView
+                ref={_scrollRef}
+                onLayout={() => _scrollRef.current?.scrollTo({
+                    x: groupIndex * SCREEN_WIDTH,
+                    y: 0,
+                    animated: false
+                })}
                 bounces={false}
                 contentContainerStyle={{
                     width: SCREEN_WIDTH * data.length,
                 }}
                 snapToInterval={SCREEN_WIDTH}
                 showsHorizontalScrollIndicator={false}
-                scrollEventThrottle={5}
+                scrollEventThrottle={16}
                 onScroll={_onScrollHandler}
                 onMomentumScrollEnd={_onScrollEndHandler}
                 horizontal={true}
@@ -104,6 +157,7 @@ const StoryView = ({ data }: StoryViewProps) => {
                     {data.map((story, index) => (
                         <Animated.View key={index} style={_getStoryStyle(index)}>
                             <StoryItem
+                                setController={_setController}
                                 item={story}
                                 index={index}
                                 controller={storyControllers[index]}

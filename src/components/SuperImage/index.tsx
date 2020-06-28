@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, Text, View, ImageBackground, Animated, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, ImageBackground, Animated, TouchableWithoutFeedback, TouchableOpacity } from 'react-native'
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../../constants'
 import TextGradient from '../TextGradient'
 import FastImage from 'react-native-fast-image'
@@ -8,9 +8,11 @@ import { firestore } from 'firebase'
 import { navigate } from '../../navigations/rootNavigation'
 import { store } from '../../store'
 export interface SuperImageProps {
-    superId: number
+    superId: number,
+    onNext?: () => void
+    onBack?: () => void
 }
-const SuperImage = ({ superId }: SuperImageProps) => {
+const SuperImage = ({ superId, onNext, onBack }: SuperImageProps) => {
     const myUsername = store.getState().user.user.userInfo?.username || ''
     const [photo, setPhoto] = useState<StoryProcessedImage>()
     useEffect(() => {
@@ -64,6 +66,26 @@ const SuperImage = ({ superId }: SuperImageProps) => {
                     }}
                     blurRadius={10}
                 >
+                    <View style={{
+                        ...StyleSheet.absoluteFillObject,
+                        zIndex: 1,
+                        width: SCREEN_WIDTH,
+                        height: SCREEN_HEIGHT,
+                        flexDirection: 'row',
+                    }}>
+                        <TouchableOpacity
+                            onPress={() => onBack && onBack()}
+                            style={{
+                                width: '50%',
+                                height: '100%'
+                            }} ><></></TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => onNext && onNext()}
+                            style={{
+                                width: '50%',
+                                height: '100%'
+                            }} ><></></TouchableOpacity>
+                    </View>
                     {photo.texts.map((txtLabel, labelIndex) => (
                         <View
                             key={labelIndex}

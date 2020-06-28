@@ -1,9 +1,8 @@
 import { firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
-import { seenTypes, storyActionTypes, ExtraStory, Story, StoryAction, StoryErrorAction, StoryList, StorySuccessAction } from '../reducers/storyReducer';
-import { UserInfo, HashTag } from '../reducers/userReducer';
+import { ExtraStory, seenTypes, Story, StoryAction, storyActionTypes, StoryErrorAction, StoryList, StorySuccessAction } from '../reducers/storyReducer';
+import { HashTag, UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
-import { StoryProcessedImage } from '../screens/Others/StoryProcessor';
 import { generateUsernameKeywords } from '../utils';
 
 export const FetchStoryListRequest = ():
@@ -61,6 +60,11 @@ export const FetchStoryListRequest = ():
                 fullStory.sort((a, b) => (a.storyList.every(
                     x => x.seen === seenTypes.SEEN) ? 1 : 0) - (b.storyList.every(
                         x => x.seen === seenTypes.SEEN) ? 1 : 0))
+                fullStory.map(x => {
+                    x.storyList.sort((a, b) =>
+                        (a.create_at?.toMillis() || 0) - (b.create_at?.toMillis() || 0)
+                    )
+                })
                 dispatch(FetchStoryListSuccess(fullStory))
             } else dispatch(FetchStoryListFailure())
         } catch (e) {

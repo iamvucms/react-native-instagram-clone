@@ -87,7 +87,7 @@ export type SuperRootStackParamList = {
         images: StoryProcessedImage[]
     },
     StoryFullView: {
-        storyIndex: number
+        groupIndex: number
     },
     ProfileX: undefined,
     Hashtag: undefined,

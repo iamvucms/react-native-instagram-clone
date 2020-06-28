@@ -6,9 +6,10 @@ import FastImage from 'react-native-fast-image'
 import { firestore } from 'firebase'
 import { navigate } from '../../navigations/rootNavigation'
 export interface StoryPreviewItemProps {
-    item: ExtraStory
+    item: ExtraStory,
+    index: number
 }
-const StoryPreviewItem = ({ item: { ownUser, storyList } }: StoryPreviewItemProps) => {
+const StoryPreviewItem = ({ item: { ownUser, storyList }, index }: StoryPreviewItemProps) => {
     const _loadingDeg = new Animated.Value(0)
     const [seen, setSeen] = useState<boolean>(false)
     useEffect(() => {
@@ -60,7 +61,7 @@ const StoryPreviewItem = ({ item: { ownUser, storyList } }: StoryPreviewItemProp
     const _onCompletedLoadingImage = () => {
         setPreloadingImage(false)
         navigate('StoryFullView', {
-
+            groupIndex: index
         })
     }
     return (
