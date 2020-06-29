@@ -11,8 +11,9 @@ export interface SuperImageProps {
     superId: number,
     onNext?: () => void
     onBack?: () => void
+    onStopAnimation?: () => void
 }
-const SuperImage = ({ superId, onNext, onBack }: SuperImageProps) => {
+const SuperImage = ({ superId, onNext, onBack, onStopAnimation }: SuperImageProps) => {
     const myUsername = store.getState().user.user.userInfo?.username || ''
     const [photo, setPhoto] = useState<StoryProcessedImage>()
     useEffect(() => {
@@ -27,6 +28,7 @@ const SuperImage = ({ superId, onNext, onBack }: SuperImageProps) => {
         }
     }
     const _onLabelPress = async (label: StoryLabel) => {
+        if (onStopAnimation) onStopAnimation()
         switch (label.type) {
             case 'address':
                 navigate('location', {

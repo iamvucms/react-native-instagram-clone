@@ -110,6 +110,7 @@ const index = () => {
             <KeyboardAvoidingView style={styles.keyboardAvoidingViewContainer} behavior="height">
                 <HomeNavigationBar />
                 <ScrollView
+                    keyboardDismissMode="on-drag"
                     ref={_scrollRef}
                     style={styles.scrollContainer}
                     refreshControl={

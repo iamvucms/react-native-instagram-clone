@@ -9,13 +9,15 @@ import postReducer, { PostList } from './postReducer'
 import commentReducer, { CommentExtraList } from './commentReducer'
 import notificationReducer, { NotificationList } from './notificationReducer'
 import profileXReducer, { ProfileX } from './profileXReducer'
+import messageReducer, { MessageList } from './messageReducer'
 export type AppState = {
     user: userPayload,
     storyList: StoryList,
     postList: PostList,
     comment: CommentExtraList,
     notifications: NotificationList,
-    profileX: ProfileX
+    profileX: ProfileX,
+    messages: MessageList
 }
 const rootReducer = combineReducers<AppState>({
     user: userReducer,
@@ -23,7 +25,8 @@ const rootReducer = combineReducers<AppState>({
     postList: postReducer,
     comment: commentReducer,
     notifications: notificationReducer,
-    profileX: profileXReducer
+    profileX: profileXReducer,
+    messages: messageReducer
 })
 export const useSelector:
     TypedUseSelectorHook<ReturnType<typeof rootReducer>> = useReduxSelector

@@ -1,38 +1,38 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, StackNavigationOptions, TransitionPresets } from '@react-navigation/stack';
 import React from 'react';
-import { ExtraPost, Post } from '../reducers/postReducer';
-import { UserInfo, HashTag } from '../reducers/userReducer';
+import { ExtraPost } from '../reducers/postReducer';
+import { ProfileX } from '../reducers/profileXReducer';
+import { HashTag, UserInfo } from '../reducers/userReducer';
+import DiscoverPeople from '../screens/Home/Account/DiscoverPeople';
 import EditProfile from '../screens/Home/Account/EditProfile';
 import GalleryChooser, { ProcessedImage } from '../screens/Home/Account/GalleryChooser';
 import LocationChooser from '../screens/Home/Account/LocationChooser';
 import MuteOptions from '../screens/Home/Account/MuteOptions';
 import NotificationOptions from '../screens/Home/Account/NotificationOptions';
+import CloseFriends from '../screens/Home/Account/Setting/Privacy/CloseFriends';
+import HideStoryFrom from '../screens/Home/Account/Setting/Privacy/HideStoryFrom';
+import StoryPravicy from '../screens/Home/Account/Setting/Privacy/Story';
 import TagPeople from '../screens/Home/Account/TagPeople';
+import HashtagScreen from '../screens/Home/Explore/Hashtag';
+import LocationScreen from '../screens/Home/Explore/Location';
+import ProfileXScreen from '../screens/Home/Explore/ProfileX';
+import ProfileXFollow from '../screens/Home/Explore/ProfileXFollow';
+import PostDetail from '../screens/Home/PostDetail';
+import FeedbackOptions from '../screens/Others/FeedbackOptions';
 import PostOptions from '../screens/Others/PostOptions';
+import PreUploadSuperImage from '../screens/Others/PreUploadSuperImage';
+import ProfileInteractionOptions from '../screens/Others/ProfileInteractionOptions';
+import ProfileOptions from '../screens/Others/ProfileOptions';
+import ShareToDirect from '../screens/Others/ShareToDirect';
+import StoryProcessor, { StoryProcessedImage } from '../screens/Others/StoryProcessor';
+import StoryTaker, { StoryImageSpec } from '../screens/Others/StoryTaker';
 import Comment from '../screens/Root/Comment';
+import StoryFullView from '../screens/Root/StoryFullView';
 import { MapBoxAddress } from '../utils';
 import { navigationRef } from './rootNavigation';
 import RootTab from './RootTab';
-import DiscoverPeople from '../screens/Home/Account/DiscoverPeople';
-import PostDetail from '../screens/Home/PostDetail';
-import ProfileOptions from '../screens/Others/ProfileOptions';
-import ProfileInteractionOptions from '../screens/Others/ProfileInteractionOptions';
-import FeedbackOptions from '../screens/Others/FeedbackOptions';
-import ShareToDirect from '../screens/Others/ShareToDirect';
-import StoryPravicy from '../screens/Home/Account/Setting/Privacy/Story';
-import CloseFriends from '../screens/Home/Account/Setting/Privacy/CloseFriends';
-import HideStoryFrom from '../screens/Home/Account/Setting/Privacy/HideStoryFrom';
-import StoryProcessor, { StoryProcessedImage } from '../screens/Others/StoryProcessor';
-import { StoryImageSpec } from '../screens/Others/StoryTaker';
-import PreUploadSuperImage from '../screens/Others/PreUploadSuperImage';
-import StoryFullView from '../screens/Root/StoryFullView';
-import ProfileXScreen from '../screens/Home/Explore/ProfileX';
-import { ProfileX } from '../reducers/profileXReducer';
-import HashtagScreen from '../screens/Home/Explore/Hashtag';
-import LocationScreen from '../screens/Home/Explore/Location';
-import AccountScreen from '../screens/Home/Account/index'
-import ProfileXFollow from '../screens/Home/Explore/ProfileXFollow';
+import Conversation from '../screens/Others/Direct/Conversation'
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -93,7 +93,11 @@ export type SuperRootStackParamList = {
     Hashtag: undefined,
     Location: undefined,
     AccountIndex: undefined,
-    ProfileXFollow: undefined
+    ProfileXFollow: undefined,
+    StoryTaker: undefined,
+    Conversation: {
+        username: string
+    }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
 const index = (): JSX.Element => {
@@ -164,13 +168,15 @@ const index = (): JSX.Element => {
                 <RootStack.Screen name="Hashtag" component={HashtagScreen} />
                 <RootStack.Screen name="Location" component={LocationScreen} />
                 <RootStack.Screen name="ProfileXFollow" component={ProfileXFollow} />
-
                 <RootStack.Screen component={DiscoverPeople} name="DiscoverPeople" />
                 <RootStack.Screen component={PostDetail} name="PostDetail" />
                 <RootStack.Screen component={StoryPravicy} name="StoryPrivacy" />
                 <RootStack.Screen component={CloseFriends} name="CloseFriends" />
                 <RootStack.Screen component={HideStoryFrom} name="HideStoryFrom" />
-
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                }} name="StoryTaker" component={StoryTaker} />
+                <RootStack.Screen name="Conversation" component={Conversation} />
             </RootStack.Navigator>
         </NavigationContainer>
     )

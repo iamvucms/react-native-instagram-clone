@@ -135,6 +135,7 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
                     <View key={storyIndex}>
                         {((index === controller.currentGroupIndex && storyIndex === childIndex) || storyIndex === childIndex) &&
                             <SuperImage
+                                onStopAnimation={stopAnimation}
                                 onNext={_onNext}
                                 onBack={_onBack}
                                 superId={storyItem.source as number} />

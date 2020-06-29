@@ -205,6 +205,11 @@ export const convertToFirebaseDatabasePathName = (text: string) => {
         .replace(/\$/g, "%").replace(/\[/g, "&")
         .replace(/\]/g, "*")
 }
+export const revertFirebaseDatabasePathName = (text: string) => {
+    return text.replace(/\!/g, ".").replace(/\@/g, "#")
+        .replace(/\%/g, "$").replace(/\&/g, "[")
+        .replace(/\*/g, "]")
+}
 export const uploadSuperImages = (images: StoryProcessedImage[]): Promise<{
     sourceId: number,
     hashtags: string[],
