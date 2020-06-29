@@ -13,11 +13,12 @@ import { firestore } from 'firebase'
 export interface StoryProps {
     item: ExtraStory,
     index: number,
+    maxIndex: number,
     controller: StoryController,
     setController: (preGroupIndex: number, nextGroupIndex: number) => void
 }
-const StoryItem = ({ item, index, controller, setController }: StoryProps) => {
-    // console.warn("item", index)
+const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryProps) => {
+
     const getNextIndex = (): number => {
         let nextIndex = 0
         item.storyList.every((story, storyIndex) => {
@@ -32,6 +33,7 @@ const StoryItem = ({ item, index, controller, setController }: StoryProps) => {
     const myInfo = store.getState().user.user.userInfo
     const [childIndex, setChildIndex] = useState<number>(getNextIndex())
     const [seenAll, setSeenAll] = useState<boolean>(false)
+    const [state, setState] = useState<object>({})
     const ref = useRef<{
         message: string,
         allowAnimationCallback: boolean,
@@ -41,7 +43,11 @@ const StoryItem = ({ item, index, controller, setController }: StoryProps) => {
     })
     const animXList = item.storyList.map(x => new Animated.Value(0))
     useEffect(() => {
-
+        return () => {
+            animXList.map(animX => animX.stopAnimation())
+        }
+    }, [])
+    useEffect(() => {
         const db = firestore()
         if (controller.currentGroupIndex === index) {
             if (seenAll) {
@@ -51,7 +57,6 @@ const StoryItem = ({ item, index, controller, setController }: StoryProps) => {
             }
             animXList.every((animX, animIndex) => {
                 if (animIndex === childIndex) {
-                    // console.warn("come")
                     ref.current.allowAnimationCallback = true
                     animX.setValue(0)
                     Animated.timing(animX, {
@@ -76,11 +81,11 @@ const StoryItem = ({ item, index, controller, setController }: StoryProps) => {
                                 if (childIndex + 1 < item.storyList.length) {
                                     setChildIndex(childIndex + 1)
                                 } else {
-                                    setSeenAll(true)
+                                    if (index < maxIndex) setSeenAll(true)
                                     setController(index, index + 1)
                                 }
                             }
-                        }, 300);
+                        }, 200);
                     })
                     return false
                 }
@@ -88,33 +93,38 @@ const StoryItem = ({ item, index, controller, setController }: StoryProps) => {
                 return true
             })
         } else {
-            ref.current.allowAnimationCallback = false
-            animXList.map(animX => animX.stopAnimation())
+            stopAnimation()
         }
-    }, [controller, childIndex, seenAll])
+    }, [controller, childIndex, seenAll, state])
     const _onSendMessage = () => {
         console.warn(ref.current.message)
     }
     const _onNext = () => {
         if (childIndex + 1 < item.storyList.length) {
             setChildIndex(childIndex + 1)
-            ref.current.allowAnimationCallback = true
+            stopAnimation()
         } else {
-            setSeenAll(true)
-            setController(index, index + 1)
+            if (index < maxIndex) setSeenAll(true)
         }
+    }
+    const stopAnimation = (allowCallback: boolean = false) => {
+        ref.current.allowAnimationCallback = allowCallback
+        animXList.map(animX => animX.stopAnimation())
     }
     const _onBack = () => {
         if (childIndex > 0) {
-            setChildIndex(childIndex - 1)
-            ref.current.allowAnimationCallback = true
+
+            stopAnimation()
+            animXList.slice(childIndex).map(animX => animX.setValue(0))
+            setTimeout(() => {
+                setChildIndex(childIndex - 1)
+            }, 300);
             /**
              Still be error here.
              */
         } else {
             setController(index, index - 1)
         }
-
         // animXList.map(animX => animX.stopAnimation())
     }
     const timeoutBarItemWidth = SCREEN_WIDTH / item.storyList.length - 1 * (item.storyList.length - 1)
@@ -150,7 +160,7 @@ const StoryItem = ({ item, index, controller, setController }: StoryProps) => {
                 </View>
                 <View style={styles.timeoutBarWrapper}>
                     {item.storyList.map((storyItem, storyIndex) => (
-                        <View style={{
+                        <View key={storyIndex} style={{
                             ...styles.timeoutBarItem,
                             width: timeoutBarItemWidth,
                         }}>
@@ -186,6 +196,12 @@ const StoryItem = ({ item, index, controller, setController }: StoryProps) => {
                         }}
                         style={styles.messageAvatar} />
                     <TextInput
+                        onFocus={() => {
+                            stopAnimation()
+                        }}
+                        onBlur={() => {
+                            setState({})
+                        }}
                         onSubmitEditing={_onSendMessage}
                         returnKeyType="send"
                         textAlignVertical="center"

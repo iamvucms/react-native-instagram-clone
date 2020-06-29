@@ -20,7 +20,7 @@ export type StoryController = {
 const StoryView = ({ groupIndex, data }: StoryViewProps) => {
     const [loading, setLoading] = useState<boolean>(true)
     const [storyControllers, setStoryControllers] = useState<StoryController[]>([])
-    const keyboard = useKeyboardStatus()
+    // const keyboard = useKeyboardStatus()
     const animX = React.useMemo(() => new Animated.Value(1), [])
     const _scrollRef = useRef<ScrollView>(null)
     // YellowBox.ignoreWarnings([''])
@@ -51,7 +51,7 @@ const StoryView = ({ groupIndex, data }: StoryViewProps) => {
             }
             setStoryControllers(temp)
         }
-        if (keyboard) Keyboard.dismiss()
+        // if (keyboard) Keyboard.dismiss()
     }
     const _getStoryStyle = (index: number) => {
         /**
@@ -157,6 +157,7 @@ const StoryView = ({ groupIndex, data }: StoryViewProps) => {
                     {data.map((story, index) => (
                         <Animated.View key={index} style={_getStoryStyle(index)}>
                             <StoryItem
+                                maxIndex={data.length - 1}
                                 setController={_setController}
                                 item={story}
                                 index={index}
