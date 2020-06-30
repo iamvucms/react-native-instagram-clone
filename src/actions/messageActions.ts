@@ -1,6 +1,6 @@
 import { firestore, database } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
-import { seenTypes, messagesActionTypes, ExtraMessage, Message, MessageAction, MessageErrorAction, MessageList, MessageSuccessAction, messagesTypes, PostingMessage } from '../reducers/messageReducer';
+import { seenTypes, messagesActionTypes, ExtraMessage, Message, MessageAction, MessageErrorAction, MessageList, MessageSuccessAction, messagesTypes, PostingMessage, OnlineStatus } from '../reducers/messageReducer';
 import { UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
 import { Post, ExtraPost } from '../reducers/postReducer';
@@ -51,6 +51,15 @@ export const TriggerMessageListenerRequest = ():
                             })
                     })
                 })
+                const fetchUserStatusTasks = userIds.map((userId, index) => {
+                    return new Promise<OnlineStatus>((resolve, reject) => {
+                        dbRef.ref(`/online/${convertToFirebaseDatabasePathName(userId)}`)
+                            .once('value', snap3 => {
+                                resolve(snap3.val() as OnlineStatus)
+
+                            })
+                    })
+                })
                 Promise.all(fetchMyMessagesTasks).then(async () => {
                     const preUserInfos: ProfileX[] = store.getState().messages.map(x => x.ownUser)
                     const fetchUserInfoListTasks: Promise<ProfileX>[] = userIds
@@ -69,10 +78,12 @@ export const TriggerMessageListenerRequest = ():
                             return userData
                         })
                     const userInfos: ProfileX[] = await Promise.all(fetchUserInfoListTasks)
+                    const onlineStatus: OnlineStatus[] = await Promise.all(fetchUserStatusTasks)
                     const collection: MessageList = messageCollection.map((messageGroup, index) => {
                         return {
                             messageList: messageGroup,
-                            ownUser: userInfos[index]
+                            ownUser: userInfos[index],
+                            online: onlineStatus[index]
                         }
                     })
                     collection.sort((a, b) =>
@@ -102,14 +113,46 @@ export const TriggerMessageListenerSuccess = (payload: MessageList): MessageSucc
         payload: payload
     }
 }
-export const CreateMessageRequest = (message: PostingMessage):
+export const CreateMessageRequest = (message: PostingMessage, targetUsername: string):
     ThunkAction<Promise<void>, {}, {}, MessageAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, MessageAction>) => {
         try {
+            const targetUsernamePath = convertToFirebaseDatabasePathName(targetUsername)
+            const myUsername = store.getState().user.user.userInfo?.username || ''
+            const myUsernamePath = convertToFirebaseDatabasePathName(
+                myUsername)
             const dbRef = database()
             const ref = firestore()
             const uid = new Date().getTime()
-
+            const msg = {
+                ...message,
+                userId: myUsername,
+                uid,
+            }
+            dbRef.ref(`/messages/${targetUsernamePath}/${myUsernamePath}/${uid}`)
+                .set(msg)
+            const extraMsg = store.getState().messages.find(x => x.ownUser.username === targetUsername)
+            if (extraMsg) {
+                const index = store.getState().messages.findIndex(x => x === extraMsg)
+                const newExtraMsg = { ...extraMsg }
+                newExtraMsg.messageList = [msg, ...newExtraMsg.messageList]
+                const newExtraList = [...store.getState().messages]
+                newExtraList[index] = newExtraMsg
+                dispatch(TriggerMessageListenerSuccess(newExtraList))
+            } else {
+                const rq = await ref.collection('users').doc(`${targetUsername}`).get()
+                const targetUserData: ProfileX = rq.data() || {}
+                dbRef.ref(`/online/${targetUsernamePath}`).once('value', snap => {
+                    const newExtraMsg: ExtraMessage = {
+                        messageList: [msg],
+                        ownUser: targetUserData,
+                        online: snap.val()
+                    }
+                    const newExtraList = [...store.getState().messages]
+                    newExtraList.push(newExtraMsg)
+                    dispatch(TriggerMessageListenerSuccess(newExtraList))
+                })
+            }
         } catch (e) {
             console.warn(e)
             dispatch(TriggerMessageListenerFailure())

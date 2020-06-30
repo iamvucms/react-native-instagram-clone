@@ -1,7 +1,7 @@
 import { useIsFocused } from '@react-navigation/native'
 import { firestore } from 'firebase'
 import React, { useEffect, useRef, useState } from 'react'
-import { FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, TouchableHighlight, KeyboardAvoidingView } from 'react-native'
+import { FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, TouchableHighlight, KeyboardAvoidingView, Image } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import NavigationBar from '../../components/NavigationBar'
 import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../constants'
@@ -99,10 +99,16 @@ const Direct = () => {
                         <TouchableOpacity style={{
                             ...styles.btnRightOptions,
                         }}>
-                            <Icon name="video-outline" size={30} />
+                            <Image style={{
+                                height: 24,
+                                width: 24
+                            }} source={require('../../assets/icons/video-call.png')} />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.btnRightOptions}>
-                            <Icon name="square-edit-outline" size={24} />
+                            <Image style={{
+                                height: 20,
+                                width: 20
+                            }} source={require('../../assets/icons/edit.png')} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -247,7 +253,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 15,
-        paddingVertical: 7.5
+        paddingVertical: 7.5,
+        justifyContent: 'space-between'
     },
     resultUserAvatar: {
         height: 50,
@@ -268,6 +275,8 @@ interface UserMessageItemProps {
     item: ExtraMessage
 }
 export const UserMessageItem = React.memo(({ item }: UserMessageItemProps) => {
+    const myUsername = store.getState().user.user.userInfo?.username || ''
+    const isMyMessage = item.messageList[0].userId === myUsername
     const _onViewConversation = () => {
         navigate('Conversation', {
             username: item.ownUser.username
@@ -279,31 +288,36 @@ export const UserMessageItem = React.memo(({ item }: UserMessageItemProps) => {
             underlayColor="#ddd"
             style={styles.userContainer}>
             <>
-                <FastImage
-                    source={{
-                        uri: item.ownUser.avatarURL
-                    }}
-                    style={styles.resultUserAvatar} />
-                <View
-                    style={{
-                        marginHorizontal: 10
-                    }}
-                >
-                    <Text style={styles.userFullname}>{item.ownUser.username}</Text>
-                    <View style={{
-                        flexDirection: 'row'
-                    }}>
-                        <Text
-                            numberOfLines={1}
-                            style={{
-                                width: SCREEN_WIDTH - 30 - 150,
-                                fontWeight: item.messageList[0].seen === seenTypes.NOTSEEN ? '600' : '400',
-                                color: item.messageList[0].seen === seenTypes.NOTSEEN ? '#000' : '#666'
-                            }}>{item.messageList[0].text}</Text>
-                        <Text style={{
-                            fontWeight: item.messageList[0].seen === seenTypes.NOTSEEN ? '600' : '400',
-                            color: item.messageList[0].seen === seenTypes.NOTSEEN ? '#000' : '#666'
-                        }}> • {timestampToString(item.messageList[0].create_at)}</Text>
+                <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}>
+                    <FastImage
+                        source={{
+                            uri: item.ownUser.avatarURL
+                        }}
+                        style={styles.resultUserAvatar} />
+                    <View
+                        style={{
+                            marginHorizontal: 10
+                        }}
+                    >
+                        <Text style={styles.userFullname}>{item.ownUser.username}</Text>
+                        <View style={{
+                            flexDirection: 'row'
+                        }}>
+                            <Text
+                                numberOfLines={1}
+                                style={{
+                                    maxWidth: SCREEN_WIDTH - 30 - 150,
+                                    fontWeight: (!isMyMessage && item.messageList[0].seen === seenTypes.NOTSEEN) ? '600' : '400',
+                                    color: (!isMyMessage && item.messageList[0].seen === seenTypes.NOTSEEN) ? '#000' : '#666'
+                                }}>{item.messageList[0].text}</Text>
+                            <Text style={{
+                                fontWeight: (!isMyMessage && item.messageList[0].seen === seenTypes.NOTSEEN) ? '600' : '400',
+                                color: (!isMyMessage && item.messageList[0].seen === seenTypes.NOTSEEN) ? '#000' : '#666'
+                            }}> • {timestampToString(item.messageList[0].create_at)}</Text>
+                        </View>
                     </View>
                 </View>
                 <TouchableOpacity style={{
@@ -312,7 +326,10 @@ export const UserMessageItem = React.memo(({ item }: UserMessageItemProps) => {
                     justifyContent: 'center',
                     alignItems: 'center'
                 }}>
-                    <Icon name="camera-outline" size={20} color="#999" />
+                    <Image style={{
+                        height: 20,
+                        width: 20
+                    }} source={require('../../assets/icons/camera.png')} />
                 </TouchableOpacity>
             </>
         </TouchableHighlight>
@@ -333,19 +350,35 @@ export const UserItem = React.memo(({ user }: UserItemProps) => {
             underlayColor="#ddd"
             style={styles.userContainer}>
             <>
-                <FastImage
-                    source={{
-                        uri: user.avatarURL
-                    }}
-                    style={styles.resultUserAvatar} />
-                <View
-                    style={{
-                        marginLeft: 10
-                    }}
-                >
-                    <Text style={styles.userFullname}>{user.fullname}</Text>
-                    <Text style={styles.userUsername}>{user.username}</Text>
+                <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}>
+                    <FastImage
+                        source={{
+                            uri: user.avatarURL
+                        }}
+                        style={styles.resultUserAvatar} />
+                    <View
+                        style={{
+                            marginLeft: 10
+                        }}
+                    >
+                        <Text style={styles.userFullname}>{user.fullname}</Text>
+                        <Text style={styles.userUsername}>{user.username}</Text>
+                    </View>
                 </View>
+                <TouchableOpacity style={{
+                    height: 50,
+                    width: 50,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}>
+                    <Image style={{
+                        height: 20,
+                        width: 20
+                    }} source={require('../../assets/icons/camera.png')} />
+                </TouchableOpacity>
             </>
         </TouchableHighlight>
     )

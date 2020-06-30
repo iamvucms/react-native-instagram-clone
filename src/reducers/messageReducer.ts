@@ -1,13 +1,12 @@
 import { Alert } from 'react-native'
-import { firestore } from 'firebase'
-import { UserInfo } from './userReducer'
-import { Post, ExtraPost } from './postReducer'
-import { Comment } from './commentReducer'
-import { Story } from './storyReducer'
 import { ProfileX } from './profileXReducer'
 export const seenTypes = {
     NOTSEEN: 0,
     SEEN: 1,
+}
+export const onlineTypes = {
+    ACTIVE: 1,
+    OFFLINE: 0
 }
 export const messagesTypes = {
     TEXT: 1,
@@ -20,6 +19,10 @@ export const messagesActionTypes = {
     TRIGGER_MESSAGES_LISTENER_REQUEST: 'TRIGGER_MESSAGES_LISTENER_REQUEST',
     TRIGGER_MESSAGES_LISTENER_SUCCESS: 'TRIGGER_MESSAGES_LISTENER_SUCCESS',
     TRIGGER_MESSAGES_LISTENER_FAILURE: 'TRIGGER_MESSAGES_LISTENER_FAILURE',
+}
+export type OnlineStatus = {
+    status: 0 | 1,
+    last_online: number
 }
 export type Message = {
     userId: string,
@@ -35,11 +38,10 @@ export type Message = {
 }
 export type ExtraMessage = {
     messageList: Message[],
-    ownUser: ProfileX
+    ownUser: ProfileX,
+    online: OnlineStatus
 }
 export type PostingMessage = {
-    userId: string,
-    uid: number,
     type: 1 | 2 | 3 | 4 | 5,
     text?: string,
     superImageId?: number,
