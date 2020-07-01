@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Image, KeyboardAvoidingView, FlatList, TextInput } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import FastImage from 'react-native-fast-image'
@@ -12,7 +12,7 @@ import { timestampToString } from '../../../utils'
 import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../constants'
 import { store } from '../../../store'
 import { useDispatch } from 'react-redux'
-import { CreateMessageRequest } from '../../../actions/messageActions'
+import { CreateMessageRequest, MakeSeenRequest, CreateEmptyConversationRequest } from '../../../actions/messageActions'
 type ConversationRouteProp = RouteProp<SuperRootStackParamList, 'Conversation'>
 
 
@@ -25,6 +25,21 @@ const Conversation = ({ route }: ConversationProps) => {
     const conversation = useSelector(state => state.messages.filter(group => group.ownUser.username === targetUsername)[0])
     const [typing, setTyping] = useState<boolean>(false)
     const [text, setText] = useState<string>('')
+    const _flatlistRef = useRef<FlatList>(null)
+    useEffect(() => {
+        if (!!!conversation) {
+            dispatch(CreateEmptyConversationRequest(targetUsername))
+            return;
+        }
+        if (conversation.messageList.length > 0) {
+            const myUsername = store.getState().user.user.userInfo?.username || ''
+            const isMyMessage = conversation.messageList[0].userId === myUsername
+            const unRead = !isMyMessage && conversation.messageList[0].seen === seenTypes.NOTSEEN
+            if (unRead) {
+                dispatch(MakeSeenRequest(conversation.messageList[0].userId, conversation.messageList[0].uid))
+            }
+        }
+    }, [conversation])
     const _onSendText = () => {
         if (text.length > 0) {
             const msg: PostingMessage = {
@@ -37,6 +52,14 @@ const Conversation = ({ route }: ConversationProps) => {
             setText('')
         }
     }
+    if (!!!conversation) return
+    <View style={{
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center'
+    }}></View>
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.navigationBar}>
@@ -101,8 +124,15 @@ const Conversation = ({ route }: ConversationProps) => {
                 style={styles.messagesContainer}>
                 <View style={styles.inboxContainer}>
                     <FlatList
+                        ref={_flatlistRef}
+                        onContentSizeChange={() => {
+                            _flatlistRef.current?.scrollToIndex({
+                                index: 0,
+                                animated: true,
+                            })
+                        }}
                         style={{
-                            height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 88 - 40
+                            height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 88 - 30,
                         }}
                         data={conversation.messageList || []}
                         renderItem={({ item, index }) =>
@@ -243,14 +273,15 @@ const styles = StyleSheet.create({
         paddingBottom: 20
     },
     inboxContainer: {
+        height: '100%',
         width: '100%',
         position: 'absolute',
-        zIndex: 1,
+        zIndex: -1,
         bottom: 20,
         left: 0
     },
     msgInputWrapper: {
-        marginTop: 20,
+        marginTop: 10,
         width: SCREEN_WIDTH - 30,
         marginHorizontal: 15,
         minHeight: 44,
@@ -313,6 +344,15 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 10,
+    },
+    seenLabel: {
+        position: 'absolute',
+        width: 50,
+        top: '105%',
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginRight: 10
     }
 })
 interface MessageItemProps {
@@ -321,18 +361,37 @@ interface MessageItemProps {
 }
 export const MessageItem = React.memo(({ item, index }: MessageItemProps) => {
     const myUsername = store.getState().user.user.userInfo?.username || ''
+    
+
     const isMyMessage = item.userId === myUsername
+    const lastSeen = index === 0 && isMyMessage && item.seen === seenTypes.SEEN
+
+    const _showEmojiOptions = () => {
+
+    }
     return (
         <TouchableOpacity
+            onLongPress={_showEmojiOptions}
+            delayLongPress={200}
             activeOpacity={1}
             style={{
                 ...styles.messageItem,
-                justifyContent: isMyMessage ? 'flex-end' : 'flex-start'
+                justifyContent: isMyMessage ? 'flex-end' : 'flex-start',
+                marginBottom: lastSeen ? 15 : 5
             }}>
             <View style={[styles.message, isMyMessage
                 ? styles.myMessage : styles.yourMessage]}>
                 <Text style={styles.msgText}>{item.text}</Text>
+                {lastSeen &&
+                    <View style={styles.seenLabel}>
+                        <Text style={{
+                            fontSize: 12,
+                            color: '#666'
+                        }}>Seen</Text>
+                    </View>
+                }
             </View>
+
         </TouchableOpacity>
     )
 })

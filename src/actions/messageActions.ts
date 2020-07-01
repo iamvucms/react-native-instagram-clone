@@ -22,31 +22,36 @@ export const TriggerMessageListenerRequest = ():
                 const messageCollection: Message[][] = []
                 const userIds: string[] = []
                 snap.forEach(targetUser => {
-                    const userId = revertFirebaseDatabasePathName(`${targetUser.key}`)
-                    if (userIds.indexOf(`${targetUser.key}`) < 0)
-                        userIds.push(userId)
+                    if (targetUser.key !== 'forceUpdate') {
+                        const userId = revertFirebaseDatabasePathName(`${targetUser.key}`)
+                        if (userIds.indexOf(`${targetUser.key}`) < 0)
+                            userIds.push(userId)
 
-                    const messages: Message[] = []
-
-                    targetUser.forEach(m => {
-                        messages.push({
-                            ...m.val(),
-                            userId,
-                        })
-                    })
-                    messageCollection.push(messages)
+                        const messages: Message[] = []
+                        if (snap.val() !== 'NULL') {
+                            targetUser.forEach(m => {
+                                messages.push({
+                                    ...m.val(),
+                                    userId,
+                                })
+                            })
+                        }
+                        messageCollection.push(messages)
+                    }
                 })
                 const fetchMyMessagesTasks = userIds.map((userId, index) => {
                     return new Promise((resolve, reject) => {
                         dbRef.ref(`/messages/${convertToFirebaseDatabasePathName(userId)}/${(myUsernamePath)}`)
                             .once('value', snap2 => {
                                 resolve()
-                                snap2.forEach(m => {
-                                    messageCollection[index].push({
-                                        ...m.val(),
-                                        userId: myUsername
+                                if (snap2.val() !== 'NULL') {
+                                    snap2.forEach(m => {
+                                        messageCollection[index].push({
+                                            ...m.val(),
+                                            userId: myUsername
+                                        })
                                     })
-                                })
+                                }
                                 messageCollection[index].sort((a, b) => b.create_at - a.create_at)
                             })
                     })
@@ -56,7 +61,6 @@ export const TriggerMessageListenerRequest = ():
                         dbRef.ref(`/online/${convertToFirebaseDatabasePathName(userId)}`)
                             .once('value', snap3 => {
                                 resolve(snap3.val() as OnlineStatus)
-
                             })
                     })
                 })
@@ -87,7 +91,7 @@ export const TriggerMessageListenerRequest = ():
                         }
                     })
                     collection.sort((a, b) =>
-                        b.messageList[0].create_at - a.messageList[0].create_at)
+                        (b.messageList.length > 0 ? b.messageList[0].create_at : 0) - (a.messageList.length > 0 ? a.messageList[0].create_at : 0))
                     dispatch(TriggerMessageListenerSuccess(collection))
                 })
 
@@ -153,6 +157,58 @@ export const CreateMessageRequest = (message: PostingMessage, targetUsername: st
                     dispatch(TriggerMessageListenerSuccess(newExtraList))
                 })
             }
+        } catch (e) {
+            console.warn(e)
+            dispatch(TriggerMessageListenerFailure())
+        }
+    }
+}
+export const MakeSeenRequest = (targetUsername: string, msgUid: number):
+    ThunkAction<Promise<void>, {}, {}, MessageAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, MessageAction>) => {
+        try {
+            const targetUsernamePath = convertToFirebaseDatabasePathName(targetUsername)
+            const myUsername = store.getState().user.user.userInfo?.username || ''
+            const myUsernamePath = convertToFirebaseDatabasePathName(
+                myUsername)
+            const dbRef = database()
+            dbRef.ref(`/messages/${myUsernamePath}/${targetUsernamePath}/${msgUid}`)
+                .update({
+                    seen: seenTypes.SEEN
+                })
+            dbRef.ref(`/messages/${targetUsernamePath}/forceUpdate`).set(Math.random())
+            const extraMsg = store.getState().messages.find(x => x.ownUser.username === targetUsername)
+            if (extraMsg) {
+                const msg = extraMsg.messageList.find(x => x.uid === msgUid)
+                if (msg) {
+                    msg.seen = 1
+                    dispatch(TriggerMessageListenerSuccess([...store.getState().messages]))
+                } else dispatch(TriggerMessageListenerFailure())
+            } else dispatch(TriggerMessageListenerFailure())
+        } catch (e) {
+            console.warn(e)
+            dispatch(TriggerMessageListenerFailure())
+        }
+    }
+}
+export const CreateEmptyConversationRequest = (targetUsername: string):
+    ThunkAction<Promise<void>, {}, {}, MessageAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, MessageAction>) => {
+        try {
+            const targetUsernamePath = convertToFirebaseDatabasePathName(targetUsername)
+            const myUsername = store.getState().user.user.userInfo?.username || ''
+            const myUsernamePath = convertToFirebaseDatabasePathName(
+                myUsername)
+            const dbRef = database()
+            const ref = firestore()
+            const rq = await ref.collection('users').doc(`${targetUsername}`).get()
+            if (rq.exists) {
+                const targetUserData: ProfileX = rq.data() || {}
+                dbRef.ref(`/ messages / ${targetUsernamePath} / ${myUsernamePath}`)
+                    .set('NULL')
+                dbRef.ref(`/ messages / ${myUsernamePath} / ${targetUsernamePath}`)
+                    .set('NULL')
+            } else dispatch(TriggerMessageListenerFailure())
         } catch (e) {
             console.warn(e)
             dispatch(TriggerMessageListenerFailure())

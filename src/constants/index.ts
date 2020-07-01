@@ -6,6 +6,7 @@ import { Dimensions } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import SettingComponents from '../screens/Home/Account/Setting';
 import { defaultUserState } from '../reducers/userReducer';
+import { convertToFirebaseDatabasePathName } from '../utils';
 const firebaseConfig = {
     apiKey: "AIzaSyATgIePHiOXnqlzUN4rRyyaPw4CTWH7yWA",
     authDomain: "vucms-7f6fa.firebaseapp.com",
@@ -27,14 +28,20 @@ firebase.initializeApp(firebaseConfig)
 //Add default Setting
 // firebase.firestore().collection('users').get().then(docs => {
 //     docs.forEach(doc => {
-//         if (doc.data().username !== 'vucms') {
-//             doc.ref.update({
-//                 notificationSetting: defaultUserState.setting?.notification,
-//                 privacySetting: defaultUserState.setting?.privacy,
-//             })
+// if (doc.data().username !== 'vucms') {
+// firebase.database().ref('/online/' + convertToFirebaseDatabasePathName(doc.data().username)).set({
+//     status: [0, 1][Math.floor(Math.random() * 2)],
+//     last_online: new Date().getTime()
+// })
+// doc.ref.update({
+//     notificationSetting: defaultUserState.setting?.notification,
+//     privacySetting: defaultUserState.setting?.privacy,
+// })
 //         }
 //     })
 // })
+//Add online status
+
 //Add Keyword
 // firebase.firestore().collection('users').get().then(x => {
 //     x.docs.map(d => {

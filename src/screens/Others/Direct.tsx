@@ -17,7 +17,7 @@ import { seenTypes } from '../../reducers/notificationReducer'
 import { timestampToString } from '../../utils'
 const Direct = () => {
     const dispatch = useDispatch()
-    const messages = useSelector(state => state.messages)
+    const messages = useSelector(state => state.messages).filter(x => x.messageList.length > 0)
     const myUsername = store.getState().user.user.userInfo?.username
     const focused = useIsFocused()
     const [query, setQuery] = useState<string>('')
@@ -277,6 +277,7 @@ interface UserMessageItemProps {
 export const UserMessageItem = React.memo(({ item }: UserMessageItemProps) => {
     const myUsername = store.getState().user.user.userInfo?.username || ''
     const isMyMessage = item.messageList[0].userId === myUsername
+    const unRead = !isMyMessage && item.messageList[0].seen === seenTypes.NOTSEEN
     const _onViewConversation = () => {
         navigate('Conversation', {
             username: item.ownUser.username
@@ -310,12 +311,12 @@ export const UserMessageItem = React.memo(({ item }: UserMessageItemProps) => {
                                 numberOfLines={1}
                                 style={{
                                     maxWidth: SCREEN_WIDTH - 30 - 150,
-                                    fontWeight: (!isMyMessage && item.messageList[0].seen === seenTypes.NOTSEEN) ? '600' : '400',
-                                    color: (!isMyMessage && item.messageList[0].seen === seenTypes.NOTSEEN) ? '#000' : '#666'
+                                    fontWeight: unRead ? '600' : '400',
+                                    color: unRead ? '#000' : '#666'
                                 }}>{item.messageList[0].text}</Text>
                             <Text style={{
-                                fontWeight: (!isMyMessage && item.messageList[0].seen === seenTypes.NOTSEEN) ? '600' : '400',
-                                color: (!isMyMessage && item.messageList[0].seen === seenTypes.NOTSEEN) ? '#000' : '#666'
+                                fontWeight: unRead ? '600' : '400',
+                                color: unRead ? '#000' : '#666'
                             }}> • {timestampToString(item.messageList[0].create_at)}</Text>
                         </View>
                     </View>
