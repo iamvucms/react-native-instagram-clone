@@ -33,6 +33,7 @@ import { MapBoxAddress } from '../utils';
 import { navigationRef } from './rootNavigation';
 import RootTab from './RootTab';
 import Conversation from '../screens/Others/Direct/Conversation'
+import ImageFullView from '../screens/Others/Direct/ImageFullView';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -94,9 +95,19 @@ export type SuperRootStackParamList = {
     Location: undefined,
     AccountIndex: undefined,
     ProfileXFollow: undefined,
-    StoryTaker: undefined,
+    StoryTaker: {
+        sendToDirect?: boolean,
+        username?: string
+    },
     Conversation: {
         username: string
+    },
+    ImageFullView: {
+        pX: number,
+        pY: number,
+        pH: number,
+        pW: number,
+        uri: string
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -177,6 +188,10 @@ const index = (): JSX.Element => {
                     ...TransitionPresets.ModalTransition,
                 }} name="StoryTaker" component={StoryTaker} />
                 <RootStack.Screen name="Conversation" component={Conversation} />
+                <RootStack.Screen options={{
+                    cardStyle: { backgroundColor: 'transparent' },
+                    animationEnabled: false
+                }} name="ImageFullView" component={ImageFullView} />
             </RootStack.Navigator>
         </NavigationContainer>
     )

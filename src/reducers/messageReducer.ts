@@ -15,6 +15,14 @@ export const messagesTypes = {
     POST: 4,
     ADDRESS: 5
 }
+export const emojiTypes = {
+    LOVE: 1,
+    HAHA: 2,
+    WOW: 3,
+    SAD: 4,
+    ANGRY: 5,
+    LIKE: 6
+}
 export const messagesActionTypes = {
     TRIGGER_MESSAGES_LISTENER_REQUEST: 'TRIGGER_MESSAGES_LISTENER_REQUEST',
     TRIGGER_MESSAGES_LISTENER_SUCCESS: 'TRIGGER_MESSAGES_LISTENER_SUCCESS',
@@ -27,11 +35,16 @@ export type OnlineStatus = {
 export type Message = {
     userId: string,
     uid: number,
-    type: 1 | 2 | 3 | 4 | 5,
+    type: number,
     text?: string,
     superImageId?: number,
+    sourceUri?: string,
     postId?: number,
     address_id?: number,
+    width?: number,
+    height?: number,
+    ownEmoji?: number,
+    yourEmoji?: number
     seenAt?: number,
     seen: 0 | 1,
     create_at: number,
@@ -42,11 +55,17 @@ export type ExtraMessage = {
     online: OnlineStatus
 }
 export type PostingMessage = {
-    type: 1 | 2 | 3 | 4 | 5,
+    uid?: number,
+    type: number,
     text?: string,
     superImageId?: number,
     postId?: number,
+    sourceUri?: string,
+    width?: number,
+    height?: number,
     address_id?: number,
+    ownEmoji?: number,
+    yourEmoji?: number
     seen: 0,
     create_at: number,
 }

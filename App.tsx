@@ -30,15 +30,15 @@ const App = () => {
     clearInterval(ref.current.itv)
     if (myUsername) {
       //limit functions quota
-      ref.current.itv = setInterval(() => {
-        if (AppState.currentState === 'active') {
-          database().ref(`/online/${convertToFirebaseDatabasePathName(myUsername)}`)
-            .update({
-              last_online: new Date().getTime(),
-              status: 1
-            })
-        }
-      }, 15000)
+      // ref.current.itv = setInterval(() => {
+      //   if (AppState.currentState === 'active') {
+      //     database().ref(`/online/${convertToFirebaseDatabasePathName(myUsername)}`)
+      //       .update({
+      //         last_online: new Date().getTime(),
+      //         status: 1
+      //       })
+      //   }
+      // }, 15000)
     }
   }, [])
   return (

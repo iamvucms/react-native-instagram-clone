@@ -1,18 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Image, KeyboardAvoidingView, FlatList, TextInput } from 'react-native'
+import { StyleSheet, Animated, Text, View, SafeAreaView, TouchableOpacity, Image, KeyboardAvoidingView, FlatList, TextInput } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import FastImage from 'react-native-fast-image'
 import { useSelector } from '../../../reducers'
 import { RouteProp } from '@react-navigation/native'
 import { SuperRootStackParamList } from '../../../navigations'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { onlineTypes, Message, PostingMessage, seenTypes, messagesTypes } from '../../../reducers/messageReducer'
+import { onlineTypes, Message, PostingMessage, seenTypes, messagesTypes, emojiTypes } from '../../../reducers/messageReducer'
 import { goBack, navigate } from '../../../navigations/rootNavigation'
-import { timestampToString } from '../../../utils'
+import { timestampToString, uriToBlob } from '../../../utils'
 import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../constants'
 import { store } from '../../../store'
 import { useDispatch } from 'react-redux'
-import { CreateMessageRequest, MakeSeenRequest, CreateEmptyConversationRequest } from '../../../actions/messageActions'
+import { CreateMessageRequest, MakeSeenRequest, CreateEmptyConversationRequest, AddEmoijToMessageRequest } from '../../../actions/messageActions'
+import { ProfileX } from '../../../reducers/profileXReducer'
+import CameraRoll from '@react-native-community/cameraroll'
+import { storage } from 'firebase'
+import { date } from 'yup'
+import ScaleImage from '../../../components/ScaleImage'
+import MessageItem from '../../../components/MessageItem'
 type ConversationRouteProp = RouteProp<SuperRootStackParamList, 'Conversation'>
 
 
@@ -21,11 +27,38 @@ type ConversationProps = {
 }
 const Conversation = ({ route }: ConversationProps) => {
     const dispatch = useDispatch()
+    const myUsername = store.getState().user.user.userInfo?.username || ''
     const targetUsername = route.params.username
     const conversation = useSelector(state => state.messages.filter(group => group.ownUser.username === targetUsername)[0])
     const [typing, setTyping] = useState<boolean>(false)
+    const [uploadingImage, setUploadingImage] = useState<boolean>(false)
     const [text, setText] = useState<string>('')
+    const [page, setPage] = useState<number>(1)
+    const [groups, setGroups] = useState<string[]>([])
+    const [selectedPhotos, setSelectedPhotos] = useState<number[]>([])
+    const [photos, setPhotos] = useState<CameraRoll.PhotoIdentifier[]>([])
+    const [selectedIndex, setSelectedIndex] = useState<number>(-1)
+    const [selectedGroupIndex, setSelectedGroupIndex] = useState<number>(-1)
     const _flatlistRef = useRef<FlatList>(null)
+    const _galleryAnim = React.useMemo(() => new Animated.Value(0), [])
+    const _emojiBarAnimX = React.useMemo(() => new Animated.Value(0), [])
+    const _emojiBarAnimY = React.useMemo(() => new Animated.Value(0), [])
+    const _emojiBarAnimRatio = React.useMemo(() => new Animated.Value(0), [])
+    const [selectedEmoijTargetIndex, setSelectedEmoijTargetIndex] = useState<number>(-1)
+    const [showGallery, setShowGallery] = useState<boolean>(false)
+    const ref = useRef<{ text: string }>({ text: '' })
+
+    useEffect(() => {
+        CameraRoll.getPhotos({ assetType: 'Photos', first: 1000 })
+            .then(result => {
+                const photos = result.edges
+                const groupList = Array.from(new Set(photos.map(photo => photo.node.group_name)))
+                setGroups(groupList)
+                if (groupList.length > 0) setSelectedGroupIndex(0)
+            })
+        return () => {
+        }
+    }, [])
     useEffect(() => {
         if (!!!conversation) {
             dispatch(CreateEmptyConversationRequest(targetUsername))
@@ -40,6 +73,20 @@ const Conversation = ({ route }: ConversationProps) => {
             }
         }
     }, [conversation])
+    useEffect(() => {
+        if (selectedGroupIndex > -1) {
+            CameraRoll.getPhotos({
+                assetType: 'Photos',
+                first: 9 * page,
+                groupName: groups[selectedGroupIndex]
+            })
+                .then(result => {
+                    const photos = result.edges
+                    setPhotos(photos)
+                    if (photos.length > 0 && selectedIndex < 0) setSelectedIndex(0)
+                })
+        }
+    }, [selectedGroupIndex, page])
     const _onSendText = () => {
         if (text.length > 0) {
             const msg: PostingMessage = {
@@ -52,16 +99,170 @@ const Conversation = ({ route }: ConversationProps) => {
             setText('')
         }
     }
-    if (!!!conversation) return
-    <View style={{
-        width: '100%',
-        height: '100%',
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center'
-    }}></View>
+    const _onShowGallery = () => {
+        ref.current.text = text
+        setText('')
+        Animated.spring(_galleryAnim, {
+            toValue: MAX_GALLERY_HEIGHT,
+            useNativeDriver: true
+        }).start()
+        setShowGallery(true)
+    }
+    const _onHideGallery = () => {
+        setText(ref.current.text)
+        Animated.spring(_galleryAnim, {
+            toValue: 0,
+            useNativeDriver: true
+        }).start()
+        setShowGallery(false)
+    }
+    const _onMsgInputFocus = () => {
+        setTyping(true)
+    }
+    const _onLoadmore = () => {
+        setPage(page + 1)
+    }
+    const _onSelectImage = (index: number) => {
+        const position = selectedPhotos.indexOf(index)
+        if (position > -1) {
+            const temp = [...selectedPhotos]
+            temp.splice(position, 1)
+            setSelectedPhotos(temp)
+        } else {
+            const temp = [...selectedPhotos]
+            temp.push(index)
+            setSelectedPhotos(temp)
+        }
+    }
+    const _onUploadImage = async () => {
+        setUploadingImage(true)
+        if (selectedPhotos.length > 0) {
+            const timestamp = new Date().getTime()
+            const uploadTasks: Promise<string>[] = selectedPhotos.map(async index => {
+                const img = photos[index].node.image
+                const extension = img.filename.split('.').pop()?.toLowerCase()
+                const blob = await uriToBlob(img.uri)
+                const rq = await storage()
+                    .ref(`messages/${myUsername}/${new Date().getTime() + Math.random()}.${extension}`)
+                    .put(blob as Blob, {
+                        contentType: `image/${extension}`
+                    })
+                const downloadUri = await rq.ref.getDownloadURL()
+                return downloadUri
+            })
+            Promise.all(uploadTasks).then(rs => {
+                const sendingTask = rs.map(async (uri, index) => {
+                    const message: PostingMessage = {
+                        uid: timestamp + index,
+                        create_at: timestamp,
+                        type: messagesTypes.IMAGE,
+                        sourceUri: uri,
+                        seen: 0,
+                        width: photos[index].node.image.width,
+                        height: photos[index].node.image.height,
+                    }
+                    dispatch(CreateMessageRequest(message, targetUsername))
+                })
+                Promise.all(sendingTask).then(() => {
+                    setUploadingImage(false)
+                    _onHideGallery()
+                    setSelectedPhotos([])
+                })
+            })
+        }
+    }
+    const _onShowEmojiSelection = React.useCallback((px: number, py: number, index: number) => {
+        setSelectedEmoijTargetIndex(index)
+        _emojiBarAnimY.setValue(py - 50)
+        if (px > SCREEN_WIDTH / 2) {
+            _emojiBarAnimX.setValue(SCREEN_WIDTH - 15 - EMOJI_SELECTION_BAR_WIDTH)
+        } else _emojiBarAnimX.setValue(15)
+        Animated.spring(_emojiBarAnimRatio, {
+            useNativeDriver: true,
+            toValue: 1
+        }).start()
+    }, [])
+    const _onHideEmojiSelection = () => {
+        Animated.timing(_emojiBarAnimRatio, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true
+        }).start(() => setSelectedEmoijTargetIndex(-1))
+    }
+    const _onEmojiSelect = (emojiType:
+        'LOVE' | 'HAHA' | 'WOW' | 'SAD' | 'ANGRY' | 'LIKE') => {
+        _onHideEmojiSelection()
+        const emoji = emojiTypes[emojiType]
+        dispatch(AddEmoijToMessageRequest(targetUsername,
+            conversation.messageList[selectedEmoijTargetIndex].uid, emoji))
+    }
+    if (!!!conversation) return (
+        <View style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#fff',
+            justifyContent: 'center',
+            alignItems: 'center'
+        }}></View>
+    )
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
+            {selectedEmoijTargetIndex > -1 &&
+                <TouchableOpacity
+                    style={{
+                        width: SCREEN_WIDTH,
+                        height: SCREEN_HEIGHT,
+                        position: 'absolute',
+                        zIndex: 10,
+                        top: 0,
+                        left: 0
+                    }}
+                    onPress={_onHideEmojiSelection}
+                    activeOpacity={1}>
+                    <Animated.View style={{
+                        ...styles.emojiSelectionBar,
+                        transform: [{
+                            translateY: _emojiBarAnimY
+                        }, {
+                            translateX: _emojiBarAnimX
+                        }, {
+                            scale: _emojiBarAnimRatio
+                        }
+                        ]
+                    }}>
+                        <TouchableOpacity
+                            onPress={_onEmojiSelect.bind(null, 'LOVE')}
+                            style={styles.btnEmoji}>
+                            <Text style={styles.emoji}>❤️</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={_onEmojiSelect.bind(null, 'HAHA')}
+                            style={styles.btnEmoji}>
+                            <Text style={styles.emoji}>😂</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={_onEmojiSelect.bind(null, 'WOW')}
+                            style={styles.btnEmoji}>
+                            <Text style={styles.emoji}>😮</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={_onEmojiSelect.bind(null, 'SAD')}
+                            style={styles.btnEmoji}>
+                            <Text style={styles.emoji}>😢</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={_onEmojiSelect.bind(null, 'ANGRY')}
+                            style={styles.btnEmoji}>
+                            <Text style={styles.emoji}>😡</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={_onEmojiSelect.bind(null, 'LIKE')}
+                            style={styles.btnEmoji}>
+                            <Text style={styles.emoji}>👍</Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+                </TouchableOpacity>
+            }
             <View style={styles.navigationBar}>
                 <View style={{
                     flexDirection: 'row',
@@ -122,27 +323,43 @@ const Conversation = ({ route }: ConversationProps) => {
             <KeyboardAvoidingView
                 behavior="height"
                 style={styles.messagesContainer}>
-                <View style={styles.inboxContainer}>
+                <Animated.View style={{
+                    ...styles.inboxContainer,
+                    height: showGallery ? SCREEN_HEIGHT - STATUS_BAR_HEIGHT - MAX_GALLERY_HEIGHT : '100%',
+                    transform: [{
+                        translateY: Animated.multiply(-1, Animated.subtract(_galleryAnim, Animated.multiply(64, Animated.divide(_galleryAnim, MAX_GALLERY_HEIGHT))))
+                    }]
+                }}>
                     <FlatList
                         ref={_flatlistRef}
                         onContentSizeChange={() => {
-                            _flatlistRef.current?.scrollToIndex({
-                                index: 0,
-                                animated: true,
-                            })
+                            if (conversation.messageList.length > 0) {
+                                _flatlistRef.current?.scrollToIndex({
+                                    index: 0,
+                                    animated: true,
+                                })
+                            }
                         }}
                         style={{
                             height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 88 - 30,
                         }}
                         data={conversation.messageList || []}
                         renderItem={({ item, index }) =>
-                            <MessageItem {...{ item, index }} />
+                            <MessageItem {...{
+                                item, index,
+                                owner: conversation.ownUser,
+                                showMsgEmojiSelection: _onShowEmojiSelection
+                            }} />
                         }
                         keyExtractor={(__, index) => `${index}`}
                         inverted
                     />
                     <View style={styles.msgInputWrapper}>
                         <TouchableOpacity
+                            onPress={() => navigate('StoryTaker', {
+                                sendToDirect: true,
+                                username: conversation.ownUser.username
+                            })}
                             activeOpacity={0.8}
                             style={styles.btnCamera}>
                             <Image style={{
@@ -154,7 +371,7 @@ const Conversation = ({ route }: ConversationProps) => {
                             value={text}
                             onChangeText={setText}
                             multiline={true}
-                            onFocus={setTyping.bind(null, true)}
+                            onFocus={_onMsgInputFocus}
                             onBlur={setTyping.bind(null, false)}
                             style={{
                                 ...styles.msgInput,
@@ -177,7 +394,9 @@ const Conversation = ({ route }: ConversationProps) => {
                                 <>
                                     {text.length === 0 &&
                                         <View style={styles.msgRightOptions}>
-                                            <TouchableOpacity style={styles.btnNavigation}>
+                                            <TouchableOpacity
+                                                onPress={_onShowGallery}
+                                                style={styles.btnNavigation}>
                                                 <Image style={{
                                                     width: 20,
                                                     height: 20
@@ -194,20 +413,147 @@ const Conversation = ({ route }: ConversationProps) => {
                                 </>
                             )}
                     </View>
-                </View>
+                </Animated.View>
+                <Animated.View style={{
+                    ...styles.galleryWrapper,
+                    transform: [{
+                        translateY: Animated.subtract(MAX_GALLERY_HEIGHT, _galleryAnim)
+                    }],
+                    opacity: showGallery ? 1 : 0
+                }}>
+                    {uploadingImage &&
+                        <View style={styles.uploadingImageMask}>
+                            <View style={styles.uploadingNotification}>
+
+                            </View>
+                        </View>
+                    }
+                    <View style={styles.navigationGalleryBar}>
+                        <TouchableOpacity
+                            onPress={_onHideGallery}
+                            style={styles.btnNavigation}>
+                            <Text style={{
+                                fontSize: 24
+                            }}>✕</Text>
+                            <View style={{
+                                position: 'absolute',
+                                left: '100%',
+                                height: '50%',
+                                backgroundColor: '#999',
+                                borderRadius: 2,
+                                width: 2,
+                            }} />
+                        </TouchableOpacity>
+                        <Text style={{
+                            fontWeight: '500',
+                            fontSize: 16,
+                            paddingHorizontal: 15,
+                        }}>Gallery</Text>
+                    </View>
+                    <FlatList
+                        numColumns={3}
+                        data={photos}
+                        renderItem={({ item, index }) =>
+                            <TouchableOpacity
+                                onPress={() => _onSelectImage(index)}
+                                activeOpacity={1}
+                                style={{
+                                    ...styles.imageItem,
+                                    marginHorizontal: (index - 1) % 3 === 0 ? 2.5 : 0,
+                                    marginTop: index < 3 ? 0 : 1.25
+                                }}>
+                                <Image
+                                    style={{
+                                        width: '100%',
+                                        height: '100%'
+                                    }}
+                                    resizeMode="cover"
+                                    source={{
+                                        uri: item.node.image.uri
+                                    }}
+                                />
+                                <View style={{
+                                    position: 'absolute',
+                                    right: 7.5,
+                                    top: 7.5,
+                                    height: 24,
+                                    width: 24,
+                                    borderRadius: 24,
+                                    borderColor: '#fff',
+                                    borderWidth: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    zIndex: 1,
+                                    backgroundColor: selectedPhotos.indexOf(index) > -1
+                                        ? '#318bfb' : 'rgba(0,0,0,0.3)'
+                                }}>
+                                    {selectedPhotos.indexOf(index) > -1 &&
+                                        <Text style={{
+                                            color: '#fff'
+                                        }}>
+                                            {selectedPhotos.indexOf(index) + 1}
+                                        </Text>
+                                    }
+                                </View>
+                            </TouchableOpacity>
+                        }
+                        keyExtractor={(__, index) => `${index}`}
+                        onEndReached={_onLoadmore}
+                    />
+                    {selectedPhotos.length > 0 &&
+                        <TouchableOpacity
+                            onPress={_onUploadImage}
+                            activeOpacity={0.8}
+                            style={styles.btnUploadImage}>
+                            <Icon name="arrow-up" size={30} color="#318bfb" />
+                        </TouchableOpacity>
+                    }
+                </Animated.View>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     )
 }
 
 export default Conversation
-
+const MAX_GALLERY_HEIGHT = SCREEN_WIDTH + 44
+const EMOJI_SELECTION_BAR_WIDTH = 44 * 6 + 15
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#fff'
     },
-    navigationBar: {
+    emojiSelectionBar: {
+        position: 'absolute',
+        zIndex: 999,
+        backgroundColor: '#fff',
+        top: 0,
+        left: 0,
         height: 44,
+        flexDirection: 'row',
+        alignItems: 'center',
+        shadowColor: "#000",
+        borderRadius: 44,
+        paddingHorizontal: 7.5,
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.30,
+        shadowRadius: 4.65,
+
+        elevation: 8,
+    },
+    btnEmoji: {
+        width: 44,
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    emoji: {
+        fontSize: 30
+    },
+    navigationBar: {
+        height: 44 + STATUS_BAR_HEIGHT,
+        paddingTop: STATUS_BAR_HEIGHT,
         width: '100%',
         flexDirection: 'row',
         alignItems: 'center',
@@ -272,6 +618,67 @@ const styles = StyleSheet.create({
         height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44,
         paddingBottom: 20
     },
+    galleryWrapper: {
+        borderTopColor: '#ddd',
+        borderTopWidth: 0.5,
+        height: MAX_GALLERY_HEIGHT,
+        width: '100%',
+        position: 'absolute',
+        backgroundColor: '#000',
+        bottom: 0,
+        zIndex: 1,
+        left: 0
+    },
+    uploadingImageMask: {
+        width: '100%',
+        height: '100%',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        zIndex: 1,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    uploadingNotification: {
+        backgroundColor: '#fff',
+        padding: 15,
+        paddingVertical: 10,
+        flexDirection: 'row'
+    },
+    btnUploadImage: {
+        position: 'absolute',
+        height: 50,
+        width: 50,
+        borderRadius: 50,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        bottom: 50,
+        left: (SCREEN_WIDTH - 50) / 2,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.5,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    navigationGalleryBar: {
+        backgroundColor: '#fff',
+        flexDirection: 'row',
+        height: 44,
+        alignItems: 'center',
+        borderBottomColor: '#ddd',
+        borderBottomWidth: 1,
+    },
+    imageItem: {
+        width: (SCREEN_WIDTH - 5) / 3,
+        height: (SCREEN_WIDTH - 5) / 3,
+        marginVertical: 1.25,
+        backgroundColor: 'red'
+    },
     inboxContainer: {
         height: '100%',
         width: '100%',
@@ -321,77 +728,4 @@ const styles = StyleSheet.create({
         bottom: 0,
         marginRight: 4
     },
-    messageItem: {
-        width: '100%',
-        flexDirection: 'row',
-        marginVertical: 5
-    },
-    message: {
-        paddingHorizontal: 15,
-        borderColor: '#ddd',
-        borderWidth: 1,
-        marginHorizontal: 15,
-        borderRadius: 40,
-        maxWidth: SCREEN_WIDTH * 0.6
-    },
-    myMessage: {
-        backgroundColor: '#ddd'
-    },
-    yourMessage: {
-
-    },
-    msgText: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 10,
-    },
-    seenLabel: {
-        position: 'absolute',
-        width: 50,
-        top: '105%',
-        right: 0,
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        marginRight: 10
-    }
-})
-interface MessageItemProps {
-    item: Message,
-    index: number
-}
-export const MessageItem = React.memo(({ item, index }: MessageItemProps) => {
-    const myUsername = store.getState().user.user.userInfo?.username || ''
-    
-
-    const isMyMessage = item.userId === myUsername
-    const lastSeen = index === 0 && isMyMessage && item.seen === seenTypes.SEEN
-
-    const _showEmojiOptions = () => {
-
-    }
-    return (
-        <TouchableOpacity
-            onLongPress={_showEmojiOptions}
-            delayLongPress={200}
-            activeOpacity={1}
-            style={{
-                ...styles.messageItem,
-                justifyContent: isMyMessage ? 'flex-end' : 'flex-start',
-                marginBottom: lastSeen ? 15 : 5
-            }}>
-            <View style={[styles.message, isMyMessage
-                ? styles.myMessage : styles.yourMessage]}>
-                <Text style={styles.msgText}>{item.text}</Text>
-                {lastSeen &&
-                    <View style={styles.seenLabel}>
-                        <Text style={{
-                            fontSize: 12,
-                            color: '#666'
-                        }}>Seen</Text>
-                    </View>
-                }
-            </View>
-
-        </TouchableOpacity>
-    )
 })
