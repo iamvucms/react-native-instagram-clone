@@ -12,7 +12,7 @@ import { timestampToString, uriToBlob } from '../../../utils'
 import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../constants'
 import { store } from '../../../store'
 import { useDispatch } from 'react-redux'
-import { CreateMessageRequest, MakeSeenRequest, CreateEmptyConversationRequest, AddEmoijToMessageRequest } from '../../../actions/messageActions'
+import { CreateMessageRequest, MakeSeenRequest, CreateEmptyConversationRequest, AddEmoijToMessageRequest, RemoveEmoijToMessageRequest } from '../../../actions/messageActions'
 import { ProfileX } from '../../../reducers/profileXReducer'
 import CameraRoll from '@react-native-community/cameraroll'
 import { storage } from 'firebase'
@@ -44,9 +44,17 @@ const Conversation = ({ route }: ConversationProps) => {
     const _emojiBarAnimX = React.useMemo(() => new Animated.Value(0), [])
     const _emojiBarAnimY = React.useMemo(() => new Animated.Value(0), [])
     const _emojiBarAnimRatio = React.useMemo(() => new Animated.Value(0), [])
+    const _emojiPointAnimOffsetX = React.useMemo(() => new Animated.Value(0), [])
+    const _emojiPointAnimOpacity = React.useMemo(() => new Animated.Value(0), [])
     const [selectedEmoijTargetIndex, setSelectedEmoijTargetIndex] = useState<number>(-1)
     const [showGallery, setShowGallery] = useState<boolean>(false)
-    const ref = useRef<{ text: string }>({ text: '' })
+    const ref = useRef<{
+        text: string,
+        preventNextScrollToEnd: boolean
+    }>({
+        text: '',
+        preventNextScrollToEnd: false
+    })
 
     useEffect(() => {
         CameraRoll.getPhotos({ assetType: 'Photos', first: 1000 })
@@ -177,11 +185,25 @@ const Conversation = ({ route }: ConversationProps) => {
         if (px > SCREEN_WIDTH / 2) {
             _emojiBarAnimX.setValue(SCREEN_WIDTH - 15 - EMOJI_SELECTION_BAR_WIDTH)
         } else _emojiBarAnimX.setValue(15)
+        //show selected emoji
+        const targetMsg = conversation.messageList[index]
+        const isMyMessage = targetMsg.userId === myUsername
+        if (targetMsg.ownEmoji && isMyMessage) {
+            _emojiPointAnimOffsetX.setValue(7.5 + (targetMsg.ownEmoji - 1) * 44 + 22 - 1.5)
+        }
+        if (targetMsg.yourEmoji && !isMyMessage) {
+            _emojiPointAnimOffsetX.setValue(7.5 + (targetMsg.yourEmoji - 1) * 44 + 22 - 1.5)
+        }
+        if (!(targetMsg.ownEmoji && isMyMessage)
+            && !(targetMsg.yourEmoji && !isMyMessage)
+        ) _emojiPointAnimOpacity.setValue(0)
+        else _emojiPointAnimOpacity.setValue(1)
+        //end show selected emoji
         Animated.spring(_emojiBarAnimRatio, {
             useNativeDriver: true,
             toValue: 1
         }).start()
-    }, [])
+    }, [conversation.messageList])
     const _onHideEmojiSelection = () => {
         Animated.timing(_emojiBarAnimRatio, {
             toValue: 0,
@@ -191,10 +213,28 @@ const Conversation = ({ route }: ConversationProps) => {
     }
     const _onEmojiSelect = (emojiType:
         'LOVE' | 'HAHA' | 'WOW' | 'SAD' | 'ANGRY' | 'LIKE') => {
+        ref.current.preventNextScrollToEnd = true
         _onHideEmojiSelection()
         const emoji = emojiTypes[emojiType]
+        const targetMsg = conversation.messageList[selectedEmoijTargetIndex]
+        const isMyMessage = targetMsg.userId === myUsername
+        if (targetMsg.ownEmoji === emoji && isMyMessage
+            || targetMsg.yourEmoji === emoji && !isMyMessage) {
+            return dispatch(RemoveEmoijToMessageRequest(targetUsername, targetMsg.uid))
+        }
         dispatch(AddEmoijToMessageRequest(targetUsername,
-            conversation.messageList[selectedEmoijTargetIndex].uid, emoji))
+            targetMsg.uid, emoji))
+    }
+    const _onMessageBoxSizeChange = () => {
+        if (conversation.messageList.length > 0 && !ref.current.preventNextScrollToEnd) {
+            _flatlistRef.current?.scrollToIndex({
+                index: 0,
+                animated: true,
+            })
+        }
+        if (ref.current.preventNextScrollToEnd) {
+            ref.current.preventNextScrollToEnd = false
+        }
     }
     if (!!!conversation) return (
         <View style={{
@@ -230,6 +270,17 @@ const Conversation = ({ route }: ConversationProps) => {
                         }
                         ]
                     }}>
+                        {
+                            <Animated.View style={{
+                                ...styles.selectedEmojiPoint,
+                                opacity: _emojiPointAnimOpacity,
+                                transform: [
+                                    {
+                                        translateX: _emojiPointAnimOffsetX
+                                    }
+                                ]
+                            }} />
+                        }
                         <TouchableOpacity
                             onPress={_onEmojiSelect.bind(null, 'LOVE')}
                             style={styles.btnEmoji}>
@@ -332,14 +383,7 @@ const Conversation = ({ route }: ConversationProps) => {
                 }}>
                     <FlatList
                         ref={_flatlistRef}
-                        onContentSizeChange={() => {
-                            if (conversation.messageList.length > 0) {
-                                _flatlistRef.current?.scrollToIndex({
-                                    index: 0,
-                                    animated: true,
-                                })
-                            }
-                        }}
+                        onContentSizeChange={_onMessageBoxSizeChange}
                         style={{
                             height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 88 - 30,
                         }}
@@ -402,7 +446,13 @@ const Conversation = ({ route }: ConversationProps) => {
                                                     height: 20
                                                 }} source={require('../../../assets/icons/photo.png')} />
                                             </TouchableOpacity>
-                                            <TouchableOpacity style={styles.btnNavigation}>
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    navigate('EmojiOptions',{
+                                                        targetUsername
+                                                    })
+                                                }}
+                                                style={styles.btnNavigation}>
                                                 <Image style={{
                                                     width: 20,
                                                     height: 20
@@ -424,7 +474,7 @@ const Conversation = ({ route }: ConversationProps) => {
                     {uploadingImage &&
                         <View style={styles.uploadingImageMask}>
                             <View style={styles.uploadingNotification}>
-
+                                <Text>Uploading...</Text>
                             </View>
                         </View>
                     }
@@ -539,7 +589,6 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.30,
         shadowRadius: 4.65,
-
         elevation: 8,
     },
     btnEmoji: {
@@ -550,6 +599,14 @@ const styles = StyleSheet.create({
     },
     emoji: {
         fontSize: 30
+    },
+    selectedEmojiPoint: {
+        height: 3,
+        width: 3,
+        borderRadius: 3,
+        backgroundColor: '#666',
+        position: 'absolute',
+        bottom: 2
     },
     navigationBar: {
         height: 44 + STATUS_BAR_HEIGHT,
@@ -644,7 +701,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         padding: 15,
         paddingVertical: 10,
-        flexDirection: 'row'
+        flexDirection: 'row',
+        borderRadius: 5
     },
     btnUploadImage: {
         position: 'absolute',

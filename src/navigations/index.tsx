@@ -34,6 +34,7 @@ import { navigationRef } from './rootNavigation';
 import RootTab from './RootTab';
 import Conversation from '../screens/Others/Direct/Conversation'
 import ImageFullView from '../screens/Others/Direct/ImageFullView';
+import EmojiOptions from '../screens/Others/Direct/EmojiOptions';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -107,7 +108,13 @@ export type SuperRootStackParamList = {
         pY: number,
         pH: number,
         pW: number,
+        oH: number,
+        oW: number,
+        pScale: number,
         uri: string
+    },
+    EmojiOptions: {
+        targetUsername: string
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -175,6 +182,11 @@ const index = (): JSX.Element => {
                     gestureEnabled: true,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="StoryFullView" component={StoryFullView} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    gestureEnabled: true,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="EmojiOptions" component={EmojiOptions} />
                 <RootStack.Screen name="ProfileX" component={ProfileXScreen} />
                 <RootStack.Screen name="Hashtag" component={HashtagScreen} />
                 <RootStack.Screen name="Location" component={LocationScreen} />

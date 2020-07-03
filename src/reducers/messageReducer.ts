@@ -13,7 +13,8 @@ export const messagesTypes = {
     IMAGE: 2,
     SUPER_IMAGE: 3,
     POST: 4,
-    ADDRESS: 5
+    ADDRESS: 5,
+    EMOJI: 6
 }
 export const emojiTypes = {
     LOVE: 1,

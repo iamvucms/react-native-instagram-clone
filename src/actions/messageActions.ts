@@ -370,14 +370,41 @@ export const AddEmoijToMessageRequest = (targetUsername: string, msgId: number, 
                 if (msgIndex > -1) {
                     const msg = extraMsg.messageList[msgIndex]
                     if (msg.userId === targetUsername) {
-                        msg.yourEmoji = emoji
                         dbRef.ref(`/messages/${myUsernamePath}/${targetUsernamePath}/${msgId}/yourEmoji`)
                             .set(emoji)
 
                     } else if (msg.userId === myUsername) {
-                        msg.ownEmoji = emoji
                         dbRef.ref(`/messages/${targetUsernamePath}/${myUsernamePath}/${msgId}/ownEmoji`)
                             .set(emoji)
+                    }
+                } else dispatch(TriggerMessageListenerFailure())
+            } else dispatch(TriggerMessageListenerFailure())
+        } catch (e) {
+            console.warn(e)
+            dispatch(TriggerMessageListenerFailure())
+        }
+    }
+}
+export const RemoveEmoijToMessageRequest = (targetUsername: string, msgId: number):
+    ThunkAction<Promise<void>, {}, {}, MessageAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, MessageAction>) => {
+        try {
+            const targetUsernamePath = convertToFirebaseDatabasePathName(targetUsername)
+            const myUsername = store.getState().user.user.userInfo?.username || ''
+            const myUsernamePath = convertToFirebaseDatabasePathName(
+                myUsername)
+            const dbRef = database()
+            const extraMsgIndex = store.getState().messages.findIndex(x => x.ownUser.username === targetUsername)
+            if (extraMsgIndex > -1) {
+                const extraMsg = store.getState().messages[extraMsgIndex]
+                const msgIndex = extraMsg.messageList.findIndex(x => x.uid === msgId)
+                if (msgIndex > -1) {
+                    const msg = extraMsg.messageList[msgIndex]
+                    if (msg.userId === targetUsername) {
+                        dbRef.ref(`/messages/${myUsernamePath}/${targetUsernamePath}/${msgId}/yourEmoji`).remove()
+
+                    } else if (msg.userId === myUsername) {
+                        dbRef.ref(`/messages/${targetUsernamePath}/${myUsernamePath}/${msgId}/ownEmoji`).remove()
                     }
                 } else dispatch(TriggerMessageListenerFailure())
             } else dispatch(TriggerMessageListenerFailure())

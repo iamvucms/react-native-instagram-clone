@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { StyleSheet, Text, View, Animated, Image, TouchableOpacity, GestureResponderEvent } from 'react-native'
 import { seenTypes, Message, messagesTypes } from '../../reducers/messageReducer'
 import { store } from '../../store'
 import { ProfileX } from '../../reducers/profileXReducer'
 import FastImage from 'react-native-fast-image'
 import { SCREEN_WIDTH } from '../../constants'
+import { navigate } from '../../navigations/rootNavigation'
 
 interface MessageItemProps {
     item: Message,
@@ -15,6 +16,7 @@ interface MessageItemProps {
 const emoijList = ['❤️', '😂', '😮', '😢', '😡', '👍']
 const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemProps) => {
     const myUsername = store.getState().user.user.userInfo?.username || ''
+    const _imageRef = useRef<Image>(null)
     const _animRatio = React.useMemo(() => new Animated.Value(1), [])
     const isMyMessage = item.userId === myUsername
     const lastSeen = index === 0 && isMyMessage && item.seen === seenTypes.SEEN
@@ -39,7 +41,32 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
         })
     }
     const _onMessagePress = () => {
-
+        switch (item.type) {
+            case messagesTypes.TEXT:
+                break;
+            case messagesTypes.POST:
+                break
+            case messagesTypes.SUPER_IMAGE:
+                break;
+            case messagesTypes.ADDRESS:
+                break
+            case messagesTypes.IMAGE:
+                _imageRef.current?.measure((x, y, w, h, pX, pY) => {
+                    navigate('ImageFullView', {
+                        pH: (height || 0) * SCREEN_WIDTH * 0.4 / (width || 1),
+                        pW: SCREEN_WIDTH * 0.4,
+                        pX,
+                        pY,
+                        oH: item.height,
+                        oW: item.width,
+                        pScale: 0.4 * SCREEN_WIDTH / (item.width as number),
+                        uri: item.sourceUri
+                    })
+                })
+                break
+            default:
+                break;
+        }
     }
     let extraStyle = {}
     switch (item.type) {
@@ -57,6 +84,9 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
             break
         case messagesTypes.IMAGE:
             extraStyle = styles.imageMessage
+            break
+        case messagesTypes.EMOJI:
+            extraStyle = styles.emojiMessage
             break
         default:
             break;
@@ -81,8 +111,8 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
                     }}
                 />
             }
-            <Animated.View style={[styles.message, extraStyle, isMyMessage
-                ? styles.myMessage : styles.yourMessage, {
+            <Animated.View style={[styles.message, isMyMessage
+                ? styles.myMessage : styles.yourMessage, extraStyle, {
                 transform: [
                     {
                         scale: _animRatio
@@ -92,15 +122,22 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
                 {item.type === messagesTypes.TEXT &&
                     <Text style={styles.msgText}>{item.text}</Text>
                 }
+                {item.type === messagesTypes.EMOJI &&
+                    <Text style={{
+                        fontSize: 40
+                    }}>{item.text}</Text>
+                }
                 {item.type === messagesTypes.IMAGE &&
-                    <FastImage
+                    <Image
+                        ref={_imageRef}
                         style={{
                             borderRadius: 20,
                             width: SCREEN_WIDTH * 0.4,
                             height: (height || 0) * SCREEN_WIDTH * 0.4 / (width || 1)
                         }}
                         source={{
-                            uri: `${item.sourceUri}`
+                            uri: `${item.sourceUri}`,
+                            cache: 'default'
                         }}
                     />
                 }
@@ -155,6 +192,10 @@ const styles = StyleSheet.create({
 
     },
     imageMessage: {
+        borderWidth: 0
+    },
+    emojiMessage: {
+        backgroundColor: 'rgba(0,0,0,0)',
         borderWidth: 0
     },
     myMessage: {
