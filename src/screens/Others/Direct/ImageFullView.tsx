@@ -21,10 +21,9 @@ const ImageFullView = ({ route }: ImageFullViewProps) => {
         }
     }, [loadedImage])
     const _onAnimateImage = () => {
-        Animated.timing(_anim, {
+        Animated.spring(_anim, {
             toValue: 1,
             useNativeDriver: true,
-            duration: 400
         }).start()
     }
     const _onGoback = () => {
@@ -57,7 +56,10 @@ const ImageFullView = ({ route }: ImageFullViewProps) => {
                     left: 0,
                     width: oW,
                     height: oH,
-
+                    borderRadius: _anim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [20 / pScale, 0]
+                    }),
                     transform: [
                         {
                             translateX: _anim.interpolate({

@@ -42,6 +42,7 @@ const SearchResult = ({ query }: SearchResultProps) => {
                     data = rq.data() || {}
                 } else {
                     const rs = await searchLocation(item.address || '')
+                    console.warn(item)
                     if (rs.length > 0) {
                         data = rs[0]
                     }
@@ -80,6 +81,7 @@ const SearchResult = ({ query }: SearchResultProps) => {
                 const accountList: MixedProfileX[] = accounts.docs.map(x => x.data() || {})
                 const posts = await ref.collection('posts')
                     .where('address.keyword', 'array-contains', query).get()
+
                 const addressList: (MapBoxAddress & {
                     uid?: number
                 })[] = posts.docs.map(doc => {
@@ -88,8 +90,8 @@ const SearchResult = ({ query }: SearchResultProps) => {
                 })
                 const temp = [...addressList]
                 temp.map((x, index) => {
-                    let check = addressList.every(address => {
-                        if (address.id === x.id) return false
+                    let check = addressList.every((address, index2) => {
+                        if (address.id === x.id && index !== index2) return false
                         return true
                     })
                     if (!check) addressList.splice(index, 1)

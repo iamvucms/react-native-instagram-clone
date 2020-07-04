@@ -1,30 +1,34 @@
 import { RouteProp } from '@react-navigation/native'
-import React, { useRef, useState, useEffect } from 'react'
-import { Animated, Keyboard, LayoutChangeEvent, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, TextInput, TouchableWithoutFeedback, FlatList } from 'react-native'
+import { firestore } from 'firebase'
+import React, { useEffect, useRef, useState } from 'react'
+import { Animated, FlatList, Keyboard, LayoutChangeEvent, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import FastImage from 'react-native-fast-image'
 import { PanGestureHandler, PanGestureHandlerGestureEvent, State } from 'react-native-gesture-handler'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useDispatch } from 'react-redux'
+import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../constants'
 import { SuperRootStackParamList } from '../../navigations'
 import { goBack } from '../../navigations/rootNavigation'
+import { messagesTypes, PostingMessage } from '../../reducers/messageReducer'
 import { ExtraPost } from '../../reducers/postReducer'
-import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT, SCREEN_WIDTH } from '../../constants'
-import FastImage from 'react-native-fast-image'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { MapBoxAddress } from '../../utils'
 import { ProfileX } from '../../reducers/profileXReducer'
+import { store } from '../../store'
+import { MapBoxAddress } from '../../utils'
+import { CreateMessageRequest, UndoMyLastMessageRequest } from '../../actions/messageActions'
+import { useSelector } from '../../reducers'
 type ShareToDirectRouteProp = RouteProp<SuperRootStackParamList, 'ShareToDirect'>
 type ShareToDirectProps = {
     route: ShareToDirectRouteProp
 }
 const ShareToDirect = ({ route }: ShareToDirectProps) => {
-    const { item } = route.params
-    const type = 'center' in item ? 1 : 2
+    const shareItem = route.params.item
+    const type = 'center' in shareItem ? 1 : 2
     const [query, setQuery] = useState<string>('')
-    const [receiverList, setReceiverList] = useState<ProfileX[]>([
-        {
-            avatarURL: 'https://www.w3schools.com/w3css/img_lights.jpg',
-            fullname: 'Vucms',
-            username: 'vucms0202'
-        }
-    ])
+    const [showFull, setShowFull] = useState<boolean>(false)
+    const extraInfo = useSelector(state => state.user.extraInfo)
+    const myUsername = store.getState().user.user.userInfo?.username
+    const [suggestionlist, setSuggestionList] = useState<ProfileX[]>([])
+    const [receiverList, setReceiverList] = useState<ProfileX[]>([])
     const _bottomSheetOffsetY = React.useMemo(() => new Animated.Value(0), [])
     const _bottomSheetAnim = React.useMemo(() => new Animated.Value(0), [])
     const ref = useRef<{
@@ -34,6 +38,50 @@ const ShareToDirect = ({ route }: ShareToDirectProps) => {
         bottomSheetHeight: 0,
         preOffsetY: 0
     })
+    //Effect
+    useEffect(() => {
+        ; (async () => {
+            const ref = firestore()
+            const rq = await ref.collection('users').doc(`${myUsername}`).get()
+            const myUserInfo: ProfileX = rq.data() || {}
+            const currentFollowings = myUserInfo.followings || []
+            const currentCloseFriends = myUserInfo.privacySetting?.closeFriends?.closeFriends || []
+            const currentBlockAccounts = myUserInfo.privacySetting?.blockedAccounts?.blockedAccounts || []
+            const followings = extraInfo?.followings || []
+            const followers = extraInfo?.followers || []
+            const currentMsgUsers = store.getState().messages.map(x => x.ownUser.username) || []
+            const commonUsers = Array.from(
+                new Set(currentMsgUsers.concat(followers).concat(followings))
+            )
+            const fetchUserInfoTasks: Promise<ProfileX>[] = commonUsers.map(async usr => {
+                const rq2 = await ref.collection('users').doc(`${usr}`).get()
+                return rq2.data() || {}
+            })
+            const userInfoList = await Promise.all(fetchUserInfoTasks)
+            const filteredUserInfoList = userInfoList.filter(usr =>
+                currentBlockAccounts.indexOf(`${usr}`) < 0
+                && (usr.privacySetting?.blockedAccounts?.blockedAccounts || [])
+                    .indexOf(`${myUsername}`) < 0
+                && (usr.privacySetting?.accountPrivacy?.private === false
+                    || (usr.privacySetting?.accountPrivacy?.private === true
+                        &&
+                        currentFollowings.indexOf(`${usr}`) > 0
+                    )
+                )
+                && usr !== myUsername
+            )
+            setSuggestionList(filteredUserInfoList)
+        })()
+    }, [])
+    useEffect(() => {
+        if (query.length > 0) {
+            _searchUsers(query).then(userList => {
+                setReceiverList(userList)
+            })
+        } else setReceiverList([])
+    }, [query])
+
+
 
     const _onGestureEventHandler = ({ nativeEvent: {
         translationY
@@ -66,6 +114,7 @@ const ShareToDirect = ({ route }: ShareToDirectProps) => {
                         toValue: -SCREEN_HEIGHT * 0.4 + STATUS_BAR_HEIGHT,
                         useNativeDriver: true,
                     }).start()
+                    setShowFull(true)
                     ref.current.preOffsetY = -SCREEN_HEIGHT * 0.4 + STATUS_BAR_HEIGHT
                 } else {
                     Animated.timing(_bottomSheetAnim, {
@@ -77,6 +126,7 @@ const ShareToDirect = ({ route }: ShareToDirectProps) => {
                         toValue: 0,
                         useNativeDriver: true,
                     }).start()
+                    setShowFull(false)
                     ref.current.preOffsetY = 0
                     Keyboard.dismiss()
                 }
@@ -101,6 +151,7 @@ const ShareToDirect = ({ route }: ShareToDirectProps) => {
             duration: 200,
             useNativeDriver: true,
         }).start()
+        setShowFull(true)
         Animated.timing(_bottomSheetOffsetY, {
             duration: 200,
             toValue: -SCREEN_HEIGHT * 0.4 + STATUS_BAR_HEIGHT,
@@ -120,8 +171,40 @@ const ShareToDirect = ({ route }: ShareToDirectProps) => {
             useNativeDriver: true,
         }).start()
     }
-    const _onSend = (receiverIndex: number) => {
-
+    const _searchUsers = async (q: string): Promise<ProfileX[]> => {
+        const ref = firestore()
+        const rq = await ref.collection('users').doc(`${myUsername}`).get()
+        const myUserInfo: ProfileX = rq.data() || {}
+        const currentFollowings = myUserInfo.followings || []
+        const currentCloseFriends = myUserInfo.privacySetting?.closeFriends?.closeFriends || []
+        const currentBlockAccounts = myUserInfo.privacySetting?.blockedAccounts?.blockedAccounts || []
+        const rq2 = await ref.collection('users')
+            .where('keyword', 'array-contains', q.trim().toLowerCase())
+            .limit(100)
+            .get()
+        let resultList: ProfileX[] = rq2.docs.map(doc => doc.data() || {})
+        resultList = resultList.filter(usr =>
+            (usr.privacySetting?.blockedAccounts?.blockedAccounts || [])
+                .indexOf(`${myUsername}`) < 0
+            && usr.username !== myUsername
+            && currentBlockAccounts.indexOf(`${usr.username}`) < 0
+        )
+        resultList.sort((a, b) => {
+            let aScore = 0
+            let bScore = 0
+            if (currentCloseFriends.indexOf(`${a.username}`) > -1) {
+                aScore = 2
+            } else if (currentFollowings.indexOf(`${a.username}`) > -1) {
+                aScore = 1
+            }
+            if (currentCloseFriends.indexOf(`${b.username}`) > -1) {
+                bScore = 2
+            } else if (currentFollowings.indexOf(`${b.username}`) > -1) {
+                bScore = 1
+            }
+            return bScore - aScore
+        })
+        return resultList
     }
     return (
         <SafeAreaView>
@@ -173,8 +256,8 @@ const ShareToDirect = ({ route }: ShareToDirectProps) => {
                         }} />
                         <View style={styles.messageInputWrapper}>
                             <FastImage style={styles.previewImage} source={{
-                                uri: type === 2 ? ((item as ExtraPost).source || [])[0].uri
-                                    : (item as MapBoxAddress).avatarURI
+                                uri: type === 2 ? ((shareItem as ExtraPost).source || [])[0].uri
+                                    : (shareItem as MapBoxAddress).avatarURI
                             }} />
                             <TextInput
                                 onFocus={_onTxtInputFocus}
@@ -201,14 +284,17 @@ const ShareToDirect = ({ route }: ShareToDirectProps) => {
                             </View>
                         </View>
                         <FlatList
+                            showsVerticalScrollIndicator={false}
                             style={{
+                                height: SCREEN_HEIGHT * (showFull ? 1 : 0.6) - 83.5 - 36 - 50,
                                 marginVertical: 5,
-                                paddingVertical: 10
                             }}
-                            data={receiverList}
+                            data={receiverList.length === 0
+                                ? suggestionlist : receiverList}
                             renderItem={({ item, index }) =>
                                 <ReceiverItem
-                                    onSend={_onSend}
+                                    type={type === 1 ? 'address' : 'post'}
+                                    shareItem={shareItem}
                                     index={index}
                                     user={item} />
                             }
@@ -323,22 +409,29 @@ const styles = StyleSheet.create({
 })
 interface ReceiverItemProps {
     user: ProfileX,
-    onSend: (i: number) => void,
-    index: number
+    index: number,
+    shareItem: MapBoxAddress | ExtraPost,
+    type: 'address' | 'post'
 }
-const ReceiverItem = ({ user, onSend, index }: ReceiverItemProps) => {
+const ReceiverItem = ({ user, index, shareItem, type }: ReceiverItemProps) => {
+    const dispatch = useDispatch()
     const [sent, setSent] = useState<boolean>(false)
-    const ref = useRef<{
-        done: boolean
-    }>({ done: false })
-    useEffect(() => {
-        return () => {
-            if (sent && !ref.current.done) {
-                onSend(index)
+    const _onToggleSend = async () => {
+        if (!sent) {
+            const msg: PostingMessage = {
+                type: messagesTypes.POST,
+                create_at: new Date().getTime(),
+                seen: 0,
             }
+            if (type === 'post') msg.postId = (shareItem as ExtraPost).uid
+            if (type === 'address') {
+                msg.type = messagesTypes.ADDRESS
+                msg.address_id = (shareItem as MapBoxAddress).id
+            }
+            await dispatch(CreateMessageRequest(msg, `${user.username}`))
+        } else {
+            dispatch(UndoMyLastMessageRequest(`${user.username}`))
         }
-    }, [])
-    const _onToggleSend = () => {
         setSent(!sent)
     }
     return (

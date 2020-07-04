@@ -35,6 +35,7 @@ import RootTab from './RootTab';
 import Conversation from '../screens/Others/Direct/Conversation'
 import ImageFullView from '../screens/Others/Direct/ImageFullView';
 import EmojiOptions from '../screens/Others/Direct/EmojiOptions';
+import SuperImageFullView from '../screens/Others/Direct/SuperImageFullView';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -83,10 +84,12 @@ export type SuperRootStackParamList = {
     CloseFriends: undefined,
     HideStoryFrom: undefined
     StoryProcessor: {
-        images: StoryImageSpec[]
+        images: StoryImageSpec[],
+        sendToDirect?: boolean,
+        username?: string
     },
     PreUploadSuperImage: {
-        images: StoryProcessedImage[]
+        images: StoryProcessedImage[],
     },
     StoryFullView: {
         groupIndex: number
@@ -115,6 +118,9 @@ export type SuperRootStackParamList = {
     },
     EmojiOptions: {
         targetUsername: string
+    },
+    SuperImageFullView: {
+        superId: number
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -187,6 +193,11 @@ const index = (): JSX.Element => {
                     gestureEnabled: true,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="EmojiOptions" component={EmojiOptions} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    gestureEnabled: true,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="SuperImageFullView" component={SuperImageFullView} />
                 <RootStack.Screen name="ProfileX" component={ProfileXScreen} />
                 <RootStack.Screen name="Hashtag" component={HashtagScreen} />
                 <RootStack.Screen name="Location" component={LocationScreen} />

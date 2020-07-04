@@ -1,4 +1,4 @@
-import { useIsFocused } from '@react-navigation/native'
+import { useIsFocused, RouteProp } from '@react-navigation/native'
 import React, { useRef, useState, useEffect } from 'react'
 import { Image, StyleSheet, Text, TouchableOpacity, View, Animated, FlatList, ScrollView } from 'react-native'
 import { RNCamera } from 'react-native-camera'
@@ -8,7 +8,13 @@ import { goBack, navigate } from '../../navigations/rootNavigation'
 import CameraRoll from '@react-native-community/cameraroll'
 import { PanGestureHandler, PanGestureHandlerGestureEvent, State } from 'react-native-gesture-handler'
 import NavigationBar from '../../components/NavigationBar'
+import { SuperRootStackParamList } from '../../navigations'
 
+type StoryTakerRouteProp = RouteProp<SuperRootStackParamList, 'StoryTaker'>
+
+type StoryTakerProps = {
+    route: StoryTakerRouteProp
+}
 
 export type StoryImageSpec = {
     width: number,
@@ -17,7 +23,8 @@ export type StoryImageSpec = {
     base64: string,
     extension: string
 }
-const StoryTaker = () => {
+const StoryTaker = ({ route }: StoryTakerProps) => {
+    const { sendToDirect, username } = route?.params || {}
     const focused = useIsFocused()
     const [page, setPage] = useState<number>(1)
     const [showGallery, setShowGallery] = useState<boolean>(false)
@@ -81,7 +88,9 @@ const StoryTaker = () => {
             extension: (photo?.uri || '').split('.').pop() || 'jpg'
         })
         navigate('StoryProcessor', {
-            images
+            images,
+            sendToDirect,
+            username
         })
     }
     const _onGestureEvent = ({ nativeEvent: {
@@ -143,7 +152,9 @@ const StoryTaker = () => {
                 extension: photos[index].node.image.filename.split('.').pop() || 'jpg'
             })
             navigate('StoryProcessor', {
-                images
+                images,
+                sendToDirect,
+                username
             })
         }
     }
@@ -201,7 +212,9 @@ const StoryTaker = () => {
             extension: photos[photoIndex].node.image.filename.split('.').pop() || 'jpg'
         }))
         navigate('StoryProcessor', {
-            images
+            images,
+            sendToDirect,
+            username
         })
     }
     return (
@@ -274,9 +287,18 @@ const StoryTaker = () => {
                                 backgroundColor: "#fff",
                                 borderColor: '#000',
                                 borderWidth: 4
-                            }}>
-
-                            </View>
+                            }} />
+                            {(sendToDirect && username) &&
+                                <View style={styles.sendTo}>
+                                    <Text style={{
+                                        color: '#fff'
+                                    }}>
+                                        Message <Text style={{
+                                            fontWeight: 'bold'
+                                        }}>{username}</Text>
+                                    </Text>
+                                </View>
+                            }
                         </TouchableOpacity>
                         <TouchableOpacity
                             activeOpacity={0.8}
@@ -543,6 +565,14 @@ const styles = StyleSheet.create({
         transform: [{
             translateY: -90
         }]
+    },
+    sendTo: {
+        position: 'absolute',
+        bottom: 90,
+        width: 200,
+        left: (70 - 200) / 2,
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     imageGalleryWrapper: {
         backgroundColor: '#000',

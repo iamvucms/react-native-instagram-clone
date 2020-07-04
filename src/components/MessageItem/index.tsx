@@ -6,6 +6,9 @@ import { ProfileX } from '../../reducers/profileXReducer'
 import FastImage from 'react-native-fast-image'
 import { SCREEN_WIDTH } from '../../constants'
 import { navigate } from '../../navigations/rootNavigation'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import PostMessage from './PostMessage'
+import LocationMessage from './LocationMessage'
 
 interface MessageItemProps {
     item: Message,
@@ -45,10 +48,21 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
             case messagesTypes.TEXT:
                 break;
             case messagesTypes.POST:
+                navigate('PostDetail', {
+                    postId: item.postId
+                })
                 break
             case messagesTypes.SUPER_IMAGE:
+                navigate('SuperImageFullView', {
+                    superId: item.superImageId
+                })
                 break;
             case messagesTypes.ADDRESS:
+                navigate('Location', {
+                    address: {
+                        id: item.address_id
+                    }
+                })
                 break
             case messagesTypes.IMAGE:
                 _imageRef.current?.measure((x, y, w, h, pX, pY) => {
@@ -122,6 +136,17 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
                 {item.type === messagesTypes.TEXT &&
                     <Text style={styles.msgText}>{item.text}</Text>
                 }
+                {item.type === messagesTypes.ADDRESS &&
+                    <LocationMessage address_id={item.address_id as string} />
+                }
+                {item.type === messagesTypes.POST &&
+                    <PostMessage
+                        maxWidth={SCREEN_WIDTH * 0.6}
+                        postId={item.postId as number} />
+                }
+                {item.type === messagesTypes.SUPER_IMAGE &&
+                    <Icon name="play" size={30} color="#fff" />
+                }
                 {item.type === messagesTypes.EMOJI &&
                     <Text style={{
                         fontSize: 40
@@ -183,13 +208,22 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
     },
     postMessage: {
-
+        width: SCREEN_WIDTH * 0.6,
+        borderRadius: 0,
+        backgroundColor: "rgba(0,0,0,0)",
+        borderWidth: 0
     },
     superImageMessage: {
-
+        backgroundColor: "#318bfb",
+        width: 64,
+        height: 36,
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     addressMessage: {
-
+        borderRadius: 25,
+        backgroundColor: 'rgba(0,0,0,0)',
+        overflow: 'hidden'
     },
     imageMessage: {
         borderWidth: 0

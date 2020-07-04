@@ -8,7 +8,7 @@ import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../../../constants'
 import { goBack, navigate } from '../../../navigations/rootNavigation'
 import { Post } from '../../../reducers/postReducer'
 import { store } from '../../../store'
-import { MapBoxAddress } from '../../../utils'
+import { MapBoxAddress, searchLocation } from '../../../utils'
 import { PhotoItem } from './Hashtag'
 import MapView from 'react-native-maps';
 import { getTabBarHeight } from '../../../components/BottomTabBar'
@@ -37,8 +37,9 @@ const Location = ({ route }: LocationProps) => {
                 .where('address.id', '==', address.id).get()
             const postList: Post[] = rq.docs.map(x => x.data() || {})
             postList.reverse()
+            const addressExtraInfo = await searchLocation(`${address.id}`)
             setLocationInfo({
-                ...addressInfo,
+                ...(addressExtraInfo.length > 0 ? { ...addressExtraInfo[0] } : {}),
                 sources: postList.map(x => x.uid) as number[],
                 avatarURI: postList.length > 0 ? (
                     postList[0].source && postList[0].source[0].uri
@@ -46,7 +47,7 @@ const Location = ({ route }: LocationProps) => {
             })
             setLocationPosts([...postList])
         })()
-    }, [address])
+    }, [])
     let postCount: string = ''
     if (addressInfo.sources) {
         postCount = addressInfo.sources.length < 1000 ? `${addressInfo.sources.length}` : (

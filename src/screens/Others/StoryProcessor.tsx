@@ -11,7 +11,12 @@ import { useKeyboardStatus } from '../../hooks/useKeyboardStatus'
 import { SuperRootStackParamList } from '../../navigations'
 import { goBack, navigate } from '../../navigations/rootNavigation'
 import { useSelector } from '../../reducers'
-import { MapBoxAddress } from '../../utils'
+import { MapBoxAddress, uploadSuperImages, Timestamp } from '../../utils'
+import { PostStoryRequest, FetchStoryListRequest } from "../../actions/storyActions"
+import { Story, storyPermissions } from "../../reducers/storyReducer"
+import { useDispatch } from "react-redux"
+import { PostingMessage, messagesTypes } from "../../reducers/messageReducer"
+import { CreateMessageRequest } from "../../actions/messageActions"
 type StoryProcessorRouteProp = RouteProp<SuperRootStackParamList, 'StoryProcessor'>
 type StoryProcessorProps = {
     route: StoryProcessorRouteProp
@@ -68,7 +73,9 @@ const textColors = [
 export const emojiList = ['😀', '😁', '😂', '🤣', '😃', '😄', '😅', '😆', '😉', '😊', '😋', '😎', '😍', '😘', '😗', '😙', '😚', '☺', '🙂', '🤗', '🤩', '🤔', '🤨', '😐', '😑', '😶', '🙄', '😏', '😣', '😥', '😮', '🤐', '😯', '😪', '😫', '😴', '😌', '😛', '😜', '😝', '🤤', '😒', '😓', '😔', '😕', '🙃', '🤑', '😲', '🙁', '😖', '😞', '😟', '😤', '😢', '😭', '😦', '😧', '😨', '😩', '🤯', '😬', '😰', '😱', '😳', '🤪', '😵', '😡', '😠', '🤬', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '😇', '🤠', '🤡', '🤥', '🤫', '🤭', '🧐', '🤓', '🤪']
 const StoryProcessor = ({ route }: StoryProcessorProps) => {
     const user = useSelector(state => state.user.user.userInfo)
-    const { images } = route.params
+    const myUsername = user?.username || ''
+    const dispatch = useDispatch()
+    const { images, sendToDirect, username } = route.params
     const keyboard = useKeyboardStatus()
     const [state, setState] = useState<object>({})
     const [currentImageIndex, setCurrentIndex] = useState<number>(0)
@@ -538,13 +545,41 @@ const StoryProcessor = ({ route }: StoryProcessorProps) => {
         if (mode === 3 && /^((\@(\w|\.)+)|\@)$/g.test(txt)) setText(txt)
         if (mode === 4 && /^((\#\w+)|\#)$/g.test(txt)) setText(txt)
     }
-    const _onNext = () => {
-        navigate('PreUploadSuperImage', {
+    const _onNext = async () => {
+        if (sendToDirect && username) {
+            const superImagesList = await Promise.all(uploadSuperImages(ref.current.processImages))
+            const messages: PostingMessage[] = superImagesList.map((source, index) => ({
+                uid: new Date().getTime() + index,
+                type: messagesTypes.SUPER_IMAGE,
+                create_at: new Date().getTime(),
+                seen: 0,
+                superImageId: source.sourceId,
+            }))
+            messages.map(msg => dispatch(CreateMessageRequest(msg, username)))
+            navigate('Conversation', {
+                username
+            })
+        } else navigate('PreUploadSuperImage', {
             images: ref.current.processImages
         })
     }
-    const _onFastUpload = () => {
-
+    const _onFastUpload = async () => {
+        const superImagesList = await Promise.all(uploadSuperImages(ref.current.processImages))
+        const storyImages: Story[] = superImagesList.map(source => ({
+            permission: storyPermissions.ALL,
+            create_at: Timestamp(),
+            seenList: [],
+            source: source.sourceId,
+            userId: myUsername,
+            messagesList: [],
+            reactions: [],
+            hashtags: source.hashtags,
+            address: source.address,
+            mention: source.mention
+        }))
+        await dispatch(PostStoryRequest(storyImages))
+        dispatch(FetchStoryListRequest())
+        navigate('HomeIndex')
     }
     return (
         <PanGestureHandler
@@ -982,7 +1017,9 @@ const StoryProcessor = ({ route }: StoryProcessorProps) => {
                 }
                 {(ref.current.processImages.length === 1 && !draggingLabel && !showLabelOptions) &&
                     <View style={styles.bottomOptionsWrapper}>
-                        <TouchableOpacity style={styles.bottomOption}>
+                        <TouchableOpacity
+                            onPress={_onFastUpload}
+                            style={styles.bottomOption}>
                             <FastImage source={{
                                 uri: user?.avatarURL
                             }}
@@ -1003,12 +1040,16 @@ const StoryProcessor = ({ route }: StoryProcessorProps) => {
                             activeOpacity={0.8}
                             style={{
                                 ...styles.btnNext,
-                                width: 100,
+                                width: (sendToDirect && username) ? 200 : 100,
                                 marginRight: 0
                             }}>
                             <Text style={{
                                 fontWeight: '600'
-                            }}>Send to</Text>
+                            }}>Send to
+                            <Text style={{
+                                    color: "#318bfb"
+                                }}> {username}</Text>
+                            </Text>
                             <Icon
                                 name="chevron-right"
                                 size={20}

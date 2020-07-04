@@ -50,7 +50,7 @@ firebase.initializeApp(firebaseConfig)
 //         })
 //     })
 // })
-export const MAPBOX_ACCESS_TOKEN = 'sk.eyJ1IjoidnVjbXMwMjAyIiwiYSI6ImNrYjZqNGlnNDEwNmUycm1pc2d6Y2trbGMifQ.ax-o4ToG3gEb-lQSaqdRjw'
+export const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoidnVjbXMwMjAyIiwiYSI6ImNrYzd3YXN5YjB0bzQyeWxqaHk3cndkZWUifQ.Rrt9iMYACnqGK-rCblD0Ag'
 const sources = [
     'https://www.statnews.com/wp-content/uploads/2019/05/GettyImages-484960237-645x645.jpg',
     'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSAFHzgUiwqYL_SoXWfUYVC8iDOEKyvNSQZHZMXIM81SuH64_3E&usqp=CAU',

@@ -448,7 +448,7 @@ const Conversation = ({ route }: ConversationProps) => {
                                             </TouchableOpacity>
                                             <TouchableOpacity
                                                 onPress={() => {
-                                                    navigate('EmojiOptions',{
+                                                    navigate('EmojiOptions', {
                                                         targetUsername
                                                     })
                                                 }}

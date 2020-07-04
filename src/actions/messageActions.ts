@@ -414,3 +414,30 @@ export const RemoveEmoijToMessageRequest = (targetUsername: string, msgId: numbe
         }
     }
 }
+export const UndoMyLastMessageRequest = (targetUsername: string):
+    ThunkAction<Promise<void>, {}, {}, MessageAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, MessageAction>) => {
+        try {
+            const targetUsernamePath = convertToFirebaseDatabasePathName(targetUsername)
+            const myUsername = store.getState().user.user.userInfo?.username || ''
+            const myUsernamePath = convertToFirebaseDatabasePathName(
+                myUsername)
+            const dbRef = database()
+            dbRef.ref(`/messages/${targetUsernamePath}/${myUsernamePath}`).once('value', snap => {
+                const msgList: Message[] = []
+                snap.forEach(msg => {
+                    msgList.push(msg.val())
+                })
+                const myLastMsg = msgList.pop()
+                if (myLastMsg) {
+                    const uid = myLastMsg.uid
+                    dbRef.ref(`/messages/${targetUsernamePath}/${myUsernamePath}/${uid}`).remove()
+                    dispatch(TriggerMessageListenerRequest())
+                }
+            })
+        } catch (e) {
+            console.warn(e)
+            dispatch(TriggerMessageListenerFailure())
+        }
+    }
+}

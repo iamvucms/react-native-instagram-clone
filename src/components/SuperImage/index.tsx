@@ -11,9 +11,10 @@ export interface SuperImageProps {
     superId: number,
     onNext?: () => void
     onBack?: () => void
-    onStopAnimation?: () => void
+    onStopAnimation?: () => void,
+    disableNavigation?: boolean
 }
-const SuperImage = ({ superId, onNext, onBack, onStopAnimation }: SuperImageProps) => {
+const SuperImage = ({ superId, disableNavigation, onNext, onBack, onStopAnimation }: SuperImageProps) => {
     const myUsername = store.getState().user.user.userInfo?.username || ''
     const [photo, setPhoto] = useState<StoryProcessedImage>()
     useEffect(() => {
@@ -28,6 +29,7 @@ const SuperImage = ({ superId, onNext, onBack, onStopAnimation }: SuperImageProp
         }
     }
     const _onLabelPress = async (label: StoryLabel) => {
+        if (disableNavigation) return;
         if (onStopAnimation) onStopAnimation()
         switch (label.type) {
             case 'address':
@@ -58,13 +60,14 @@ const SuperImage = ({ superId, onNext, onBack, onStopAnimation }: SuperImageProp
         return (
             <View style={styles.backgroundContainer} />
         )
-    } else
+    } else {
         return (
             <View style={StyleSheet.absoluteFillObject}>
                 <ImageBackground
                     style={styles.backgroundContainer}
                     source={{
-                        uri: photo.uri
+                        uri: photo.uri,
+                        cache: "force-cache"
                     }}
                     blurRadius={10}
                 >
@@ -214,6 +217,9 @@ const SuperImage = ({ superId, onNext, onBack, onStopAnimation }: SuperImageProp
                 </ImageBackground>
             </View>
         )
+    }
+
+
 }
 
 export default SuperImage

@@ -41,7 +41,7 @@ export type Message = {
     superImageId?: number,
     sourceUri?: string,
     postId?: number,
-    address_id?: number,
+    address_id?: string,
     width?: number,
     height?: number,
     ownEmoji?: number,
@@ -64,7 +64,7 @@ export type PostingMessage = {
     sourceUri?: string,
     width?: number,
     height?: number,
-    address_id?: number,
+    address_id?: string,
     ownEmoji?: number,
     yourEmoji?: number
     seen: 0,
