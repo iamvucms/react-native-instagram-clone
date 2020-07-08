@@ -682,7 +682,9 @@ const index = () => {
                                 marginLeft: 5,
                             }}>Nametag</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity activeOpacity={0.8} style={styles.optionItem}>
+                        <TouchableOpacity
+                            onPress={() => navigate('Saved')}
+                            activeOpacity={0.8} style={styles.optionItem}>
                             <Icon name="bookmark-outline" size={30} color="#333" />
                             <Text style={{
                                 fontSize: 16,

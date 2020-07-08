@@ -11,6 +11,7 @@ import LinkedAccounts from './Account/LinkedAccounts'
 import PostYouLiked from './Account/PostYouLiked'
 import RequestVerification from './Account/RequestVerification'
 import Saved from './Account/Saved'
+import SavedCollection from './Account/SavedCollection'
 import YourActivity from './Account/YourActivity'
 import FollowFriends from './Friends'
 import FollowContacts from './Friends/FollowContacts'
@@ -106,5 +107,6 @@ const navigation = {
     Logout,
     LinkedAccounts,
     Language,
+    SavedCollection
 }
 export default navigation

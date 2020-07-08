@@ -33,7 +33,9 @@ export const userActionTypes = {
     FETCH_SETTING_FAILURE: 'FETCH_SETTING_FAILURE',
     FETCH_RECENT_SEARCH_SUCCESS: 'FETCH_RECENT_SEARCH_SUCCESS',
     UPDATE_EXTRA_INFO_SUCCESS: 'UPDATE_EXTRA_INFO_SUCCESS',
-    UPDATE_EXTRA_INFO_FAILURE: 'UPDATE_EXTRA_INFO_FAILURE'
+    UPDATE_EXTRA_INFO_FAILURE: 'UPDATE_EXTRA_INFO_FAILURE',
+    UPDATE_BOOKMARK_SUCCESS: 'UPDATE_BOOKMARK_SUCCESS',
+    UPDATE_BOOKMARK_FAILURE: 'UPDATE_BOOKMARK_FAILURE'
 }
 /**
  * type:
@@ -207,12 +209,23 @@ export type UserSetting = {
     notification?: NotificationSetting,
     privacy?: PrivacySetting
 }
+export type Bookmark = {
+    postId: number,
+    previewUri: string,
+    create_at: number
+}
+export type BookmarkCollection = {
+    name: string,
+    bookmarks: Bookmark[],
+    create_at: number,
+}
 export interface userPayload {
     user: {
         logined?: boolean,
         firebaseUser?: firebase.UserInfo,
         userInfo?: UserInfo
     },
+    bookmarks?: BookmarkCollection[],
     setting?: UserSetting,
     photos?: Post[],
     tagPhotos?: Post[],
@@ -237,17 +250,23 @@ export type ExtraInfoPayload = {
     extraInfo: ExtraInfo,
     tagPhotos: Post[],
 }
+export type BookmarkPayload = {
+    bookmarks: BookmarkCollection[]
+}
 export type userAction = SuccessAction<userPayload> | ErrorAction
-    | SuccessAction<UserInfo> | SuccessAction<ExtraInfoPayload>
+    | SuccessAction<UserInfo>
+    | SuccessAction<ExtraInfoPayload>
     | SuccessAction<NotificationSetting>
     | SuccessAction<PrivacySetting>
     | SuccessAction<UserSetting>
     | SuccessAction<SearchItem[]>
+    | SuccessAction<BookmarkPayload>
 export const defaultUserState: userPayload = {
     user: {},
     photos: [],
     tagPhotos: [],
     taggedPhotos: [],
+    bookmarks: [],
     setting: {
         notification: {
             notificationAccounts: {
@@ -508,6 +527,17 @@ const reducer = (state: userPayload = defaultUserState, action: userAction): use
                 photos: [...action.payload.photos],
                 tagPhotos: [...action.payload.tagPhotos]
             }
+            return state
+        case userActionTypes.UPDATE_BOOKMARK_SUCCESS:
+            action = <SuccessAction<BookmarkPayload>>action
+            state = {
+                ...state,
+                bookmarks: action.payload.bookmarks
+            }
+            return state
+        case userActionTypes.UPDATE_BOOKMARK_FAILURE:
+            action = <ErrorAction>action
+            Alert.alert('Error', action.payload.message)
             return state
         default:
             return state

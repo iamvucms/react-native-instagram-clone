@@ -11,6 +11,8 @@ import { store } from '../../store'
 import { timestampToString } from '../../utils'
 import CirclePagination from '../CirclePagination'
 import PhotoShower from './PhotoShower'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { ToggleBookMarkRequest } from '../../actions/userActions'
 export interface PostItemProps {
     item: ExtraPost,
     showCommentInput?: (id: number, prefix?: string) => void,
@@ -19,6 +21,7 @@ export interface PostItemProps {
 const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
     const dispatch = useDispatch()
     const [currentPage, setCurrentPage] = useState<number>(1)
+    const bookmarks = useSelector(state => state.user.bookmarks)?.find(x => x.name === 'All Posts')?.bookmarks || []
     const [content, setContent] = useState<JSX.Element[]>([])
     const user = useSelector(state => state.user.user)
     const isLiked = item.likes && item.likes?.indexOf(user.userInfo?.username || '') > -1
@@ -38,7 +41,12 @@ const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
             ...(setPost ? { postData: { ...item } } : {})
         })
     }
+    const _onToggleBookmark = () => {
+        dispatch(ToggleBookMarkRequest(item.uid as number,
+            (item.source || [{ uri: '' }])[0].uri))
+    }
 
+    const isBookmarked = !!bookmarks.find(x => x.postId === item.uid)
     return (
         <View style={styles.container}>
             <View style={styles.postHeader}>
@@ -77,15 +85,15 @@ const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
                                 } />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={_onViewAllComments}>
-                            <Icons name="comment-outline" size={24} />
+                            <Icon name="comment-outline" size={22} />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => navigate('ShareToDirect', {
                             item: { ...item }
                         })}>
                             <Image
                                 style={{
-                                    height: 24,
-                                    width: 24
+                                    height: 20,
+                                    width: 20
                                 }}
                                 source={require('../../assets/icons/send.png')} />
                         </TouchableOpacity>
@@ -94,8 +102,18 @@ const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
                         maxPage={item.source?.length || 0}
                         currentPage={currentPage}
                     />}
-                    <TouchableOpacity>
-                        <Icons name="bookmark-outline" size={24} />
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={_onToggleBookmark}
+                    >
+                        <Image
+                            style={{
+                                height: 24,
+                                width: 24
+                            }}
+                            source={
+                                isBookmarked ? require('../../assets/icons/bookmarked.png')
+                                    : require('../../assets/icons/bookmark.png')} />
                     </TouchableOpacity>
                 </View>
                 {item.likes && item.likes.length !== 0 && <Text style={{
@@ -242,7 +260,8 @@ const styles = StyleSheet.create({
     lReactions: {
         flexDirection: 'row',
         width: 24.3 * 3 + 15,
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        alignItems: 'center'
     },
     btnViewCmt: {
         marginVertical: 5

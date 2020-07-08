@@ -896,3 +896,54 @@ export const RemoveRecentSearchRequest = (searchItem: SearchItem):
         }
     }
 }
+export const ToggleBookMarkRequest = (postId: number, previewUri: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const collections = [...(store.getState().user.bookmarks || [])]
+            if (collections.length > 0) {
+                const newCollections = collections.map(collection => {
+                    const bookmarks = [...collection.bookmarks]
+                    const index = bookmarks.findIndex(x => x.postId === postId)
+                    if (index > -1) {
+                        bookmarks.splice(index, 1)
+                    } else {
+                        bookmarks.push({
+                            postId,
+                            previewUri,
+                            create_at: new Date().getTime()
+                        })
+                    }
+                    return {
+                        ...collection,
+                        bookmarks
+                    }
+                })
+                dispatch({
+                    type: userActionTypes.UPDATE_BOOKMARK_SUCCESS,
+                    payload: {
+                        bookmarks: newCollections
+                    }
+                })
+            } else {
+                dispatch({
+                    type: userActionTypes.UPDATE_BOOKMARK_SUCCESS,
+                    payload: {
+                        bookmarks: [{
+                            bookmarks: [{
+                                create_at: new Date().getTime(),
+                                postId,
+                                previewUri,
+                            }],
+                            name: 'All Posts',
+                            create_at: new Date().getTime(),
+                        }]
+                    }
+                })
+            }
+        }
+        catch (e) {
+
+        }
+    }
+}

@@ -549,6 +549,7 @@ const Conversation = ({ route }: ConversationProps) => {
                         }
                         keyExtractor={(__, index) => `${index}`}
                         onEndReached={_onLoadmore}
+                        onEndReachedThreshold={0.5}
                     />
                     {selectedPhotos.length > 0 &&
                         <TouchableOpacity
