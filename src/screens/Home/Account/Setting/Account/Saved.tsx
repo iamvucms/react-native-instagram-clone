@@ -15,7 +15,9 @@ const Saved = (): JSX.Element => {
                 <NavigationBar title="Saved" callback={() => {
                     navigation.goBack()
                 }} />
-                <TouchableOpacity style={styles.btnAdd}>
+                <TouchableOpacity
+                    onPress={() => navigate('AddSavedCollection')}
+                    style={styles.btnAdd}>
                     <Icon name="plus" size={30} color="#000" />
                 </TouchableOpacity>
             </View>
@@ -34,7 +36,7 @@ const Saved = (): JSX.Element => {
                                 }
                                 activeOpacity={0.8}
                                 style={styles.collection}>
-                                {new Array(4).fill(0).map((_, index2) => (
+                                {collection.name === 'All Posts' && new Array(4).fill(0).map((_, index2) => (
                                     <View
                                         key={index2}
                                         style={{
@@ -55,6 +57,17 @@ const Saved = (): JSX.Element => {
                                         }
                                     </View>
                                 ))}
+                                {collection.name !== 'All Posts' &&
+                                    <FastImage
+                                        style={{
+                                            width: '100%',
+                                            height: '100%'
+                                        }}
+                                        source={{
+                                            uri: collection.bookmarks[collection.avatarIndex || 0]?.previewUri
+                                        }}
+                                    />
+                                }
                             </TouchableOpacity>
                             <Text style={{
                                 margin: 7.5,

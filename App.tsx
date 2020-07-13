@@ -9,14 +9,11 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, YellowBox, AppState } from 'react-native';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
-import RootStackNavigation from './src/navigations'
-import { Provider } from 'react-redux'
-import { persistor, store } from './src/store'
-import { PersistGate } from 'redux-persist/integration/react'
-import { database } from 'firebase';
-import { convertToFirebaseDatabasePathName } from './src/utils';
+import { StyleSheet, YellowBox } from 'react-native';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import RootStackNavigation from './src/navigations';
+import { persistor, store } from './src/store';
 YellowBox.ignoreWarnings([
   'Non-serializable values were found in the navigation state',
 ]);
@@ -26,7 +23,6 @@ const App = () => {
     itv: setInterval(() => { }, 3000)
   })
   useEffect(() => {
-    //Update online status
     clearInterval(ref.current.itv)
     if (myUsername) {
       //limit functions quota

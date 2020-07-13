@@ -22,7 +22,8 @@ firebase.initializeApp(firebaseConfig)
 // Refresh stories expired
 // firebase.firestore().collection('stories').get().then(docs => {
 //     docs.forEach(doc => doc.ref.update({
-//         create_at: new Date()
+//         create_at: new Date(),
+//         seenList: []
 //     }))
 // })
 //Add default Setting
@@ -86,7 +87,7 @@ export const SCREEN_WIDTH: number = Math.round(Dimensions.get('window').width)
 export type SettingNavigation = {
     icon?: string,
     name: string,
-    component: () => JSX.Element,
+    component: (props?: any) => JSX.Element,
     navigationName: string,
     child?: SettingNavigation[]
 }
@@ -292,6 +293,11 @@ export const settingNavigationMap: SettingNavigation[] = [
                 name: 'SavedCollection',
                 component: SettingComponents.SavedCollection,
                 navigationName: 'SavedCollection',
+            },
+            {
+                name: 'AddSavedCollection',
+                component: SettingComponents.AddSavedCollection,
+                navigationName: 'AddSavedCollection',
             },
             {
                 name: 'Close Friends',

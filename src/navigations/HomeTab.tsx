@@ -23,6 +23,7 @@ import Location from '../screens/Home/Explore/Location'
 import Hashtag from '../screens/Home/Explore/Hashtag'
 import ProfileX from '../screens/Home/Explore/ProfileX'
 import ProfileXFollow from '../screens/Home/Explore/ProfileXFollow'
+import Archive from '../screens/Home/Account/Archive'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -50,14 +51,15 @@ const AccountStack = () => {
             <Stack.Screen component={FollowRequests} name="FollowRequests" />
             <Stack.Screen component={RecentFollowingInteraction} name="RecentFollowingInteraction" />
             <Stack.Screen component={RecentFollowerInteraction} name="RecentFollowerInteraction" />
+            <Stack.Screen component={Archive} name="Archive" />
             <Stack.Screen component={AccountYouDontFollowBack} name="AccountYouDontFollowBack" />
             <Stack.Screen component={SettingNavigationx.Logout} name="Logout" />
             <Stack.Screen component={SettingNavigationx.AddAccount} name="AddAccount" />
             {settingNavigationMap.map((settingNavigation, index) => (
-                <>
-                    <Stack.Screen key={index} component={settingNavigation.component} name={settingNavigation.navigationName} />
-                    {settingNavigation.child && settingNavigation.child.map((childSettingNavigation, index) => (
-                        <>
+                <React.Fragment key={index}>
+                    <Stack.Screen component={settingNavigation.component} name={settingNavigation.navigationName} />
+                    {settingNavigation.child && settingNavigation.child.map((childSettingNavigation, index2) => (
+                        <React.Fragment key={index2}>
                             {childSettingNavigation.navigationName === 'FollowContact' ? (
                                 <Stack.Screen options={{
                                     cardStyle: { backgroundColor: 'transparent' },
@@ -67,9 +69,9 @@ const AccountStack = () => {
                             ) : (
                                     <Stack.Screen component={childSettingNavigation.component} name={childSettingNavigation.navigationName} />
                                 )}
-                        </>
+                        </React.Fragment>
                     ))}
-                </>
+                </React.Fragment>
             ))}
             <Stack.Screen component={SettingNavigationx.BlockedComments} name="BlockedComments" />
             <Stack.Screen component={SettingNavigationx.HideStoryFrom} name="HideStoryFrom" />

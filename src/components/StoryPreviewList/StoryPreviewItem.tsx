@@ -18,6 +18,9 @@ const StoryPreviewItem = ({ item: { ownUser, storyList }, index }: StoryPreviewI
     }, [])
     const [preloadingImage, setPreloadingImage] = useState<boolean>(false)
     const _onShowStory = () => {
+        if (seen) {
+            return _onCompletedLoadingImage()
+        }
         const ref = firestore()
         setPreloadingImage(true)
         let preFetchTasks: Promise<any>[] = [];

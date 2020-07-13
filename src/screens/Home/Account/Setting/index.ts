@@ -12,6 +12,7 @@ import PostYouLiked from './Account/PostYouLiked'
 import RequestVerification from './Account/RequestVerification'
 import Saved from './Account/Saved'
 import SavedCollection from './Account/SavedCollection'
+import AddSavedCollection from './Account/AddSavedCollection'
 import YourActivity from './Account/YourActivity'
 import FollowFriends from './Friends'
 import FollowContacts from './Friends/FollowContacts'
@@ -54,6 +55,8 @@ import EmailFromInstagram from './Security/EmailFromInstagram'
 import AddAccount from './AddAccount'
 import Logout from './Logout'
 const navigation = {
+    SavedCollection,
+    AddSavedCollection,
     HideStoryFrom,
     BlockedComments,
     Password,
@@ -107,6 +110,6 @@ const navigation = {
     Logout,
     LinkedAccounts,
     Language,
-    SavedCollection
+
 }
 export default navigation

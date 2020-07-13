@@ -71,7 +71,6 @@ export default PostMessage
 const styles = StyleSheet.create({
     container: {
         width: '100%',
-        minHeight: 400
     },
     header: {
         backgroundColor: "#ddd",

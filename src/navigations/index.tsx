@@ -3,7 +3,7 @@ import { createStackNavigator, StackNavigationOptions, TransitionPresets } from 
 import React from 'react';
 import { ExtraPost } from '../reducers/postReducer';
 import { ProfileX } from '../reducers/profileXReducer';
-import { HashTag, UserInfo } from '../reducers/userReducer';
+import { HashTag, UserInfo, Bookmark } from '../reducers/userReducer';
 import DiscoverPeople from '../screens/Home/Account/DiscoverPeople';
 import EditProfile from '../screens/Home/Account/EditProfile';
 import GalleryChooser, { ProcessedImage } from '../screens/Home/Account/GalleryChooser';
@@ -36,6 +36,7 @@ import Conversation from '../screens/Others/Direct/Conversation'
 import ImageFullView from '../screens/Others/Direct/ImageFullView';
 import EmojiOptions from '../screens/Others/Direct/EmojiOptions';
 import SuperImageFullView from '../screens/Others/Direct/SuperImageFullView';
+import MoveBookmarkOptions from '../screens/Others/MoveBookmarkOptions';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -121,6 +122,11 @@ export type SuperRootStackParamList = {
     },
     SuperImageFullView: {
         superId: number
+    },
+    MoveBookmarkOptions: {
+        fromCollectionName: string,
+        bookmarks: Bookmark[],
+        selectedIndexs: number[]
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -183,6 +189,10 @@ const index = (): JSX.Element => {
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="ProfileInteractionOptions" component={ProfileInteractionOptions} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="MoveBookmarkOptions" component={MoveBookmarkOptions} />
                 <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
                     gestureEnabled: true,

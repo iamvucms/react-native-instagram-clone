@@ -2,7 +2,7 @@ import { auth, firestore, storage } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { DEFAULT_PHOTO_URI } from '../constants';
 import { navigate } from "../navigations/rootNavigation";
-import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting, HashTag, SearchItem } from '../reducers/userReducer';
+import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting, HashTag, SearchItem, BookmarkCollection } from '../reducers/userReducer';
 import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
 import { store } from '../store';
 import { generateUsernameKeywords, uriToBlob, Timestamp } from '../utils';
@@ -902,23 +902,25 @@ export const ToggleBookMarkRequest = (postId: number, previewUri: string):
         try {
             const collections = [...(store.getState().user.bookmarks || [])]
             if (collections.length > 0) {
-                const newCollections = collections.map(collection => {
+                const newCollections = collections.map((collection, index) => {
                     const bookmarks = [...collection.bookmarks]
-                    const index = bookmarks.findIndex(x => x.postId === postId)
-                    if (index > -1) {
-                        bookmarks.splice(index, 1)
+                    const index2 = bookmarks.findIndex(x => x.postId === postId)
+                    if (index2 > -1) {
+                        bookmarks.splice(index2, 1)
                     } else {
-                        bookmarks.push({
-                            postId,
-                            previewUri,
-                            create_at: new Date().getTime()
-                        })
+                        if (collection.name === 'All Posts') {
+                            bookmarks.push({
+                                postId,
+                                previewUri,
+                                create_at: new Date().getTime()
+                            })
+                        }
                     }
                     return {
                         ...collection,
                         bookmarks
                     }
-                })
+                }).filter(x => x.bookmarks.length > 0)
                 dispatch({
                     type: userActionTypes.UPDATE_BOOKMARK_SUCCESS,
                     payload: {
@@ -943,7 +945,100 @@ export const ToggleBookMarkRequest = (postId: number, previewUri: string):
             }
         }
         catch (e) {
-
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_FAILURE,
+                payload: {
+                    message: `Can't not edit bookmark now!`
+                }
+            })
+        }
+    }
+}
+export const CreateBookmarkCollectionRequest = (collection: BookmarkCollection):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const collections = [...(store.getState().user.bookmarks || [])]
+            const index = collections.findIndex(x => x.name === collection.name)
+            if (index > -1) {
+                dispatch({
+                    type: userActionTypes.UPDATE_BOOKMARK_FAILURE,
+                    payload: {
+                        message: 'Collection exists, choose another name!'
+                    }
+                })
+                return;
+            }
+            collections.push(collection)
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_SUCCESS,
+                payload: {
+                    bookmarks: collections
+                }
+            })
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_FAILURE,
+                payload: {
+                    message: `Can't not add collection now!`
+                }
+            })
+        }
+    }
+}
+export const RemoveBookmarkCollectionRequest = (collectionName: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const collections = [...(store.getState().user.bookmarks || [])]
+                .filter(x => x.name !== collectionName)
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_SUCCESS,
+                payload: {
+                    bookmarks: collections
+                }
+            })
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_FAILURE,
+                payload: {
+                    message: `Can't not add collection now!`
+                }
+            })
+        }
+    }
+}
+export const RemoveFromBookmarkCollectionRequest = (postId: number, collectionName: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const collections = [...(store.getState().user.bookmarks || [])]
+            const index = collections.findIndex(x => x.name === collectionName)
+            if (index > -1) {
+                const collection = { ...collections[index] }
+                const index2 = collection.bookmarks.findIndex(x => x.postId === postId)
+                collection.bookmarks.splice(index2, 1)
+                if (collection.avatarIndex === index2) {
+                    collection.avatarIndex = 0
+                }
+                collections[index] = collection
+            }
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_SUCCESS,
+                payload: {
+                    bookmarks: collections
+                }
+            })
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_FAILURE,
+                payload: {
+                    message: `Can't not add collection now!`
+                }
+            })
         }
     }
 }

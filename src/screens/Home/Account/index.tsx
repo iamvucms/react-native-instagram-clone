@@ -661,7 +661,9 @@ const index = () => {
                         }}>{user.userInfo?.username}</Text>
                     </View>
                     <View style={styles.optionsWrapper}>
-                        <TouchableOpacity activeOpacity={0.8} style={styles.optionItem}>
+                        <TouchableOpacity
+                            onPress={() => navigate('Archive')}
+                            activeOpacity={0.8} style={styles.optionItem}>
                             <Icon name="history" size={30} color="#333" />
                             <Text style={{
                                 fontSize: 16,

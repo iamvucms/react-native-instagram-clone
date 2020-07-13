@@ -217,6 +217,7 @@ export type Bookmark = {
 export type BookmarkCollection = {
     name: string,
     bookmarks: Bookmark[],
+    avatarIndex?: number,
     create_at: number,
 }
 export interface userPayload {
