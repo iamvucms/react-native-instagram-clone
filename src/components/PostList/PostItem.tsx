@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import FastImage from 'react-native-fast-image'
-import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
+import { default as Icon, default as Icons } from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useDispatch } from 'react-redux'
 import { ToggleLikePostRequest } from '../../actions/postActions'
+import { ToggleBookMarkRequest } from '../../actions/userActions'
 import { navigate, navigation } from '../../navigations/rootNavigation'
 import { useSelector } from '../../reducers'
 import { ExtraPost } from '../../reducers/postReducer'
@@ -11,8 +12,6 @@ import { store } from '../../store'
 import { timestampToString } from '../../utils'
 import CirclePagination from '../CirclePagination'
 import PhotoShower from './PhotoShower'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { ToggleBookMarkRequest } from '../../actions/userActions'
 export interface PostItemProps {
     item: ExtraPost,
     showCommentInput?: (id: number, prefix?: string) => void,
@@ -24,6 +23,7 @@ const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
     const bookmarks = useSelector(state => state.user.bookmarks)?.find(x => x.name === 'All Posts')?.bookmarks || []
     const [content, setContent] = useState<JSX.Element[]>([])
     const user = useSelector(state => state.user.user)
+    const _animBookmarkNotification = React.useMemo(() => new Animated.Value(0), [])
     const isLiked = item.likes && item.likes?.indexOf(user.userInfo?.username || '') > -1
     const _onChangePageHandler = (page: number) => {
         setCurrentPage(page)
@@ -42,10 +42,26 @@ const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
         })
     }
     const _onToggleBookmark = () => {
+        const isBookmarked = !!bookmarks.find(x => x.postId === item.uid)
+        if (!isBookmarked) {
+            Animated.sequence([
+                Animated.timing(_animBookmarkNotification, {
+                    toValue: -44,
+                    duration: 500,
+                    useNativeDriver: true
+                }),
+                Animated.delay(3000)
+                ,
+                Animated.timing(_animBookmarkNotification, {
+                    toValue: 0,
+                    duration: 500,
+                    useNativeDriver: true
+                }),
+            ]).start()
+        }
         dispatch(ToggleBookMarkRequest(item.uid as number,
             (item.source || [{ uri: '' }])[0].uri))
     }
-
     const isBookmarked = !!bookmarks.find(x => x.postId === item.uid)
     return (
         <View style={styles.container}>
@@ -70,6 +86,42 @@ const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
             </View>
             <View style={styles.body}>
                 <PhotoShower onChangePage={_onChangePageHandler} sources={item.source || []} />
+                <Animated.View style={{
+                    ...styles.bookmarkAddionNotification,
+                    transform: [{
+                        translateY: _animBookmarkNotification
+                    }]
+                }}>
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center'
+                    }}>
+                        <FastImage
+                            source={{
+                                uri: (item.source || [])[0].uri
+                            }}
+                            style={styles.bookmarkPreviewImage}
+                        />
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: '600',
+                            marginHorizontal: 10
+                        }}>Saved</Text>
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => {
+                            navigate('Saved')
+                        }}
+                        style={styles.btnGoToSaved}>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: '500',
+                            color: "#318bfb"
+                        }}>
+                            See All
+                        </Text>
+                    </TouchableOpacity>
+                </Animated.View>
             </View>
             <View style={styles.reactionsWrapper}>
                 <View style={styles.reactions}>
@@ -155,7 +207,6 @@ const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
                                 View all {item.comments.length} comments
                             </Text>
                         </TouchableOpacity>
-
                     </>
                 }
 
@@ -239,7 +290,31 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     body: {
-
+        overflow: 'hidden'
+    },
+    bookmarkAddionNotification: {
+        position: 'absolute',
+        backgroundColor: "#fff",
+        paddingHorizontal: 15,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        height: 44,
+        width: '100%',
+        borderBottomColor: '#ddd',
+        borderBottomWidth: 1,
+        bottom: -44,
+        left: 0
+    },
+    btnGoToSaved: {
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    bookmarkPreviewImage: {
+        height: 30,
+        width: 30,
+        borderRadius: 5
     },
     avatar: {
         borderColor: '#ddd',

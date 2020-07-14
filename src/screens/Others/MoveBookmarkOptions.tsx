@@ -4,6 +4,8 @@ import React, { useRef } from 'react'
 import { Animated, FlatList, Image, LayoutChangeEvent, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import FastImage from 'react-native-fast-image'
 import { PanGestureHandler, PanGestureHandlerGestureEvent, State } from 'react-native-gesture-handler'
+import { useDispatch } from 'react-redux'
+import { MoveBookmarkToCollectionRequest } from '../../actions/userActions'
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../../constants'
 import { SuperRootStackParamList } from '../../navigations'
 import { goBack } from '../../navigations/rootNavigation'
@@ -14,6 +16,7 @@ type MoveBookmarkOptionsProps = {
     route: MoveBookmarkOptionsRouteProp
 }
 const MoveBookmarkOptions = ({ route }: MoveBookmarkOptionsProps) => {
+    const dispatch = useDispatch()
     const { bookmarks, fromCollectionName, selectedIndexs }
         = route.params || {}
     const collections = useSelector(state => state.user.bookmarks
@@ -50,6 +53,13 @@ const MoveBookmarkOptions = ({ route }: MoveBookmarkOptionsProps) => {
                     useNativeDriver: true,
                 }).start()
             }
+        }
+    }
+    const _onMoveBookmark = async (targetCollectionName: string) => {
+        if (collections) {
+            Promise.all(selectedIndexs.map(async i => {
+                await dispatch(MoveBookmarkToCollectionRequest(fromCollectionName, targetCollectionName, bookmarks[i].postId))
+            })).then(goBack)
         }
     }
     return (
@@ -94,14 +104,16 @@ const MoveBookmarkOptions = ({ route }: MoveBookmarkOptionsProps) => {
                             numColumns={4}
                             data={collections}
                             renderItem={({ item, index }) =>
-                                <TouchableOpacity style={{
-                                    ...styles.collectionItem,
-                                    marginHorizontal: 7.5
-
-                                }}>
+                                <TouchableOpacity
+                                    onPress={_onMoveBookmark.bind(null, item.name)}
+                                    disabled={item.name === fromCollectionName}
+                                    style={{
+                                        ...styles.collectionItem,
+                                        marginHorizontal: 7.5
+                                    }}>
                                     <FastImage
                                         source={{
-                                            uri: item.bookmarks[item.avatarIndex || 0].previewUri
+                                            uri: item.bookmarks[item.avatarIndex || 0]?.previewUri
                                         }}
                                         style={{
                                             borderRadius: 10,

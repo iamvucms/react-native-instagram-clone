@@ -2,7 +2,7 @@ import { auth, firestore, storage } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { DEFAULT_PHOTO_URI } from '../constants';
 import { navigate } from "../navigations/rootNavigation";
-import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting, HashTag, SearchItem, BookmarkCollection } from '../reducers/userReducer';
+import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting, HashTag, SearchItem, BookmarkCollection, Bookmark } from '../reducers/userReducer';
 import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
 import { store } from '../store';
 import { generateUsernameKeywords, uriToBlob, Timestamp } from '../utils';
@@ -907,6 +907,11 @@ export const ToggleBookMarkRequest = (postId: number, previewUri: string):
                     const index2 = bookmarks.findIndex(x => x.postId === postId)
                     if (index2 > -1) {
                         bookmarks.splice(index2, 1)
+                        if (collection.avatarIndex === index2
+                            && collection.bookmarks.length > 0
+                        ) {
+                            collection.avatarIndex = 0
+                        }
                     } else {
                         if (collection.name === 'All Posts') {
                             bookmarks.push({
@@ -1014,14 +1019,146 @@ export const RemoveFromBookmarkCollectionRequest = (postId: number, collectionNa
     ThunkAction<Promise<void>, {}, {}, userAction> => {
     return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
         try {
+            let collections = [...(store.getState().user.bookmarks || [])]
+            if (collectionName !== 'All Posts') {
+                const index = collections.findIndex(x => x.name === collectionName)
+                if (index > -1) {
+                    const collection = { ...collections[index] }
+                    const index2 = collection.bookmarks.findIndex(x => x.postId === postId)
+                    collection.bookmarks.splice(index2, 1)
+                    if (collection.avatarIndex === index2) {
+                        collection.avatarIndex = 0
+                    }
+                    collections[index] = collection
+                }
+            } else {
+                collections = collections.map(collection => {
+                    const index2 = collection.bookmarks.findIndex(x => x.postId === postId)
+                    collection.bookmarks.splice(index2, 1)
+                    if (collection.avatarIndex === index2
+                        && collection.bookmarks.length > 0
+                    ) {
+                        collection.avatarIndex = 0
+                    }
+                    return { ...collection }
+                })
+            }
+            collections = collections.filter(x => x.bookmarks.length > 0)
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_SUCCESS,
+                payload: {
+                    bookmarks: collections
+                }
+            })
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_FAILURE,
+                payload: {
+                    message: `Can't not add collection now!`
+                }
+            })
+        }
+    }
+}
+export const MoveBookmarkToCollectionRequest = (fromCollectionName: string,
+    targetCollectionName: string, postId: number):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
             const collections = [...(store.getState().user.bookmarks || [])]
-            const index = collections.findIndex(x => x.name === collectionName)
+            const fromCollectionIndex = collections.findIndex(x => x.name === fromCollectionName)
+            const targetCollectionIndex = collections.findIndex(x => x.name === targetCollectionName)
+            const fromBookmarkIndex = collections[fromCollectionIndex].bookmarks
+                .findIndex(x => x.postId === postId)
+            if (fromBookmarkIndex > -1) {
+                const newFromCollection = {
+                    ...collections[fromCollectionIndex],
+                }
+                const newTargetCollection = {
+                    ...collections[targetCollectionIndex]
+                }
+                const bookmark = newFromCollection.bookmarks
+                    .splice(fromBookmarkIndex, 1)[0]
+                if (newFromCollection.avatarIndex === fromBookmarkIndex
+                    && newFromCollection.bookmarks.length > 0
+                ) {
+                    newFromCollection.avatarIndex = 0
+                }
+                if (!newTargetCollection.bookmarks.find(x => x.postId === postId)) {
+                    newTargetCollection.bookmarks.push(bookmark)
+                }
+                collections[fromCollectionIndex] = newFromCollection
+                collections[targetCollectionIndex] = newTargetCollection
+                if (newFromCollection.bookmarks.length === 0) {
+                    collections.splice(fromCollectionIndex, 1)
+                }
+            }
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_SUCCESS,
+                payload: {
+                    bookmarks: collections
+                }
+            })
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_FAILURE,
+                payload: {
+                    message: `Can't not add collection now!`
+                }
+            })
+        }
+    }
+}
+export const AddBookmarkToCollectionRequest = (
+    collectionName: string, bookmarkList: Bookmark[]):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const collections = [...(store.getState().user.bookmarks || [])]
+            const index = collections
+                .findIndex(x => x.name === collectionName)
             if (index > -1) {
                 const collection = { ...collections[index] }
-                const index2 = collection.bookmarks.findIndex(x => x.postId === postId)
-                collection.bookmarks.splice(index2, 1)
-                if (collection.avatarIndex === index2) {
-                    collection.avatarIndex = 0
+                bookmarkList.map(bookmark => {
+                    if (!collection.bookmarks
+                        .find(x => x.postId === bookmark.postId)
+                    ) {
+                        collection.bookmarks.push({
+                            ...bookmark
+                        })
+                    }
+                })
+                collections[index] = collection
+            }
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_SUCCESS,
+                payload: {
+                    bookmarks: collections
+                }
+            })
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.UPDATE_BOOKMARK_FAILURE,
+                payload: {
+                    message: `Can't not add collection now!`
+                }
+            })
+        }
+    }
+}
+export const UpdateBookmarkCollectionRequest = (collectionName: string, updatedCollection: BookmarkCollection):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const collections = [...(store.getState().user.bookmarks || [])]
+            const index = collections
+                .findIndex(x => x.name === collectionName)
+            if (index > -1) {
+                const collection = {
+                    ...updatedCollection
                 }
                 collections[index] = collection
             }

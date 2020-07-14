@@ -300,6 +300,16 @@ export const settingNavigationMap: SettingNavigation[] = [
                 navigationName: 'AddSavedCollection',
             },
             {
+                name: 'EditSavedCollection',
+                component: SettingComponents.EditSavedCollection,
+                navigationName: 'EditSavedCollection',
+            },
+            {
+                name: 'AddToSavedCollection',
+                component: SettingComponents.AddToSavedCollection,
+                navigationName: 'AddToSavedCollection',
+            },
+            {
                 name: 'Close Friends',
                 component: SettingComponents.CloseFriends,
                 navigationName: 'CloseFriends',

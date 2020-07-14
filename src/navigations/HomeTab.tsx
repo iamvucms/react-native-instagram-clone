@@ -24,6 +24,11 @@ import Hashtag from '../screens/Home/Explore/Hashtag'
 import ProfileX from '../screens/Home/Explore/ProfileX'
 import ProfileXFollow from '../screens/Home/Explore/ProfileXFollow'
 import Archive from '../screens/Home/Account/Archive'
+import Saved from '../screens/Home/Account/Setting/Account/Saved'
+import SavedCollection from '../screens/Home/Account/Setting/Account/SavedCollection'
+import AddSavedCollection from '../screens/Home/Account/Setting/Account/AddSavedCollection'
+import EditSavedCollection from '../screens/Home/Account/Setting/Account/EditSavedCollection'
+import AddToSavedCollection from '../screens/Home/Account/Setting/Account/AddToSavedCollection'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -115,6 +120,11 @@ const HomeStack = () => {
             <Stack.Screen name="Hashtag" component={Hashtag} />
             <Stack.Screen name="ProfileX" component={ProfileX} />
             <Stack.Screen name="ProfileXFollow" component={ProfileXFollow} />
+            <Stack.Screen name="Saved" component={Saved} />
+            <Stack.Screen name="SavedCollection" component={SavedCollection} />
+            <Stack.Screen name="EditSavedCollection" component={EditSavedCollection} />
+            <Stack.Screen name="AddSavedCollection" component={AddSavedCollection} />
+            <Stack.Screen name="AddToSavedCollection" component={AddToSavedCollection} />
         </Stack.Navigator>
     )
 }

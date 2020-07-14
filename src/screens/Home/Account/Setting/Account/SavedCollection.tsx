@@ -1,5 +1,5 @@
 import { RouteProp } from '@react-navigation/native'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Dimensions, FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import FastImage from 'react-native-fast-image'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -27,6 +27,7 @@ const SavedCollection = ({ route }: SavedCollectionProps) => {
     const bookmarks = [...(collection?.bookmarks || [])]
     bookmarks.reverse()
     //
+
     const [selectionMode, setSelectionMode] = useState<boolean>(false)
     const [selectedIndexs, setSelectedIndexs] = useState<number[]>([])
     const [showOptions, setShowOptions] = useState<boolean>(false)
@@ -60,27 +61,46 @@ const SavedCollection = ({ route }: SavedCollectionProps) => {
             setSelectedIndexs([])
         }
     }
+    if (!collection) {
+        navigate('Saved')
+        return <React.Fragment></React.Fragment>
+    }
     return (
-        <SafeAreaView style={{
-            height: SCREEN_HEIGHT - getTabBarHeight(),
-            ...styles.container
-        }}>
+        <React.Fragment>
             {showOptions &&
                 <TouchableOpacity
                     activeOpacity={1}
                     onPress={() => setShowOptions(false)}
                     style={styles.backdrop}>
                     <View style={styles.menu}>
-                        <TouchableOpacity style={styles.menuItem}>
-                            <Text style={styles.menuText}>
-                                Edit Collection
+                        {collectionName !== 'All Posts' &&
+                            <>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        navigate('EditSavedCollection', {
+                                            collectionName,
+                                        })
+                                        setShowOptions(false)
+                                    }}
+                                    style={styles.menuItem}>
+                                    <Text style={styles.menuText}>
+                                        Edit Collection
                             </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.menuItem}>
-                            <Text style={styles.menuText}>
-                                Add to Collection
-                            </Text>
-                        </TouchableOpacity>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        navigate('AddToSavedCollection', {
+                                            collectionName,
+                                        })
+                                        setShowOptions(false)
+                                    }}
+                                    style={styles.menuItem}>
+                                    <Text style={styles.menuText}>
+                                        Add to Collection
+                                    </Text>
+                                </TouchableOpacity>
+                            </>
+                        }
                         <TouchableOpacity
                             onPress={() => {
                                 setSelectionMode(true)
@@ -94,137 +114,143 @@ const SavedCollection = ({ route }: SavedCollectionProps) => {
                     </View>
                 </TouchableOpacity>
             }
-            <View style={styles.navigationBar}>
-                <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                }}>
-                    <TouchableOpacity
-                        onPress={_onGoback}
-                        style={styles.btnNavigation}>
-                        <Icon name="arrow-left" size={20} />
-                    </TouchableOpacity>
-                    {(selectionMode && selectedIndexs.length > 0) ? (
-                        <Text style={{
-                            fontSize: 16,
-                            fontWeight: '600'
-                        }}>{selectedIndexs.length} Selected</Text>
-                    ) : (
-                            <View>
-                                <Text style={{
-                                    fontSize: 12
-                                }}>
-                                    Saved
-                        </Text>
-                                <Text style={{
-                                    fontWeight: '600'
-                                }}>
-                                    {collection?.name}
-                                </Text>
-                            </View>
-                        )}
-                </View>
-                <TouchableOpacity
-                    onPress={() => setShowOptions(true)}
-                    style={styles.btnNavigation}>
-                    <Icon name="dots-vertical" size={20} />
-                </TouchableOpacity>
-            </View>
-            <FlatList
-                bounces={false}
-                numColumns={3}
-                data={bookmarks}
-                renderItem={({ item, index }) => (
-                    <TouchableOpacity
-                        onLongPress={() => {
-                            if (!selectionMode) {
-                                setSelectedIndexs([index])
-                                setSelectionMode(true)
-                            }
-                        }}
-                        onPress={() => {
-                            if (selectionMode) {
-                                _onSelectImage(index)
-                            } else navigate('PostDetail', {
-                                postId: item.postId
-                            })
-                        }}
-                        activeOpacity={0.8}
-                        style={{
-                            marginHorizontal: (index - 1) % 3 === 0 ? 3 : 0,
-                            marginTop: index > 2 ? 3 : 0
-                        }}>
-                        <FastImage
-                            source={{
-                                uri: item.previewUri
-                            }}
-                            style={styles.bookmarkImage}
-                        />
-                        {selectionMode &&
-                            <View style={{
-                                position: 'absolute',
-                                right: 7.5,
-                                top: 7.5,
-                                height: 24,
-                                width: 24,
-                                borderRadius: 24,
-                                borderColor: '#fff',
-                                borderWidth: 1,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                zIndex: 1,
-                                backgroundColor: selectedIndexs.indexOf(index) > -1
-                                    ? '#318bfb' : 'rgba(0,0,0,0.3)'
-                            }}>
-                                {selectedIndexs.indexOf(index) > -1 &&
+            <SafeAreaView style={{
+                height: SCREEN_HEIGHT - getTabBarHeight(),
+                ...styles.container
+            }}>
+
+                <View style={styles.navigationBar}>
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center'
+                    }}>
+                        <TouchableOpacity
+                            onPress={_onGoback}
+                            style={styles.btnNavigation}>
+                            <Icon name="arrow-left" size={20} />
+                        </TouchableOpacity>
+                        {(selectionMode && selectedIndexs.length > 0) ? (
+                            <Text style={{
+                                fontSize: 16,
+                                fontWeight: '600'
+                            }}>{selectedIndexs.length} Selected</Text>
+                        ) : (
+                                <View>
                                     <Text style={{
-                                        color: '#fff'
+                                        fontSize: 12
                                     }}>
-                                        {selectedIndexs.indexOf(index) + 1}
+                                        Saved
+                        </Text>
+                                    <Text style={{
+                                        fontWeight: '600'
+                                    }}>
+                                        {collection?.name}
                                     </Text>
-                                }
-                            </View>
-                        }
-                    </TouchableOpacity>
-                )}
-                keyExtractor={(_, index) => `${index}`}
-            />
-            {selectionMode &&
-                <View style={styles.bottomOptions}>
+                                </View>
+                            )}
+                    </View>
                     <TouchableOpacity
-                        onPress={_onRemove}
-                        disabled={selectedIndexs.length === 0}
-                        style={styles.bottomOption}
-                    >
-                        <Text style={{
-                            fontSize: 16,
-                            color: selectedIndexs.length > 0 ? '#000' : "#666",
-                            fontWeight: "500"
-                        }}>Remove</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() =>
-                            navigate('MoveBookmarkOptions', {
-                                fromCollectionName: collectionName,
-                                bookmarks: [...bookmarks],
-                                selectedIndexs
-                            })}
-                        disabled={selectedIndexs.length === 0}
-                        style={styles.bottomOption}
-                    >
-                        <Text style={{
-                            fontSize: 16,
-                            color: selectedIndexs.length > 0 ? '#000' : "#666",
-                            fontWeight: "500"
-                        }}>Move</Text>
+                        onPress={() => setShowOptions(true)}
+                        style={styles.btnNavigation}>
+                        <Icon name="dots-vertical" size={20} />
                     </TouchableOpacity>
                 </View>
-            }
-        </SafeAreaView>
+                <FlatList
+                    bounces={false}
+                    numColumns={3}
+                    data={bookmarks}
+                    renderItem={({ item, index }) => (
+                        <TouchableOpacity
+                            onLongPress={() => {
+                                if (!selectionMode) {
+                                    setSelectedIndexs([index])
+                                    setSelectionMode(true)
+                                }
+                            }}
+                            onPress={() => {
+                                if (selectionMode) {
+                                    _onSelectImage(index)
+                                } else navigate('PostDetail', {
+                                    postId: item.postId
+                                })
+                            }}
+                            activeOpacity={0.8}
+                            style={{
+                                marginHorizontal: (index - 1) % 3 === 0 ? 3 : 0,
+                                marginTop: index > 2 ? 3 : 0
+                            }}>
+                            <FastImage
+                                source={{
+                                    uri: item.previewUri
+                                }}
+                                style={styles.bookmarkImage}
+                            />
+                            {selectionMode &&
+                                <View style={{
+                                    position: 'absolute',
+                                    right: 7.5,
+                                    top: 7.5,
+                                    height: 24,
+                                    width: 24,
+                                    borderRadius: 24,
+                                    borderColor: '#fff',
+                                    borderWidth: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    zIndex: 1,
+                                    backgroundColor: selectedIndexs.indexOf(index) > -1
+                                        ? '#318bfb' : 'rgba(0,0,0,0.3)'
+                                }}>
+                                    {selectedIndexs.indexOf(index) > -1 &&
+                                        <Text style={{
+                                            color: '#fff'
+                                        }}>
+                                            {selectedIndexs.indexOf(index) + 1}
+                                        </Text>
+                                    }
+                                </View>
+                            }
+                        </TouchableOpacity>
+                    )}
+                    keyExtractor={(_, index) => `${index}`}
+                />
+                {selectionMode &&
+                    <View style={styles.bottomOptions}>
+                        <TouchableOpacity
+                            onPress={_onRemove}
+                            disabled={selectedIndexs.length === 0}
+                            style={styles.bottomOption}
+                        >
+                            <Text style={{
+                                fontSize: 16,
+                                color: selectedIndexs.length > 0 ? '#000' : "#666",
+                                fontWeight: "500"
+                            }}>Remove</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() =>
+                                navigate('MoveBookmarkOptions', {
+                                    fromCollectionName: collectionName,
+                                    bookmarks: [...bookmarks],
+                                    selectedIndexs
+                                })}
+                            disabled={selectedIndexs.length === 0 || collectionName === 'All Posts'}
+                            style={styles.bottomOption}
+                        >
+                            <Text style={{
+                                fontSize: 16,
+                                color: (selectedIndexs.length > 0 && collectionName !== 'All Posts') ? '#000' : "#666",
+                                fontWeight: "500"
+                            }}>Move</Text>
+                        </TouchableOpacity>
+                    </View>
+                }
+            </SafeAreaView>
+        </React.Fragment >
     )
 }
 
-export default React.memo(SavedCollection)
+export default SavedCollection
 const IMAGE_SIZE = (SCREEN_WIDTH - 6) / 3
 const styles = StyleSheet.create({
     container: {
@@ -253,8 +279,8 @@ const styles = StyleSheet.create({
     },
     backdrop: {
         zIndex: 1,
-        width: '100%',
-        height: '100%',
+        width: SCREEN_WIDTH,
+        height: SCREEN_HEIGHT,
         position: 'absolute',
         top: 0,
         left: 0,
@@ -265,7 +291,6 @@ const styles = StyleSheet.create({
     menu: {
         width: '80%',
         borderRadius: 5,
-        height: 44 * 3,
         backgroundColor: "#fff"
     },
     menuItem: {
