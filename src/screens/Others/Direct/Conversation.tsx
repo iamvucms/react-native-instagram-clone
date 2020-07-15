@@ -1,27 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { StyleSheet, Animated, Text, View, SafeAreaView, TouchableOpacity, Image, KeyboardAvoidingView, FlatList, TextInput } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import FastImage from 'react-native-fast-image'
-import { useSelector } from '../../../reducers'
-import { RouteProp } from '@react-navigation/native'
-import { SuperRootStackParamList } from '../../../navigations'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { onlineTypes, Message, PostingMessage, seenTypes, messagesTypes, emojiTypes } from '../../../reducers/messageReducer'
-import { goBack, navigate } from '../../../navigations/rootNavigation'
-import { timestampToString, uriToBlob } from '../../../utils'
-import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../constants'
-import { store } from '../../../store'
-import { useDispatch } from 'react-redux'
-import { CreateMessageRequest, MakeSeenRequest, CreateEmptyConversationRequest, AddEmoijToMessageRequest, RemoveEmoijToMessageRequest } from '../../../actions/messageActions'
-import { ProfileX } from '../../../reducers/profileXReducer'
 import CameraRoll from '@react-native-community/cameraroll'
+import { RouteProp } from '@react-navigation/native'
 import { storage } from 'firebase'
-import { date } from 'yup'
-import ScaleImage from '../../../components/ScaleImage'
+import React, { useEffect, useRef, useState } from 'react'
+import { Animated, FlatList, Image, KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import FastImage from 'react-native-fast-image'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useDispatch } from 'react-redux'
+import { AddEmoijToMessageRequest, CreateEmptyConversationRequest, CreateMessageRequest, MakeSeenRequest, RemoveEmoijToMessageRequest } from '../../../actions/messageActions'
 import MessageItem from '../../../components/MessageItem'
+import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../../constants'
+import { SuperRootStackParamList } from '../../../navigations'
+import { goBack, navigate } from '../../../navigations/rootNavigation'
+import { useSelector } from '../../../reducers'
+import { emojiTypes, messagesTypes, onlineTypes, PostingMessage, seenTypes } from '../../../reducers/messageReducer'
+import { store } from '../../../store'
+import { timestampToString, uriToBlob } from '../../../utils'
 type ConversationRouteProp = RouteProp<SuperRootStackParamList, 'Conversation'>
-
-
 type ConversationProps = {
     route: ConversationRouteProp
 }
@@ -29,6 +23,7 @@ const Conversation = ({ route }: ConversationProps) => {
     const dispatch = useDispatch()
     const myUsername = store.getState().user.user.userInfo?.username || ''
     const targetUsername = route.params.username
+    const myCurrentBlockAccounts = useSelector(state => state.user.setting?.privacy?.blockedAccounts?.blockedAccounts) || []
     const conversation = useSelector(state => state.messages.filter(group => group.ownUser.username === targetUsername)[0])
     const [typing, setTyping] = useState<boolean>(false)
     const [uploadingImage, setUploadingImage] = useState<boolean>(false)
@@ -245,6 +240,10 @@ const Conversation = ({ route }: ConversationProps) => {
             alignItems: 'center'
         }}></View>
     )
+    const isBlocked = myCurrentBlockAccounts.indexOf(targetUsername) > -1
+        || (conversation.ownUser.privacySetting?.blockedAccounts?.blockedAccounts
+            && conversation.ownUser.privacySetting?.blockedAccounts?.blockedAccounts
+                .indexOf(myUsername) > -1)
     return (
         <View style={styles.container}>
             {selectedEmoijTargetIndex > -1 &&
@@ -363,7 +362,11 @@ const Conversation = ({ route }: ConversationProps) => {
                             width: 24
                         }} source={require('../../../assets/icons/video-call.png')} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnNavigation}>
+                    <TouchableOpacity
+                        onPress={() => navigate('ConversationOptions', {
+                            username: targetUsername
+                        })}
+                        style={styles.btnNavigation}>
                         <Image style={{
                             height: 24,
                             width: 24
@@ -382,6 +385,7 @@ const Conversation = ({ route }: ConversationProps) => {
                     }]
                 }}>
                     <FlatList
+                        showsVerticalScrollIndicator={false}
                         ref={_flatlistRef}
                         onContentSizeChange={_onMessageBoxSizeChange}
                         style={{
@@ -399,69 +403,82 @@ const Conversation = ({ route }: ConversationProps) => {
                         inverted
                     />
                     <View style={styles.msgInputWrapper}>
-                        <TouchableOpacity
-                            onPress={() => navigate('StoryTaker', {
-                                sendToDirect: true,
-                                username: conversation.ownUser.username
-                            })}
-                            activeOpacity={0.8}
-                            style={styles.btnCamera}>
-                            <Image style={{
-                                width: 20,
-                                height: 20
-                            }} source={require('../../../assets/icons/camera-white.png')} />
-                        </TouchableOpacity>
-                        <TextInput
-                            value={text}
-                            onChangeText={setText}
-                            multiline={true}
-                            onFocus={_onMsgInputFocus}
-                            onBlur={setTyping.bind(null, false)}
-                            style={{
-                                ...styles.msgInput,
-                                width: (typing || text.length > 0) ? SCREEN_WIDTH - 30 - 44 - 60 : SCREEN_WIDTH - 30 - 44
-                            }}
-                            placeholder="Message..."
-                        />
-                        {(typing || text.length > 0) ? (
-                            <TouchableOpacity
-                                onPress={_onSendText}
-                                style={styles.btnSend}>
-                                <Text style={{
-                                    fontWeight: '600',
-                                    color: '#318bfb'
-                                }}>
-                                    Send
+                        {!isBlocked &&
+                            <React.Fragment>
+                                <TouchableOpacity
+                                    onPress={() => navigate('StoryTaker', {
+                                        sendToDirect: true,
+                                        username: conversation.ownUser.username
+                                    })}
+                                    activeOpacity={0.8}
+                                    style={styles.btnCamera}>
+                                    <Image style={{
+                                        width: 20,
+                                        height: 20
+                                    }} source={require('../../../assets/icons/camera-white.png')} />
+                                </TouchableOpacity>
+                                <TextInput
+                                    value={text}
+                                    onChangeText={setText}
+                                    multiline={true}
+                                    onFocus={_onMsgInputFocus}
+                                    onBlur={setTyping.bind(null, false)}
+                                    style={{
+                                        ...styles.msgInput,
+                                        width: (typing || text.length > 0) ? SCREEN_WIDTH - 30 - 44 - 60 : SCREEN_WIDTH - 30 - 44
+                                    }}
+                                    placeholder="Message..."
+                                />
+                                {(typing || text.length > 0) ? (
+                                    <TouchableOpacity
+                                        onPress={_onSendText}
+                                        style={styles.btnSend}>
+                                        <Text style={{
+                                            fontWeight: '600',
+                                            color: '#318bfb'
+                                        }}>
+                                            Send
                                 </Text>
-                            </TouchableOpacity>
-                        ) : (
-                                <>
-                                    {text.length === 0 &&
-                                        <View style={styles.msgRightOptions}>
-                                            <TouchableOpacity
-                                                onPress={_onShowGallery}
-                                                style={styles.btnNavigation}>
-                                                <Image style={{
-                                                    width: 20,
-                                                    height: 20
-                                                }} source={require('../../../assets/icons/photo.png')} />
-                                            </TouchableOpacity>
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    navigate('EmojiOptions', {
-                                                        targetUsername
-                                                    })
-                                                }}
-                                                style={styles.btnNavigation}>
-                                                <Image style={{
-                                                    width: 20,
-                                                    height: 20
-                                                }} source={require('../../../assets/icons/emoji.png')} />
-                                            </TouchableOpacity>
-                                        </View>
-                                    }
-                                </>
-                            )}
+                                    </TouchableOpacity>
+                                ) : (
+                                        <>
+                                            {text.length === 0 &&
+                                                <View style={styles.msgRightOptions}>
+                                                    <TouchableOpacity
+                                                        onPress={_onShowGallery}
+                                                        style={styles.btnNavigation}>
+                                                        <Image style={{
+                                                            width: 20,
+                                                            height: 20
+                                                        }} source={require('../../../assets/icons/photo.png')} />
+                                                    </TouchableOpacity>
+                                                    <TouchableOpacity
+                                                        onPress={() => {
+                                                            navigate('EmojiOptions', {
+                                                                targetUsername
+                                                            })
+                                                        }}
+                                                        style={styles.btnNavigation}>
+                                                        <Image style={{
+                                                            width: 20,
+                                                            height: 20
+                                                        }} source={require('../../../assets/icons/emoji.png')} />
+                                                    </TouchableOpacity>
+                                                </View>
+                                            }
+                                        </>
+                                    )}
+                            </React.Fragment>
+                        }
+                        {isBlocked &&
+                            <Text style={{
+                                textAlign: 'center',
+                                width: '100%',
+                                color: '#666'
+                            }}>
+                                You can't not reply this conversation.
+                            </Text>
+                        }
                     </View>
                 </Animated.View>
                 <Animated.View style={{

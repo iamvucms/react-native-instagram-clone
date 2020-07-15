@@ -103,6 +103,8 @@ export type PrivacyProperties =
     | 'restrictedAccounts'
     | 'closeFriends'
     | 'blockedAccounts'
+    | 'mutedMessages'
+    | 'mutedVideoCalls'
 export type NotificationLevel = 0 | 1 | 2
 export type PostStoryCommentOptions = {
     likes?: NotificationLevel,
@@ -189,6 +191,12 @@ export type PrivacySetting = {
     },
     accountPrivacy?: {
         private?: boolean
+    },
+    mutedMessages?: {
+        mutedMessages?: string[]
+    },
+    mutedVideoCalls?: {
+        mutedVideoCalls?: string[]
     },
     blockedAccounts?: {
         blockedAccounts?: string[]
@@ -344,6 +352,12 @@ export const defaultUserState: userPayload = {
                 allowResharing: false,
                 allowSharing: true,
                 shareYourStoryToFacebook: false
+            },
+            mutedMessages: {
+                mutedMessages: []
+            },
+            mutedVideoCalls: {
+                mutedVideoCalls: []
             },
             restrictedAccounts: {
                 restrictedAccounts: []

@@ -50,7 +50,7 @@ const CustomNotificationIcon = ({ focused }: CustomNotificationIconProps) => {
                     useNativeDriver: true,
                     duration: 150
                 }),
-            ]), { iterations: 20 })
+            ]), { iterations: 10 })
         ]).start(() =>
             Animated.parallel([
                 Animated.timing(_animBellY, {

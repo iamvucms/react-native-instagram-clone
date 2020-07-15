@@ -74,7 +74,8 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
                         oH: item.height,
                         oW: item.width,
                         pScale: 0.4 * SCREEN_WIDTH / (item.width as number),
-                        uri: item.sourceUri
+                        uri: item.sourceUri,
+                        borderRadius: true
                     })
                 })
                 break

@@ -37,6 +37,9 @@ import ImageFullView from '../screens/Others/Direct/ImageFullView';
 import EmojiOptions from '../screens/Others/Direct/EmojiOptions';
 import SuperImageFullView from '../screens/Others/Direct/SuperImageFullView';
 import MoveBookmarkOptions from '../screens/Others/MoveBookmarkOptions';
+import ConversationOptions from '../screens/Others/Direct/ConversationOptions';
+import SharedImages from '../screens/Others/Direct/SharedImages';
+import { Message } from '../reducers/messageReducer';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -115,7 +118,9 @@ export type SuperRootStackParamList = {
         oH: number,
         oW: number,
         pScale: number,
-        uri: string
+        uri: string,
+        borderRadius?: boolean,
+        unScaled?: boolean
     },
     EmojiOptions: {
         targetUsername: string
@@ -127,6 +132,12 @@ export type SuperRootStackParamList = {
         fromCollectionName: string,
         bookmarks: Bookmark[],
         selectedIndexs: number[]
+    },
+    ConversationOptions: {
+        username: string
+    },
+    SharedImages: {
+        imageMessages: Message[]
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -198,6 +209,8 @@ const index = (): JSX.Element => {
                     gestureEnabled: true,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="StoryFullView" component={StoryFullView} />
+                <RootStack.Screen name="ConversationOptions" component={ConversationOptions} />
+                <RootStack.Screen name="SharedImages" component={SharedImages} />
                 <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
                     gestureEnabled: true,

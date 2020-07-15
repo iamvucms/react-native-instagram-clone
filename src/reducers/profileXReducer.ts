@@ -61,6 +61,12 @@ export interface ProfileX {
         restrictedAccounts?: {
             restrictedAccounts?: string[]
         },
+        mutedMessages?: {
+            mutedMessages?: string[]
+        },
+        mutedVideoCalls?: {
+            mutedVideoCalls?: string[]
+        },
         mutedAccouts?: {
             posts?: string[],
             story?: string[]

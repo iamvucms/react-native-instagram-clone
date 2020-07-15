@@ -346,7 +346,7 @@ const index = () => {
                         position: 'relative',
                         width: '100%',
                         height: '100%',
-                    }} source={{ uri: selectedPhoto.source[0].uri, }} >
+                    }} source={{ uri: selectedPhoto.source[0].uri, cache: 'force-cache' }} >
                     <Animated.View style={{
                         width: _popupImageWidth,
                         position: 'absolute',
