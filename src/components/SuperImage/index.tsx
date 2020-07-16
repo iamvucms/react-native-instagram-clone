@@ -33,7 +33,7 @@ const SuperImage = ({ superId, disableNavigation, onNext, onBack, onStopAnimatio
         if (onStopAnimation) onStopAnimation()
         switch (label.type) {
             case 'address':
-                navigate('location', {
+                navigate('Location', {
                     address: {
                         place_name: label.text,
                         id: label.address_id
@@ -123,7 +123,6 @@ const SuperImage = ({ superId, disableNavigation, onNext, onBack, onStopAnimatio
                                     fontSize: 40,
                                     fontWeight: '800',
                                     color: txtLabel.textBg ? '#000' : txtLabel.color,
-
                                 }}
                             >
                                 {txtLabel.text}

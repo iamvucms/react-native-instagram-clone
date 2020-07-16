@@ -11,7 +11,7 @@ import { messagesTypes, Message } from '../../../reducers/messageReducer'
 import { SCREEN_WIDTH } from '../../../constants'
 import FastImage from 'react-native-fast-image'
 import { useDispatch } from 'react-redux'
-import { UnfollowRequest, ToggleSendFollowRequest, UpdatePrivacySettingsRequest } from '../../../actions/userActions'
+import { UnfollowRequest, ToggleSendFollowRequest, UpdatePrivacySettingsRequest, ToggleFollowUserRequest } from '../../../actions/userActions'
 
 type ConversationOptionsRouteProp = RouteProp<SuperRootStackParamList, 'ConversationOptions'>
 type ConversationOptionsProps = {
@@ -70,10 +70,13 @@ const ConversationOptions = ({ route }: ConversationOptionsProps) => {
             dispatch(UnfollowRequest(targetUsername))
             setFollowType(2)
         } else if (followType === 2) {
-            dispatch(ToggleSendFollowRequest(targetUsername))
             if (conversation.ownUser.privacySetting?.accountPrivacy?.private) {
                 setFollowType(3)
-            } else setFollowType(1)
+                dispatch(ToggleSendFollowRequest(targetUsername))
+            } else {
+                setFollowType(1)
+                dispatch(ToggleFollowUserRequest(targetUsername))
+            }
         } else {
             dispatch(ToggleSendFollowRequest(targetUsername))
             setFollowType(2)

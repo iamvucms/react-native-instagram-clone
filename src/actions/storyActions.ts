@@ -166,3 +166,40 @@ export const PostStoryRequest = (images: Story[]):
         return []
     }
 }
+export const DeleteStoryRequest = (storyId: number):
+    ThunkAction<Promise<string[]>, {}, {}, StoryAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, StoryAction>) => {
+        try {
+            const ref = firestore()
+            const me = store.getState().user.user
+            const myUsername = `${me.userInfo?.username}`
+            const rq = await ref.collection('stories')
+                .doc(`${storyId}`)
+                .get()
+            if (rq.exists) {
+                const story: Story = rq.data() || {}
+                if (story.userId === myUsername) {
+                    await rq.ref.delete()
+                    // const stories = [...store.getState().storyList]
+                    // const index = stories.findIndex(x => x.ownUser.username === myUsername)
+                    // const newExtraStory = stories[index]
+                    // const newStoryList = [...newExtraStory.storyList]
+                    // const storyIndex = newStoryList.findIndex(x => x.uid === storyId)
+                    // newStoryList.splice(storyIndex, 1)
+                    // newExtraStory.storyList = newStoryList
+                    // stories[index] = newExtraStory
+                    // dispatch(FetchStoryListSuccess(stories))
+                }
+            }
+
+        } catch (e) {
+            dispatch({
+                type: storyActionTypes.FETCH_STORY_LIST_FAILURE,
+                payload: {
+                    message: 'Delete story error!'
+                }
+            })
+        }
+        return []
+    }
+}

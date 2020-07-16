@@ -40,6 +40,8 @@ import MoveBookmarkOptions from '../screens/Others/MoveBookmarkOptions';
 import ConversationOptions from '../screens/Others/Direct/ConversationOptions';
 import SharedImages from '../screens/Others/Direct/SharedImages';
 import { Message } from '../reducers/messageReducer';
+import { ExtraStory } from '../reducers/storyReducer';
+import StorySeenList from '../screens/Others/StorySeenList';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -138,6 +140,10 @@ export type SuperRootStackParamList = {
     },
     SharedImages: {
         imageMessages: Message[]
+    },
+    StorySeenList: {
+        extraStory: ExtraStory,
+        childIndex: number
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -238,6 +244,10 @@ const index = (): JSX.Element => {
                     cardStyle: { backgroundColor: 'transparent' },
                     animationEnabled: false
                 }} name="ImageFullView" component={ImageFullView} />
+                <RootStack.Screen options={{
+                    cardStyle: { backgroundColor: 'transparent' },
+                    animationEnabled: false
+                }} name="StorySeenList" component={StorySeenList} />
             </RootStack.Navigator>
         </NavigationContainer>
     )
