@@ -12,9 +12,13 @@ export interface SuperImageProps {
     onNext?: () => void
     onBack?: () => void
     onStopAnimation?: () => void,
-    disableNavigation?: boolean
+    disableNavigation?: boolean,
+    disablePress?: boolean,
+    fitSize?: boolean,
+    showOnlyImage?: boolean,
+    onReady?: () => void
 }
-const SuperImage = ({ superId, disableNavigation, onNext, onBack, onStopAnimation }: SuperImageProps) => {
+const SuperImage = ({ onReady, fitSize, showOnlyImage, disablePress, superId, disableNavigation, onNext, onBack, onStopAnimation }: SuperImageProps) => {
     const myUsername = store.getState().user.user.userInfo?.username || ''
     const [photo, setPhoto] = useState<StoryProcessedImage>()
     useEffect(() => {
@@ -62,36 +66,46 @@ const SuperImage = ({ superId, disableNavigation, onNext, onBack, onStopAnimatio
         )
     } else {
         return (
-            <View style={StyleSheet.absoluteFillObject}>
+            <View style={{
+                ...StyleSheet.absoluteFillObject,
+                width: fitSize ? '100%' : SCREEN_WIDTH,
+                height: fitSize ? '100%' : SCREEN_HEIGHT,
+            }}>
                 <ImageBackground
-                    style={styles.backgroundContainer}
+                    onLoadEnd={() => onReady && onReady()}
+                    style={{
+                        ...styles.backgroundContainer,
+                    }}
                     source={{
                         uri: photo.uri,
                         cache: "force-cache"
                     }}
                     blurRadius={10}
                 >
-                    <View style={{
-                        ...StyleSheet.absoluteFillObject,
-                        zIndex: 1,
-                        width: SCREEN_WIDTH,
-                        height: SCREEN_HEIGHT,
-                        flexDirection: 'row',
-                    }}>
-                        <TouchableOpacity
-                            onPress={() => onBack && onBack()}
-                            style={{
-                                width: '50%',
-                                height: '100%'
-                            }} ><></></TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => onNext && onNext()}
-                            style={{
-                                width: '50%',
-                                height: '100%'
-                            }} ><></></TouchableOpacity>
-                    </View>
-                    {photo.texts.map((txtLabel, labelIndex) => (
+                    {!!!disablePress &&
+                        <View style={{
+                            ...StyleSheet.absoluteFillObject,
+                            zIndex: 1,
+                            width: '100%',
+                            height: '100%',
+                            flexDirection: 'row',
+                        }}>
+                            <TouchableOpacity
+                                onPress={() => onBack && onBack()}
+                                style={{
+                                    width: '50%',
+                                    height: '100%'
+                                }} ><></></TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => onNext && onNext()}
+                                style={{
+                                    width: '50%',
+                                    height: '100%'
+                                }} ><></></TouchableOpacity>
+                        </View>
+                    }
+
+                    {!!!showOnlyImage && photo.texts.map((txtLabel, labelIndex) => (
                         <View
                             key={labelIndex}
                             style={{
@@ -129,7 +143,7 @@ const SuperImage = ({ superId, disableNavigation, onNext, onBack, onStopAnimatio
                             </Text>
                         </View>
                     ))}
-                    {photo.labels.map((label, labelIndex) => (
+                    {!!!showOnlyImage && photo.labels.map((label, labelIndex) => (
                         <TouchableOpacity
                             activeOpacity={0.8}
                             onPress={_onLabelPress.bind(null, label)}
@@ -184,11 +198,11 @@ const SuperImage = ({ superId, disableNavigation, onNext, onBack, onStopAnimatio
                     ))}
                     <Animated.View
                         style={{
-                            width: photo.width,
-                            height: photo.height,
+                            width: fitSize ? '100%' : photo.width,
+                            height: fitSize ? '100%' : photo.height,
                             transform: [
                                 {
-                                    scale: photo.ratio
+                                    scale: fitSize ? 1 : photo.ratio
                                 },
                                 {
                                     rotate: photo.rotateDeg
@@ -214,7 +228,7 @@ const SuperImage = ({ superId, disableNavigation, onNext, onBack, onStopAnimatio
                             }} />
                     </Animated.View>
                 </ImageBackground>
-            </View>
+            </View >
         )
     }
 
@@ -226,8 +240,8 @@ export default SuperImage
 const styles = StyleSheet.create({
     backgroundContainer: {
         overflow: 'hidden',
-        width: SCREEN_WIDTH,
-        height: SCREEN_HEIGHT,
+        width: '100%',
+        height: '100%',
         justifyContent: "center",
         alignItems: 'center'
     },

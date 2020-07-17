@@ -5,6 +5,7 @@ import { ExtraStory, seenTypes } from '../../reducers/storyReducer'
 import FastImage from 'react-native-fast-image'
 import { firestore } from 'firebase'
 import { navigate } from '../../navigations/rootNavigation'
+import { store } from '../../store'
 export interface StoryPreviewItemProps {
     item: ExtraStory,
     index: number
@@ -12,10 +13,12 @@ export interface StoryPreviewItemProps {
 const StoryPreviewItem = ({ item: { ownUser, storyList }, index }: StoryPreviewItemProps) => {
     const _loadingDeg = new Animated.Value(0)
     const [seen, setSeen] = useState<boolean>(false)
+    const myUsername = store.getState().user.user.userInfo?.username || ''
     useEffect(() => {
-        const isSeen: boolean = storyList.every(story => story.seen === seenTypes.SEEN)
+        const isSeen: boolean = storyList.every(story =>
+            (story.seenList || []).indexOf(myUsername) > -1)
         setSeen(isSeen)
-    }, [])
+    }, [storyList])
     const [preloadingImage, setPreloadingImage] = useState<boolean>(false)
     const _onShowStory = () => {
         if (seen) {

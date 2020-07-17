@@ -37,6 +37,7 @@ const App = () => {
       // }, 15000)
     }
   }, [])
+  console.log("render")
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>

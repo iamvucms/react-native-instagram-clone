@@ -123,7 +123,7 @@ export const PostStoryRequest = (images: Story[]):
                                 const data: HashTag[] = rq.docs.map(x => x.data() || {})
                                 return data.map(x => x.name || '')
                             })
-                            Promise.all(fetchRelatedTags).then(rs => {
+                            Promise.all(fetchRelatedTags).then(async rs => {
                                 let relatedTags: string[] = []
                                 rs.map(lv1 => {
                                     lv1.map(x => relatedTags.push(x))
@@ -140,7 +140,7 @@ export const PostStoryRequest = (images: Story[]):
                                     }
                                 })
                                 const hashtagUid = new Date().getTime()
-                                ref.collection('hashtags').doc(hashtag).set({
+                                await ref.collection('hashtags').doc(hashtag).set({
                                     name: hashtag,
                                     followers: [],
                                     keyword,
@@ -153,6 +153,7 @@ export const PostStoryRequest = (images: Story[]):
                         }
                     })
                 }
+                dispatch(FetchStoryListRequest())
             }
 
         } catch (e) {

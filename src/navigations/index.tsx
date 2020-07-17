@@ -42,6 +42,7 @@ import SharedImages from '../screens/Others/Direct/SharedImages';
 import { Message } from '../reducers/messageReducer';
 import { ExtraStory } from '../reducers/storyReducer';
 import StorySeenList from '../screens/Others/StorySeenList';
+import StoryViewerOptions from '../screens/Others/StoryViewerOptions';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -144,6 +145,9 @@ export type SuperRootStackParamList = {
     StorySeenList: {
         extraStory: ExtraStory,
         childIndex: number
+    },
+    StoryViewerOptions: {
+        username: string
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -245,9 +249,14 @@ const index = (): JSX.Element => {
                     animationEnabled: false
                 }} name="ImageFullView" component={ImageFullView} />
                 <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' },
                     animationEnabled: false
                 }} name="StorySeenList" component={StorySeenList} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    cardStyle: { backgroundColor: 'transparent' },
+                }} name="StoryViewerOptions" component={StoryViewerOptions} />
             </RootStack.Navigator>
         </NavigationContainer>
     )

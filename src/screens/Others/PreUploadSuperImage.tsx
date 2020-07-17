@@ -47,6 +47,7 @@ const PreUploadSuperImage = ({ route }: PreUploadSuperImageProps) => {
             mention: source.mention
         }))
         dispatch(PostStoryRequest(storyImages))
+        navigate('HomeIndex')
     }
     const _handlerGoBack = () => {
         if (searching) setSearching(false)

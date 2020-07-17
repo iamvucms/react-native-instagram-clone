@@ -21,10 +21,14 @@ firebase.initializeApp(firebaseConfig)
 //     .where('userId', '==', 'vucms').get().then(x => console.warn(x.docs[0].data()))
 // Refresh stories expired
 // firebase.firestore().collection('stories').get().then(docs => {
-//     docs.forEach(doc => doc.ref.update({
-//         create_at: new Date(),
-//         seenList: []
-//     }))
+//     docs.forEach(doc => {
+//         if (doc.data().seenList.length === 1) {
+//             doc.ref.update({
+//                 create_at: new Date(),
+//                 seenList: []
+//             })
+//         }
+//     })
 // })
 //Add default Setting
 // firebase.firestore().collection('users').get().then(docs => {

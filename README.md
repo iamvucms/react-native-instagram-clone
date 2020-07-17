@@ -18,6 +18,7 @@ Use the package manager [YARN] to install [React Native Instagram Clone].
 git clone https://github.com/iamvucms/react-native-instagram-clone.git
 cd react-native-instagram-clone
 yarn
+cd ios && pod install
 ```
 
 ## Usage

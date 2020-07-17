@@ -42,6 +42,7 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
     const [childIndex, setChildIndex] = useState<number>(getNextIndex())
     const [seenAll, setSeenAll] = useState<boolean>(false)
     const [state, setState] = useState<object>({})
+    const [showConfirmDelete, setShowConfirmDelete] = useState<boolean>(false)
     const ref = useRef<{
         message: string,
         allowAnimationCallback: boolean,
@@ -130,7 +131,7 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
             setController(index, index - 1)
         }
     }
-    const _onDeleteStory = async () => {
+    const _onConfirmDelete = async () => {
         const uid = item.storyList[childIndex].uid || 0
         await dispatch(DeleteStoryRequest(uid))
         setShowMoreOptions(false)
@@ -144,6 +145,43 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
     const previewSeenList = [...seenList].splice(-5)
     return (
         <React.Fragment>
+            {showConfirmDelete &&
+                <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={() => {
+                        setShowConfirmDelete(false)
+                        setState({})
+                    }}
+                    style={styles.backdrop}>
+                    <View style={styles.confirmBox}>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: "600",
+                            marginBottom: 15
+                        }}>Delete Story?</Text>
+                        <TouchableOpacity
+                            onPress={_onConfirmDelete}
+                            style={styles.btnConfirm}>
+                            <Text style={{
+                                fontSize: 16,
+                                fontWeight: "500",
+                                color: 'red'
+                            }}>Delete</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setShowConfirmDelete(false)
+                                setState({})
+                            }}
+                            style={styles.btnConfirm}>
+                            <Text style={{
+                                fontSize: 16,
+                                fontWeight: "500",
+                            }}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            }
             {showOptions &&
                 <TouchableOpacity
                     style={styles.backdrop}
@@ -173,7 +211,10 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
                     <View style={styles.optionsWrapper}>
                         <TouchableHighlight
                             underlayColor="#eee"
-                            onPress={_onDeleteStory}
+                            onPress={() => {
+                                setShowConfirmDelete(true)
+                                setShowMoreOptions(false)
+                            }}
                             style={styles.optionItem}>
                             <Text>Delete</Text>
                         </TouchableHighlight>
@@ -299,6 +340,9 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
                                 <View>
                                     {seenList.length > 0 &&
                                         <SeenPreviewList
+                                            stopAnimation={stopAnimation}
+                                            childIndex={childIndex}
+                                            extraStory={{ ...item }}
                                             seenCount={seenList.length}
                                             previewSeenList={previewSeenList} />
                                     }
@@ -477,13 +521,33 @@ const styles = StyleSheet.create({
         width: 30,
         borderColor: '#fff',
         borderWidth: 2
-    }
+    },
+
+    confirmBox: {
+        width: '80%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: 15,
+        backgroundColor: '#fff',
+        borderRadius: 10
+    },
+    btnConfirm: {
+        height: 44,
+        width: "100%",
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderTopColor: '#ddd',
+        borderTopWidth: 1
+    },
 })
 interface SeenPreviewListProps {
     previewSeenList: string[],
-    seenCount: number
+    seenCount: number,
+    childIndex: number,
+    extraStory: ExtraStory,
+    stopAnimation: () => void
 }
-const SeenPreviewList = ({ seenCount, previewSeenList }: SeenPreviewListProps) => {
+const SeenPreviewList = ({ seenCount, stopAnimation, childIndex, previewSeenList, extraStory }: SeenPreviewListProps) => {
     const [seenListPreviewInfo, setSeenListPreviewInfo] = useState<ProfileX[]>([])
     useEffect(() => {
         const previewInfoUsernames = Array.from(new Set(previewSeenList))
@@ -495,9 +559,18 @@ const SeenPreviewList = ({ seenCount, previewSeenList }: SeenPreviewListProps) =
         Promise.all(fetchPreviewSeenListInfoTask).then(userData => {
             setSeenListPreviewInfo(userData)
         })
-    }, [])
+    }, [previewSeenList])
+    const _onShowDetail = () => {
+        stopAnimation()
+        navigate('StorySeenList', {
+            extraStory,
+            childIndex
+        })
+    }
     return (
-        <TouchableOpacity>
+        <TouchableOpacity
+            onPress={_onShowDetail}
+        >
             <View style={styles.previewSeenList}>
                 {previewSeenList.map((usr, idx) => (
                     <FastImage
