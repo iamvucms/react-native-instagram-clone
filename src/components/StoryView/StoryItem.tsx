@@ -231,12 +231,12 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
                             style={styles.optionItem}>
                             <Text>Delete</Text>
                         </TouchableHighlight>
-                        <TouchableHighlight
+                        {/* <TouchableHighlight
                             underlayColor="#eee"
                             onPress={() => { }}
                             style={styles.optionItem}>
                             <Text>Send to...</Text>
-                        </TouchableHighlight>
+                        </TouchableHighlight> */}
                         <TouchableHighlight
                             underlayColor="#eee"
                             onPress={() => {

@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import Clipboard from '@react-native-community/clipboard'
-import { navigation, goBack } from '../../navigations/rootNavigation'
+import { navigation, goBack, navigate } from '../../navigations/rootNavigation'
 import { SCREEN_WIDTH } from '../../constants'
 import { SuperRootStackParamList } from '../../navigations'
 import { RouteProp } from '@react-navigation/native'
 import { useDispatch } from 'react-redux'
-import { UnfollowRequest } from '../../actions/userActions'
+import { UnfollowRequest, AddPostArchiveRequest, RemovePostArchiveRequest } from '../../actions/userActions'
 import { store } from '../../store'
 import { UpdatePostRequest } from '../../actions/postActions'
 import { sharePost } from '../../utils'
 import { firestore } from 'firebase'
 import { Post } from '../../reducers/postReducer'
 import { useSelector } from '../../reducers'
+import { PostArchive } from '../../reducers/userReducer'
 type PostOptionsRouteProp = RouteProp<SuperRootStackParamList, 'PostOptions'>
 type PostOptionsProps = {
     route: PostOptionsRouteProp
@@ -21,6 +22,7 @@ const PostOptions = ({ route }: PostOptionsProps) => {
     const user = store.getState().user.user.userInfo
     const item = route.params.item
     const setPost = route.params.setPost
+    const archivePosts = useSelector(state => state.user.archive?.posts || [])
     const post = setPost ? item : useSelector(state => state.postList).filter(post => post.uid === item.uid)[0] || {}
     const dispatch = useDispatch()
     const _onUnfollow = () => {
@@ -47,6 +49,24 @@ const PostOptions = ({ route }: PostOptionsProps) => {
         }))
         goBack()
     }
+    const _onArchive = async () => {
+        const postArchive: PostArchive = {
+            uid: item.uid as number,
+            create_at: new Date().getTime(),
+            previewUri: (item.source || [])[0]?.uri as string,
+            multiple: !!item.source && item.source.length > 1
+        }
+        await dispatch(AddPostArchiveRequest([postArchive]))
+        goBack()
+    }
+    const _onRemoveBoth = async () => {
+        navigate('AccountIndex')
+        await dispatch(RemovePostArchiveRequest(item.uid as number))
+    }
+    const _onRemoveArchive = async () => {
+        navigate('AccountIndex')
+        await dispatch(RemovePostArchiveRequest(item.uid as number))
+    }
     return (
         <TouchableOpacity
             activeOpacity={1}
@@ -55,65 +75,97 @@ const PostOptions = ({ route }: PostOptionsProps) => {
                 ...styles.container,
             }}>
             <View style={styles.mainOptions}>
-                {user?.username !== item.userId &&
-                    <View style={{ backgroundColor: "#000" }}>
-                        <TouchableOpacity
-                            activeOpacity={0.8}
-                            style={styles.optionItem}>
-                            <Text>Report...</Text>
-                        </TouchableOpacity>
-                    </View>
-                }
-                <View style={{ backgroundColor: "#000" }}>
-                    <TouchableOpacity
-                        onPress={_toggleNotification}
-                        activeOpacity={0.8}
-                        style={styles.optionItem}>
-                        <Text>Turn {(post.notificationUsers
-                            && post.notificationUsers?.indexOf(user?.username || '')
-                            > -1) ? 'Off' : 'On'
-                        } Post Notifications</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={{ backgroundColor: "#000" }}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            Clipboard.setString('https://instagram.com/' + item.uid)
-                        }}
-                        activeOpacity={0.8}
-                        style={styles.optionItem}>
-                        <Text>Copy Link</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={{ backgroundColor: "#000" }}>
-                    <TouchableOpacity
-                        onPress={() => sharePost(post)}
-                        activeOpacity={0.8}
-                        style={styles.optionItem}>
-                        <Text>Share to...</Text>
-                    </TouchableOpacity>
-                </View>
-                {user?.username !== item.userId &&
-                    <View style={{ backgroundColor: "#000" }}>
-                        <TouchableOpacity
-                            onPress={_onUnfollow}
-                            activeOpacity={0.8}
-                            style={styles.optionItem}>
-                            <Text>Unfollow</Text>
-                        </TouchableOpacity>
-                    </View>
-                }
+                {!!archivePosts.find(x => x.uid === item.uid) ? (
+                    <>
+                        <View style={{ backgroundColor: "#000" }}>
+                            <TouchableOpacity
+                                onPress={_onRemoveArchive}
+                                activeOpacity={0.8}
+                                style={styles.optionItem}>
+                                <Text>Show on Profile</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{ backgroundColor: "#000" }}>
+                            <TouchableOpacity
+                                onPress={_onRemoveBoth}
+                                activeOpacity={0.8}
+                                style={styles.optionItem}>
+                                <Text>Delete</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </>
+                ) : (
+                        <>
+                            {user?.username !== item.userId &&
+                                <View style={{ backgroundColor: "#000" }}>
+                                    <TouchableOpacity
+                                        activeOpacity={0.8}
+                                        style={styles.optionItem}>
+                                        <Text>Report...</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            }
+                            <View style={{ backgroundColor: "#000" }}>
+                                <TouchableOpacity
+                                    onPress={_toggleNotification}
+                                    activeOpacity={0.8}
+                                    style={styles.optionItem}>
+                                    <Text>Turn {(post.notificationUsers
+                                        && post.notificationUsers?.indexOf(user?.username || '')
+                                        > -1) ? 'Off' : 'On'
+                                    } Post Notifications</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={{ backgroundColor: "#000" }}>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        Clipboard.setString('https://instagram.com/' + item.uid)
+                                    }}
+                                    activeOpacity={0.8}
+                                    style={styles.optionItem}>
+                                    <Text>Copy Link</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={{ backgroundColor: "#000" }}>
+                                <TouchableOpacity
+                                    onPress={() => sharePost(post)}
+                                    activeOpacity={0.8}
+                                    style={styles.optionItem}>
+                                    <Text>Share to...</Text>
+                                </TouchableOpacity>
+                            </View>
+                            {user?.username === item.userId &&
+                                <View style={{ backgroundColor: "#000" }}>
+                                    <TouchableOpacity
+                                        onPress={_onArchive}
+                                        activeOpacity={0.8}
+                                        style={styles.optionItem}>
+                                        <Text>Archive</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            }
+                            {user?.username !== item.userId &&
+                                <View style={{ backgroundColor: "#000" }}>
+                                    <TouchableOpacity
+                                        onPress={_onUnfollow}
+                                        activeOpacity={0.8}
+                                        style={styles.optionItem}>
+                                        <Text>Unfollow</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            }
 
-                {user?.username !== item.userId &&
-                    <View style={{ backgroundColor: "#000" }}>
-                        <TouchableOpacity
-                            activeOpacity={0.8}
-                            style={styles.optionItem}>
-                            <Text>Mute</Text>
-                        </TouchableOpacity>
-                    </View>}
-
-
+                            {user?.username !== item.userId &&
+                                <View style={{ backgroundColor: "#000" }}>
+                                    <TouchableOpacity
+                                        activeOpacity={0.8}
+                                        style={styles.optionItem}>
+                                        <Text>Mute</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            }
+                        </>
+                    )}
             </View>
         </TouchableOpacity>
     )

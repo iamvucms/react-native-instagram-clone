@@ -1,5 +1,5 @@
 import { firestore } from 'firebase'
-import { DirectMessagesOptions, EmailandSMSNotificationsOptions, FollowingFollower, FromInstagramOptions, LiveIGTVOptions, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyStoryOptions, PrivacyTagsOptions, SearchItem } from './userReducer'
+import { DirectMessagesOptions, EmailandSMSNotificationsOptions, FollowingFollower, FromInstagramOptions, LiveIGTVOptions, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyStoryOptions, PrivacyTagsOptions, SearchItem, StoryArchive, PostArchive } from './userReducer'
 import { Post } from './postReducer'
 export const userXActionTypes = {
     FETCH_PROFILEX_SUCCESS: 'FETCH_PROFILEX_SUCCESS',
@@ -12,6 +12,10 @@ export interface ProfileX {
         date: number,
         month: number,
         year: number
+    },
+    archive?: {
+        stories: StoryArchive[],
+        posts: PostArchive[]
     },
     posts?: Post[],
     tagPhotos?: Post[],

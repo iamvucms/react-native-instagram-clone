@@ -2,13 +2,14 @@ import { auth, firestore, storage } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { DEFAULT_PHOTO_URI } from '../constants';
 import { navigate } from "../navigations/rootNavigation";
-import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting, HashTag, SearchItem, BookmarkCollection, Bookmark } from '../reducers/userReducer';
+import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting, HashTag, SearchItem, BookmarkCollection, Bookmark, StoryArchive, PostArchive } from '../reducers/userReducer';
 import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
 import { store } from '../store';
 import { generateUsernameKeywords, uriToBlob, Timestamp } from '../utils';
 import { Alert } from 'react-native';
 import { CreateNotificationRequest } from './notificationActions';
 import { notificationTypes } from '../reducers/notificationReducer';
+import { ProfileX } from '../reducers/profileXReducer';
 export interface userLoginWithEmail {
     email: string,
     password: string
@@ -1171,6 +1172,132 @@ export const UpdateBookmarkCollectionRequest = (collectionName: string, updatedC
                 type: userActionTypes.UPDATE_BOOKMARK_FAILURE,
                 payload: {
                     message: `Can't not add collection now!`
+                }
+            })
+        }
+    }
+}
+//Archive Actions
+export const FetchArchiveRequest = ():
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const ref = firestore()
+            const myUsername = `${store.getState().user.user.userInfo?.username}`
+            const rq = await ref.collection('users').doc(myUsername).get()
+            const userData: ProfileX = rq.data() as ProfileX
+            dispatch({
+                type: userActionTypes.FETCH_ARCHIVE_SUCCESS,
+                payload: {
+                    archive: {
+                        ...(userData.archive || {
+                            posts: [],
+                            stories: []
+                        })
+                    }
+                }
+            })
+        }
+        catch (e) {
+
+        }
+    }
+}
+export const AddStoryArchiveRequest = (storyList: StoryArchive[]):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const ref = firestore()
+            const myUsername = `${store.getState().user.user.userInfo?.username}`
+            const storyArchiveList = [...(store.getState().user
+                .archive?.stories || [])]
+            const postArchiveList = [...(store.getState().user
+                .archive?.posts || [])]
+            storyList.map(story => {
+                if (!!!storyArchiveList.find(x => x.uid === story.uid)) {
+                    storyArchiveList.push(story)
+                }
+            })
+            const rq = await ref.collection('users').doc(myUsername).get()
+            if (rq.exists) {
+                rq.ref.update({
+                    archive: {
+                        stories: storyArchiveList,
+                        posts: postArchiveList
+                    }
+                })
+            }
+            dispatch(FetchArchiveRequest())
+        }
+        catch (e) {
+
+        }
+    }
+}
+export const AddPostArchiveRequest = (postList: PostArchive[]):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const ref = firestore()
+            const myUsername = `${store.getState().user.user.userInfo?.username}`
+            const storyArchiveList = [...(store.getState().user
+                .archive?.stories || [])]
+            const postArchiveList = [...(store.getState().user
+                .archive?.posts || [])]
+            postList.map(post => {
+                if (!!!postArchiveList.find(x => x.uid === post.uid)) {
+                    postArchiveList.push(post)
+                }
+            })
+            const rq = await ref.collection('users').doc(myUsername).get()
+            if (rq.exists) {
+                rq.ref.update({
+                    archive: {
+                        stories: storyArchiveList,
+                        posts: postArchiveList
+                    }
+                })
+            }
+            dispatch(FetchArchiveRequest())
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.UPDATE_STORY_ARCHIVE_FAILURE,
+                payload: {
+                    message: `Can't not add to archive!`
+                }
+            })
+        }
+    }
+}
+export const RemovePostArchiveRequest = (uid: number):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const ref = firestore()
+            const myUsername = `${store.getState().user.user.userInfo?.username}`
+            const storyArchiveList = [...(store.getState().user
+                .archive?.stories || [])]
+            const postArchiveList = [...(store.getState().user
+                .archive?.posts || [])]
+            const index = postArchiveList.findIndex(x => x.uid === uid)
+            postArchiveList.splice(index, 1)
+            const rq = await ref.collection('users').doc(myUsername).get()
+            if (rq.exists) {
+                rq.ref.update({
+                    archive: {
+                        stories: storyArchiveList,
+                        posts: postArchiveList
+                    }
+                })
+            }
+            dispatch(FetchArchiveRequest())
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.UPDATE_STORY_ARCHIVE_FAILURE,
+                payload: {
+                    message: `Can't not remove to archive!`
                 }
             })
         }

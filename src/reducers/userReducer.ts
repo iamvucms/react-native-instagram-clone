@@ -35,7 +35,13 @@ export const userActionTypes = {
     UPDATE_EXTRA_INFO_SUCCESS: 'UPDATE_EXTRA_INFO_SUCCESS',
     UPDATE_EXTRA_INFO_FAILURE: 'UPDATE_EXTRA_INFO_FAILURE',
     UPDATE_BOOKMARK_SUCCESS: 'UPDATE_BOOKMARK_SUCCESS',
-    UPDATE_BOOKMARK_FAILURE: 'UPDATE_BOOKMARK_FAILURE'
+    UPDATE_BOOKMARK_FAILURE: 'UPDATE_BOOKMARK_FAILURE',
+    UPDATE_STORY_ARCHIVE_SUCCESS: 'UPDATE_STORY_ARCHIVE_SUCCESS',
+    UPDATE_STORY_ARCHIVE_FAILURE: 'UPDATE_STORY_ARCHIVE_FAILURE',
+    UPDATE_POST_ARCHIVE_SUCCESS: 'UPDATE_POST_ARCHIVE_SUCCESS',
+    UPDATE_POST_ARCHIVE_FAILURE: 'UPDATE_POST_ARCHIVE_FAILURE',
+    FETCH_ARCHIVE_SUCCESS: 'FETCH_ARCHIVE_SUCCESS',
+    FETCH_ARCHIVE_FAILURE: 'FETCH_ARCHIVE_FAILURE'
 }
 /**
  * type:
@@ -228,6 +234,17 @@ export type BookmarkCollection = {
     avatarIndex?: number,
     create_at: number,
 }
+export type StoryArchive = {
+    uid: number,
+    create_at: number,
+    superId: number
+}
+export type PostArchive = {
+    uid: number,
+    create_at: number,
+    multiple: boolean,
+    previewUri: string
+}
 export interface userPayload {
     user: {
         logined?: boolean,
@@ -241,7 +258,10 @@ export interface userPayload {
     taggedPhotos?: [],
     currentStory?: Story[],
     extraInfo?: ExtraInfo,
-
+    archive?: {
+        stories: StoryArchive[],
+        posts: PostArchive[]
+    }
 }
 export interface ErrorAction {
     type: string,
@@ -262,6 +282,18 @@ export type ExtraInfoPayload = {
 export type BookmarkPayload = {
     bookmarks: BookmarkCollection[]
 }
+export type StoryArchivePayload = {
+    stories: StoryArchive[]
+}
+export type PostArchivePayload = {
+    posts: PostArchive[]
+}
+export type ArchivePayload = {
+    archive: {
+        stories: StoryArchive[],
+        posts: PostArchive[]
+    }
+}
 export type userAction = SuccessAction<userPayload> | ErrorAction
     | SuccessAction<UserInfo>
     | SuccessAction<ExtraInfoPayload>
@@ -270,12 +302,19 @@ export type userAction = SuccessAction<userPayload> | ErrorAction
     | SuccessAction<UserSetting>
     | SuccessAction<SearchItem[]>
     | SuccessAction<BookmarkPayload>
+    | SuccessAction<StoryArchivePayload>
+    | SuccessAction<PostArchivePayload>
+    | SuccessAction<ArchivePayload>
 export const defaultUserState: userPayload = {
     user: {},
     photos: [],
     tagPhotos: [],
     taggedPhotos: [],
     bookmarks: [],
+    archive: {
+        stories: [],
+        posts: []
+    },
     setting: {
         notification: {
             notificationAccounts: {
@@ -569,6 +608,51 @@ const reducer = (state: userPayload = defaultUserState, action: userAction): use
             }
             return state
         case userActionTypes.UPDATE_BOOKMARK_FAILURE:
+            action = <ErrorAction>action
+            Alert.alert('Error', action.payload.message)
+            return state
+        case userActionTypes.UPDATE_STORY_ARCHIVE_SUCCESS:
+            action = <SuccessAction<StoryArchivePayload>>action
+            state = {
+                ...state,
+                archive: {
+                    posts: [...(state.archive?.posts || [])],
+                    stories: [
+                        ...action.payload.stories
+                    ],
+                }
+            }
+            return state
+        case userActionTypes.UPDATE_STORY_ARCHIVE_FAILURE:
+            action = <ErrorAction>action
+            Alert.alert('Error', action.payload.message)
+            return state
+        case userActionTypes.UPDATE_POST_ARCHIVE_SUCCESS:
+            action = <SuccessAction<PostArchivePayload>>action
+            state = {
+                ...state,
+                archive: {
+                    stories: [...(state.archive?.stories || [])],
+                    posts: [
+                        ...action.payload.posts
+                    ],
+                }
+            }
+            return state
+        case userActionTypes.UPDATE_POST_ARCHIVE_FAILURE:
+            action = <ErrorAction>action
+            Alert.alert('Error', action.payload.message)
+            return state
+        case userActionTypes.FETCH_ARCHIVE_SUCCESS:
+            action = <SuccessAction<ArchivePayload>>action
+            if (!!action.payload) {
+                state = {
+                    ...state,
+                    ...action.payload
+                }
+            }
+            return state
+        case userActionTypes.FETCH_ARCHIVE_FAILURE:
             action = <ErrorAction>action
             Alert.alert('Error', action.payload.message)
             return state

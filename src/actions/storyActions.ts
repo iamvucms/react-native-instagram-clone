@@ -1,9 +1,10 @@
 import { firestore } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { ExtraStory, seenTypes, Story, StoryAction, storyActionTypes, StoryErrorAction, StoryList, StorySuccessAction } from '../reducers/storyReducer';
-import { HashTag, UserInfo } from '../reducers/userReducer';
+import { HashTag, UserInfo, StoryArchive } from '../reducers/userReducer';
 import { store } from "../store";
 import { generateUsernameKeywords } from '../utils';
+import { AddStoryArchiveRequest } from './userActions';
 
 export const FetchStoryListRequest = ():
     ThunkAction<Promise<void>, {}, {}, StoryAction> => {
@@ -93,65 +94,75 @@ export const PostStoryRequest = (images: Story[]):
         try {
             const ref = firestore()
             const me = store.getState().user.user
+            const shouldSaving = !!store.getState().user.setting?.privacy?.story?.saveToArchive
             const rq = await ref.collection('users')
                 .doc(me.userInfo?.username)
                 .get()
             if (rq.exists) {
+                const storyArchiveCollection: StoryArchive[] = []
                 for (let img of images) {
                     const uid = new Date().getTime()
                     await ref.collection('stories').doc(`${uid}`).set({
                         ...img,
                         uid
                     });
-                    (img.hashtags || []).map(async hashtag => {
-                        const rq = await ref.collection('hashtags')
-                            .where('name', '==', hashtag).get()
-                        if (rq.size > 0) {
-                            const targetHashtag = rq.docs[0]
-                            const data: HashTag = targetHashtag.data() || {}
-                            const stories = (data.stories || [])
-                            stories.push(uid)
-                            targetHashtag.ref.update({
-                                stories
-                            })
-                        } else {
-                            const keyword = generateUsernameKeywords(hashtag)
-                            keyword.splice(0, 1)
-                            const fetchRelatedTags: Promise<string[]>[] = keyword.map(async character => {
-                                const rq = await ref.collection('hashtags').
-                                    where('keyword', 'array-contains', character).get()
-                                const data: HashTag[] = rq.docs.map(x => x.data() || {})
-                                return data.map(x => x.name || '')
-                            })
-                            Promise.all(fetchRelatedTags).then(async rs => {
-                                let relatedTags: string[] = []
-                                rs.map(lv1 => {
-                                    lv1.map(x => relatedTags.push(x))
-                                })
-                                relatedTags = Array.from(new Set(relatedTags))
-                                relatedTags.map(async tag => {
-                                    const rq = await ref.collection('hashtags').doc(`${tag}`).get()
-                                    if (rq.exists) {
-                                        const currentRelatedTags = (rq.data() || {}).relatedTags || []
-                                        currentRelatedTags.push(hashtag)
-                                        rq.ref.update({
-                                            relatedTags: currentRelatedTags
-                                        })
-                                    }
-                                })
-                                const hashtagUid = new Date().getTime()
-                                await ref.collection('hashtags').doc(hashtag).set({
-                                    name: hashtag,
-                                    followers: [],
-                                    keyword,
-                                    relatedTags,
-                                    sources: [],
-                                    stories: [uid],
-                                    uid: hashtagUid
-                                })
-                            })
-                        }
+                    storyArchiveCollection.push({
+                        uid,
+                        create_at: new Date().getTime(),
+                        superId: img.source as number
                     })
+                        ; (img.hashtags || []).map(async hashtag => {
+                            const rq = await ref.collection('hashtags')
+                                .where('name', '==', hashtag).get()
+                            if (rq.size > 0) {
+                                const targetHashtag = rq.docs[0]
+                                const data: HashTag = targetHashtag.data() || {}
+                                const stories = (data.stories || [])
+                                stories.push(uid)
+                                targetHashtag.ref.update({
+                                    stories
+                                })
+                            } else {
+                                const keyword = generateUsernameKeywords(hashtag)
+                                keyword.splice(0, 1)
+                                const fetchRelatedTags: Promise<string[]>[] = keyword.map(async character => {
+                                    const rq = await ref.collection('hashtags').
+                                        where('keyword', 'array-contains', character).get()
+                                    const data: HashTag[] = rq.docs.map(x => x.data() || {})
+                                    return data.map(x => x.name || '')
+                                })
+                                Promise.all(fetchRelatedTags).then(async rs => {
+                                    let relatedTags: string[] = []
+                                    rs.map(lv1 => {
+                                        lv1.map(x => relatedTags.push(x))
+                                    })
+                                    relatedTags = Array.from(new Set(relatedTags))
+                                    relatedTags.map(async tag => {
+                                        const rq = await ref.collection('hashtags').doc(`${tag}`).get()
+                                        if (rq.exists) {
+                                            const currentRelatedTags = (rq.data() || {}).relatedTags || []
+                                            currentRelatedTags.push(hashtag)
+                                            rq.ref.update({
+                                                relatedTags: currentRelatedTags
+                                            })
+                                        }
+                                    })
+                                    const hashtagUid = new Date().getTime()
+                                    await ref.collection('hashtags').doc(hashtag).set({
+                                        name: hashtag,
+                                        followers: [],
+                                        keyword,
+                                        relatedTags,
+                                        sources: [],
+                                        stories: [uid],
+                                        uid: hashtagUid
+                                    })
+                                })
+                            }
+                        })
+                }
+                if (shouldSaving) {
+                    dispatch(AddStoryArchiveRequest(storyArchiveCollection))
                 }
                 dispatch(FetchStoryListRequest())
             }

@@ -389,7 +389,6 @@ const StoryTaker = ({ route }: StoryTakerProps) => {
 
                         <FlatList
                             onEndReached={_onLoadmore}
-                            bounces={false}
                             style={styles.galleryList}
                             data={photos}
                             renderItem={({ item, index }) =>
@@ -438,6 +437,8 @@ const StoryTaker = ({ route }: StoryTakerProps) => {
                                 </TouchableOpacity>
                             }
                             numColumns={3}
+
+                            onEndReachedThreshold={0.5}
                             keyExtractor={(item, index) => `${index}`}
                         />
                         {multiple &&
