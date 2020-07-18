@@ -7,10 +7,13 @@ import { SuperRootStackParamList } from '../../navigations'
 import { goBack, navigate } from '../../navigations/rootNavigation'
 import { useSelector } from '../../reducers'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { UnfollowRequest, ToggleFollowUserRequest, UpdatePrivacySettingsRequest } from '../../actions/userActions'
+import { UnfollowRequest, ToggleFollowUserRequest, UpdatePrivacySettingsRequest, RemoveFollowerRequest } from '../../actions/userActions'
 import { store } from '../../store'
 import { firestore } from 'firebase'
 import { ProfileX } from '../../reducers/profileXReducer'
+import { FetchStoryListRequest } from '../../actions/storyActions'
+import { FetchPostListRequest } from '../../actions/postActions'
+import FastImage from 'react-native-fast-image'
 type StoryViewerOptionsRouteProp = RouteProp<SuperRootStackParamList, 'StoryViewerOptions'>
 type StoryViewerOptionsProps = {
     route: StoryViewerOptionsRouteProp
@@ -19,8 +22,11 @@ const StoryViewerOptions = ({ route }: StoryViewerOptionsProps) => {
     const dispatch = useDispatch()
     const { username } = route.params
     const myUsername = store.getState().user.user.userInfo?.username
-    const setting = store.getState().user.setting
-    const [closeFriends, setCloseFriends] = useState<string[]>(setting?.privacy?.closeFriends?.closeFriends || [])
+    const hideStoryFrom = useSelector(state =>
+        state.user.setting?.privacy?.story?.hideStoryFrom) || []
+    const [userInfo, setUserInfo] = useState<ProfileX>({})
+    const [showConfirmBlock, setShowConfirmBlock] = useState<boolean>(false)
+    const [showConfirmRemoveFollower, setShowConfirmRemoveFollower] = useState<boolean>(false)
     const _bottomSheetOffsetY = React.useMemo(() => new Animated.Value(0), [])
     const ref = useRef<{
         bottomSheetHeight: number
@@ -28,7 +34,13 @@ const StoryViewerOptions = ({ route }: StoryViewerOptionsProps) => {
         bottomSheetHeight: 0
     })
     useEffect(() => {
-
+        ; (async () => {
+            const ref = firestore()
+            const rq = await ref.collection('users').doc(`${username}`).get()
+            if (rq.exists) {
+                setUserInfo(rq.data() || {})
+            }
+        })()
     }, [])
 
     const _onGestureEventHandler = ({ nativeEvent: {
@@ -59,81 +71,194 @@ const StoryViewerOptions = ({ route }: StoryViewerOptionsProps) => {
             }
         }
     }
-    const _onUnFollow = () => {
-        goBack()
-        dispatch(UnfollowRequest(username))
-    }
-    const _onUnRequest = () => {
-        goBack()
-        dispatch(ToggleFollowUserRequest(username))
-    }
-    const _toggleCloseFriend = async () => {
-        const temp = [...closeFriends]
-        const index = temp.indexOf(username)
-        if (index > -1) {
-            temp.splice(index, 1)
-        } else {
-            temp.push(username)
-        }
-        setCloseFriends(temp)
-        const ref = firestore()
-        const rq = await ref.collection('users').doc(`${myUsername}`).get()
-        if (rq.exists) {
-            const data: ProfileX = rq.data() || {}
-            const currentCloseFriends = data.privacySetting?.closeFriends?.closeFriends || []
-            const index2 = currentCloseFriends.indexOf(username)
-            if (index2 > -1) {
-                currentCloseFriends.splice(index2, 1)
-            } else {
-                currentCloseFriends.push(username)
+    const _onConfirmBlock = async () => {
+        let currentBlockedAccounts = [...(store.getState().user.setting?.privacy?.blockedAccounts?.blockedAccounts || [])]
+        currentBlockedAccounts.push(username)
+        currentBlockedAccounts = Array.from(new Set(currentBlockedAccounts))
+        dispatch(UpdatePrivacySettingsRequest({
+            blockedAccounts: {
+                blockedAccounts: currentBlockedAccounts
             }
-            dispatch(UpdatePrivacySettingsRequest({
-                closeFriends: {
-                    closeFriends: currentCloseFriends
+        }))
+        await dispatch(UnfollowRequest(username))
+        dispatch(RemoveFollowerRequest(username))
+        dispatch(FetchStoryListRequest())
+        dispatch(FetchPostListRequest())
+        goBack()
+    }
+    const _onConfirmRemoveFollower = async () => {
+        await dispatch(RemoveFollowerRequest(username))
+        goBack()
+    }
+    const _onHideYourStory = async () => {
+        const exists = hideStoryFrom.indexOf(username) > -1
+        if (!exists) {
+            await dispatch(UpdatePrivacySettingsRequest({
+                story: {
+                    hideStoryFrom: [...hideStoryFrom, username]
                 }
             }))
         }
+        goBack()
     }
     return (
-        <SafeAreaView>
-            <TouchableOpacity
-                onPress={goBack}
-                style={{
-                    height: '100%',
-                    width: '100%',
-                }}>
-
-            </TouchableOpacity>
-            <PanGestureHandler
-                onGestureEvent={_onGestureEventHandler}
-                onHandlerStateChange={_onStateChangeHandler}
-            >
-                <Animated.View
-                    onLayout={({ nativeEvent: { layout: { height } } }: LayoutChangeEvent) => {
-                        ref.current.bottomSheetHeight = height
-                    }}
-                    style={{
-                        ...styles.bottomSheet,
-                        transform: [{
-                            translateY: _bottomSheetOffsetY
-                        }]
-                    }}>
-                    <View style={styles.titleWrapper}>
-                        <View style={{
-                            marginBottom: 10,
-                            height: 3,
-                            width: 40,
-                            backgroundColor: '#999',
-                            borderRadius: 2,
-                        }} />
+        <React.Fragment>
+            {showConfirmBlock &&
+                <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={() => setShowConfirmBlock(false)}
+                    style={styles.backdrop}>
+                    <View style={styles.confirmBox}>
                         <Text style={{
                             fontSize: 16,
-                            fontWeight: '600'
-                        }}>{username}</Text>
+                            fontWeight: "600"
+                        }}>Block {username}?</Text>
+                        <Text style={{
+                            textAlign: 'center',
+                            color: '#666',
+                            maxWidth: "80%",
+                            marginVertical: 15
+                        }}>They won't be able to find your profile, posts or story on Instagram. Instagram wont't let them know you blocked them.</Text>
+                        <TouchableOpacity
+                            onPress={_onConfirmBlock}
+                            style={styles.btnConfirm}>
+                            <Text style={{
+                                fontSize: 16,
+                                fontWeight: "500",
+                                color: 'red'
+                            }}>Block</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => setShowConfirmBlock(false)}
+                            style={styles.btnConfirm}>
+                            <Text style={{
+                                fontSize: 16,
+                                fontWeight: "500",
+                            }}>Cancel</Text>
+                        </TouchableOpacity>
                     </View>
-                </Animated.View>
-            </PanGestureHandler>
-        </SafeAreaView>
+                </TouchableOpacity>
+            }
+            {showConfirmRemoveFollower &&
+                <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={() => setShowConfirmRemoveFollower(false)}
+                    style={styles.backdrop}>
+                    <View style={styles.confirmBox}>
+                        <FastImage
+                            source={{
+                                uri: userInfo.avatarURL
+                            }}
+                            style={{
+                                height: 80,
+                                width: 80,
+                                borderRadius: 80
+                            }}
+                        />
+                        <Text style={{
+                            marginTop: 20,
+                            fontSize: 20,
+                            fontWeight: "600"
+                        }}>Remove Follower?</Text>
+                        <Text style={{
+                            textAlign: 'center',
+                            color: '#666',
+                            maxWidth: "80%",
+                            marginVertical: 15
+                        }}>Instagram won't tell to {username} they were removed from your followers.</Text>
+                        <TouchableOpacity
+                            onPress={_onConfirmRemoveFollower}
+                            style={styles.btnConfirm}>
+                            <Text style={{
+                                fontSize: 16,
+                                fontWeight: "500",
+                                color: '#318bfb'
+                            }}>Remove</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => setShowConfirmRemoveFollower(false)}
+                            style={styles.btnConfirm}>
+                            <Text style={{
+                                fontSize: 16,
+                                fontWeight: "500",
+                            }}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            }
+            <SafeAreaView>
+                <TouchableOpacity
+                    onPress={goBack}
+                    style={{
+                        height: '100%',
+                        width: '100%',
+                    }}>
+
+                </TouchableOpacity>
+                <PanGestureHandler
+                    onGestureEvent={_onGestureEventHandler}
+                    onHandlerStateChange={_onStateChangeHandler}
+                >
+                    <Animated.View
+                        onLayout={({ nativeEvent: { layout: { height } } }: LayoutChangeEvent) => {
+                            ref.current.bottomSheetHeight = height
+                        }}
+                        style={{
+                            ...styles.bottomSheet,
+                            transform: [{
+                                translateY: _bottomSheetOffsetY
+                            }]
+                        }}>
+                        <View style={styles.titleWrapper}>
+                            <View style={{
+                                marginBottom: 10,
+                                height: 3,
+                                width: 40,
+                                backgroundColor: '#999',
+                                borderRadius: 2,
+                            }} />
+                            <Text style={{
+                                fontSize: 16,
+                                fontWeight: '600'
+                            }}>{username}</Text>
+                        </View>
+                        <View>
+                            <TouchableOpacity
+                                onPress={() => setShowConfirmBlock(true)}
+                                style={styles.optionItem}>
+                                <Text style={{
+                                    fontSize: 16,
+                                    color: 'red'
+                                }}>Block</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => setShowConfirmRemoveFollower(true)}
+                                style={styles.optionItem}>
+                                <Text style={{
+                                    fontSize: 16,
+                                }}>Remove Follower</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={_onHideYourStory}
+                                style={styles.optionItem}>
+                                <Text style={{
+                                    fontSize: 16,
+                                }}>Hide Your Story</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => navigate('ProfileX', {
+                                    username
+                                })}
+                                style={styles.optionItem}>
+                                <Text style={{
+                                    fontSize: 16,
+                                }}>View Profile</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Animated.View>
+                </PanGestureHandler>
+            </SafeAreaView>
+        </React.Fragment>
     )
 }
 
@@ -177,6 +302,34 @@ const styles = StyleSheet.create({
     closeFriendIcon: {
         width: 24,
         height: 24
-    }
+    },
+    backdrop: {
+        position: 'absolute',
+        zIndex: 2,
+        height: '100%',
+        width: '100%',
+        backgroundColor: "rgba(0,0,0,0.3)",
+        top: 0,
+        left: 0,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    confirmBox: {
+        width: '80%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: 15,
+        backgroundColor: '#fff',
+        borderRadius: 10
+    },
+    btnConfirm: {
+        height: 44,
+        width: "100%",
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderTopColor: '#ddd',
+        borderTopWidth: 1
+    },
+
 })
 

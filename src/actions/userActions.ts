@@ -158,10 +158,9 @@ export const UnfollowRequest = (username: string):
                 const user: UserInfo = targetUser.data() || {}
                 if (user.followings !== undefined &&
                     user.followings.indexOf(username) > -1) {
-                    user.followings
-                        .splice(user.followings.indexOf(username), 1)
                     const followings = [...user.followings]
-                    targetUser.ref.update({
+                    followings.splice(followings.indexOf(username), 1)
+                    await targetUser.ref.update({
                         followings
                     })
                     dispatch(CreateNotificationRequest({
@@ -175,14 +174,12 @@ export const UnfollowRequest = (username: string):
                         type: notificationTypes.FOLLOW_ME
                     }))
                 }
-
                 const rq2 = await targetUser.ref.get()
                 me = rq2.data() || {}
                 dispatch(UnfollowSuccess(me))
             } else {
 
             }
-
         } catch (e) {
             console.warn(e)
             dispatch(UnfollowFailure())

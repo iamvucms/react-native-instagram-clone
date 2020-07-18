@@ -1,6 +1,6 @@
 import { RouteProp } from '@react-navigation/native'
 import React, { useRef, useState, useEffect } from 'react'
-import { Animated, Image, StyleSheet, Text, TouchableOpacity, View, FlatList } from 'react-native'
+import { Animated, Image, StyleSheet, Text, TouchableOpacity, View, FlatList, KeyboardAvoidingView, TextInput, Keyboard } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import SuperImage from '../../components/SuperImage'
 import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../constants'
@@ -12,6 +12,8 @@ import { firestore } from 'firebase'
 import FastImage from 'react-native-fast-image'
 import { useDispatch } from 'react-redux'
 import { DeleteStoryRequest } from '../../actions/storyActions'
+import { PostingMessage, messagesTypes } from '../../reducers/messageReducer'
+import { CreateMessageRequest } from '../../actions/messageActions'
 type StorySeenListRouteProp = RouteProp<SuperRootStackParamList, 'StorySeenList'>
 
 type StorySeenListProps = {
@@ -23,6 +25,8 @@ const StorySeenList = ({ route }: StorySeenListProps) => {
     const myUsername = `${store.getState().user.user.userInfo?.username}`
     const story = { ...extraStory.storyList[childIndex] }
     const [viewerInfos, setViewerInfos] = useState<ProfileX[]>([])
+    const [targetSendMsgUsername, setTargetSendMsgUsername] = useState<string>('')
+    const [msgTxt, setMsgTxt] = useState<string>('')
     //
     const filteredSeenList = React.useMemo(() => (() => {
         const temp = [...(story.seenList || [])]
@@ -72,6 +76,22 @@ const StorySeenList = ({ route }: StorySeenListProps) => {
         await dispatch(DeleteStoryRequest(uid))
         navigate('HomeIndex')
     }
+    const _onSendMsg = () => {
+        const targetUsername = targetSendMsgUsername
+        Keyboard.dismiss()
+        if (msgTxt.length > 0) {
+            const msg: PostingMessage = {
+                seen: 0,
+                type: messagesTypes.REPLY_STORY,
+                text: msgTxt,
+                superImageId: story.source,
+                create_at: new Date().getTime(),
+            }
+            dispatch(CreateMessageRequest(msg, targetUsername))
+            setMsgTxt('')
+            setTargetSendMsgUsername('')
+        }
+    }
     let seenCount = filteredSeenList.length < 1000 ? `${filteredSeenList.length}` : (
         filteredSeenList.length < 1000000
             ? Math.round(filteredSeenList.length / 1000) + 'K'
@@ -115,6 +135,25 @@ const StorySeenList = ({ route }: StorySeenListProps) => {
                     ...styles.storyTopWrapper,
                     opacity: _anim
                 }}>
+                    <View style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                        alignItems: 'center'
+                    }}>
+                        <TouchableOpacity
+                            onPress={() => navigate('StoryPrivacy')}
+                            style={styles.btnOption}>
+                            <Icon name="tune" size={30} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={_onGoBack}
+                            style={styles.btnOption}>
+                            <Text style={{
+                                fontSize: 30,
+                            }}>✕</Text>
+                        </TouchableOpacity>
+                    </View>
                     <View style={styles.triangle} />
                 </Animated.View>
                 <Animated.View style={{
@@ -156,7 +195,9 @@ const StorySeenList = ({ route }: StorySeenListProps) => {
                             }}
                             data={viewerInfos}
                             renderItem={({ item }) => (
-                                <ViewerItem user={item} />
+                                <ViewerItem
+                                    setTargetMsgUsername={setTargetSendMsgUsername}
+                                    user={item} />
                             )}
                             keyExtractor={(_, index) => `${index}`}
                         />
@@ -203,6 +244,60 @@ const StorySeenList = ({ route }: StorySeenListProps) => {
                     />
                 </TouchableOpacity>
             </Animated.View>
+            {targetSendMsgUsername.length > 0 &&
+                <KeyboardAvoidingView behavior="position" style={styles.msgInput}>
+                    <View style={{
+                        backgroundColor: "#fff",
+                        padding: 15,
+                        borderTopColor: '#ddd',
+                        borderTopWidth: 1
+                    }}>
+                        <View style={styles.msgUserInfo}>
+                            <FastImage
+                                source={{
+                                    uri: viewerInfos.find(x => x.username === targetSendMsgUsername)?.avatarURL
+                                }}
+                                style={{
+                                    height: 64,
+                                    width: 64,
+                                    borderRadius: 64,
+                                    borderColor: "#333",
+                                    borderWidth: 0.3
+                                }}
+                            />
+                            <Text style={{
+                                marginLeft: 15,
+                                fontWeight: '600'
+                            }}>
+                                Message to {targetSendMsgUsername}
+                            </Text>
+                        </View>
+                        <TextInput
+                            returnKeyType="send"
+                            onSubmitEditing={_onSendMsg}
+                            keyboardType="ascii-capable"
+                            autoFocus={true}
+                            value={msgTxt}
+                            onChangeText={setMsgTxt}
+                            placeholder="Message..."
+                            onBlur={() => setTargetSendMsgUsername('')}
+                            style={styles.msgTxtInput} />
+                        {msgTxt.length > 0 &&
+                            <TouchableOpacity
+                                onPress={_onSendMsg}
+                                style={styles.btnSend}>
+                                <Text style={{
+                                    fontSize: 16,
+                                    fontWeight: '500',
+                                    color: "#318bfb"
+                                }}>
+                                    Send
+                                </Text>
+                            </TouchableOpacity>
+                        }
+                    </View>
+                </KeyboardAvoidingView>
+            }
         </React.Fragment>
 
     )
@@ -234,10 +329,11 @@ const styles = StyleSheet.create({
             width: 0,
             height: 2,
         },
-        shadowOpacity: 0.25,
+        shadowOpacity: 0.5,
         shadowRadius: 10,
     },
     storyTopWrapper: {
+        width: "100%",
         height: HEADER_SIZE,
         paddingTop: STATUS_BAR_HEIGHT,
         backgroundColor: "rgb(242,242,242)"
@@ -305,15 +401,48 @@ const styles = StyleSheet.create({
         width: "100%",
         justifyContent: 'center',
         alignItems: 'center',
-        borderTopColor: '#ddd',
-        borderTopWidth: 1
-    },
 
+    },
+    msgInput: {
+        position: 'absolute',
+        left: 0,
+        bottom: 0,
+        width: "100%",
+
+        backgroundColor: "#fff",
+
+    },
+    msgUserInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 15,
+        borderTopColor: "#ddd",
+
+    },
+    msgTxtInput: {
+        height: 44,
+        paddingHorizontal: 15,
+        paddingRight: 75,
+        borderColor: "#ddd",
+        borderRadius: 44,
+        borderWidth: 1,
+        width: SCREEN_WIDTH - 30
+    },
+    btnSend: {
+        height: 44,
+        width: 60,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute',
+        bottom: 15,
+        right: 15
+    }
 })
 interface ViewerItemProps {
-    user: ProfileX
+    user: ProfileX,
+    setTargetMsgUsername: React.Dispatch<React.SetStateAction<string>>
 }
-const ViewerItem = React.memo(({ user }: ViewerItemProps) => {
+const ViewerItem = React.memo(({ user, setTargetMsgUsername }: ViewerItemProps) => {
     const _onViewProfile = () => {
         navigate("ProfileX", {
             username: user.username
@@ -357,7 +486,9 @@ const ViewerItem = React.memo(({ user }: ViewerItemProps) => {
                     style={styles.btnViewerOption}>
                     <Icon name="dots-vertical" size={24} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.btnViewerOption}>
+                <TouchableOpacity
+                    onPress={() => setTargetMsgUsername(`${user.username}`)}
+                    style={styles.btnViewerOption}>
                     <Image style={{
                         height: 20,
                         width: 20

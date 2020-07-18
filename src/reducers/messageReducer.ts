@@ -14,7 +14,8 @@ export const messagesTypes = {
     SUPER_IMAGE: 3,
     POST: 4,
     ADDRESS: 5,
-    EMOJI: 6
+    EMOJI: 6,
+    REPLY_STORY: 7,
 }
 export const emojiTypes = {
     LOVE: 1,

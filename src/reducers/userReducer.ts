@@ -414,7 +414,19 @@ const reducer = (state: userPayload = defaultUserState, action: userAction): use
             return state
         case userActionTypes.UNFOLLOW_SUCCESS:
             action = <SuccessAction<UserInfo>>action
-            state = { ...state, user: { userInfo: { ...action.payload }, ...state.user } }
+            state = {
+                ...state, user: {
+                    ...state.user,
+                    userInfo: {
+                        ...state.user.userInfo,
+                        followings: action.payload.followings || []
+                    },
+                },
+                extraInfo: {
+                    ...state.extraInfo,
+                    followings: action.payload.followings || [],
+                } as ExtraInfo
+            }
             return state
         case userActionTypes.UNFOLLOW_FAILURE:
             action = <ErrorAction>action
@@ -426,7 +438,13 @@ const reducer = (state: userPayload = defaultUserState, action: userAction): use
             return state
         case userActionTypes.FOLLOW_SUCCESS:
             action = <SuccessAction<UserInfo>>action
-            state = { ...state, user: { userInfo: { ...action.payload }, ...state.user } }
+            state = {
+                ...state, user: { ...state.user, userInfo: { ...action.payload }, },
+                extraInfo: {
+                    ...state.extraInfo,
+                    followings: action.payload.followings || [],
+                } as ExtraInfo
+            }
             return state
         case userActionTypes.FOLLOW_FAILURE:
             action = <ErrorAction>action

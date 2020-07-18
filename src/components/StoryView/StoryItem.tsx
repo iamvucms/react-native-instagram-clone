@@ -1,6 +1,6 @@
 import { firestore } from 'firebase'
 import React, { useEffect, useRef, useState } from 'react'
-import { Animated, KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableHighlight, TouchableOpacity, View } from 'react-native'
+import { Animated, KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableHighlight, TouchableOpacity, View, Keyboard } from 'react-native'
 import FastImage from 'react-native-fast-image'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useDispatch } from 'react-redux'
@@ -14,6 +14,8 @@ import { store } from '../../store'
 import { timestampToString } from '../../utils'
 import SuperImage from '../SuperImage'
 import { goBack, navigate } from '../../navigations/rootNavigation'
+import { messagesTypes, PostingMessage } from '../../reducers/messageReducer'
+import { CreateMessageRequest } from '../../actions/messageActions'
 export interface StoryProps {
     item: ExtraStory,
     index: number,
@@ -53,7 +55,7 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
     const animXList = item.storyList.map(x => new Animated.Value(0))
     useEffect(() => {
         return () => {
-            animXList.map(animX => animX.stopAnimation())
+            stopAnimation()
         }
     }, [])
     useEffect(() => {
@@ -106,7 +108,18 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
         }
     }, [controller, childIndex, seenAll, state])
     const _onSendMessage = () => {
-        console.warn(ref.current.message)
+        Keyboard.dismiss()
+        if (ref.current.message.length > 0) {
+            const msg: PostingMessage = {
+                seen: 0,
+                type: messagesTypes.REPLY_STORY,
+                text: ref.current.message,
+                superImageId: item.storyList[childIndex].source,
+                create_at: new Date().getTime(),
+            }
+            dispatch(CreateMessageRequest(msg, item.ownUser.username as string))
+            ref.current.message = ''
+        }
     }
     const _onNext = () => {
         if (childIndex + 1 < item.storyList.length) {
@@ -313,6 +326,7 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
                                         onBlur={() => {
                                             setState({})
                                         }}
+                                        clearTextOnFocus={true}
                                         onSubmitEditing={_onSendMessage}
                                         returnKeyType="send"
                                         textAlignVertical="center"

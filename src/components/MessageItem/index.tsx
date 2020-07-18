@@ -9,6 +9,7 @@ import { navigate } from '../../navigations/rootNavigation'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import PostMessage from './PostMessage'
 import LocationMessage from './LocationMessage'
+import SuperImage from '../SuperImage'
 
 interface MessageItemProps {
     item: Message,
@@ -103,6 +104,8 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
         case messagesTypes.EMOJI:
             extraStyle = styles.emojiMessage
             break
+        case messagesTypes.REPLY_STORY:
+            extraStyle = styles.replyStoryMessage
         default:
             break;
     }
@@ -136,6 +139,52 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
             }]}>
                 {item.type === messagesTypes.TEXT &&
                     <Text style={styles.msgText}>{item.text}</Text>
+                }
+                {item.type === messagesTypes.REPLY_STORY &&
+                    <React.Fragment>
+                        <Text style={{
+                            fontWeight: '600',
+                            color: "#999",
+                            marginVertical: 5,
+                        }}>Replied about story</Text>
+                        <View style={{
+                            width: 140,
+                            height: 200,
+
+                        }}>
+                            <View style={{
+                                width: 120,
+                                height: 200,
+                                borderRadius: 20,
+                                overflow: 'hidden'
+                            }}>
+                                <SuperImage
+                                    superId={item.superImageId as number}
+                                    fitSize={true}
+                                    disableNavigation={true}
+                                    disablePress={true}
+                                    showOnlyImage={true}
+                                />
+                            </View>
+                            <View style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                height: '100%',
+                                width: 5,
+                                borderRadius: 5,
+                                backgroundColor: "#ddd"
+                            }} />
+                        </View>
+                        <View style={{
+                            ...styles.textMessage,
+                            backgroundColor: '#ddd',
+                            marginTop: 5,
+                            borderRadius: 999
+                        }}>
+                            <Text style={styles.msgText}>{item.text}</Text>
+                        </View>
+                    </React.Fragment>
                 }
                 {item.type === messagesTypes.ADDRESS &&
                     <LocationMessage address_id={item.address_id as string} />
@@ -228,6 +277,11 @@ const styles = StyleSheet.create({
     },
     imageMessage: {
         borderWidth: 0
+    },
+    replyStoryMessage: {
+        backgroundColor: 'rgba(0,0,0,0)',
+        borderWidth: 0,
+        alignItems: 'flex-end'
     },
     emojiMessage: {
         backgroundColor: 'rgba(0,0,0,0)',

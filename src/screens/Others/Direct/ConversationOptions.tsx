@@ -11,7 +11,9 @@ import { messagesTypes, Message } from '../../../reducers/messageReducer'
 import { SCREEN_WIDTH } from '../../../constants'
 import FastImage from 'react-native-fast-image'
 import { useDispatch } from 'react-redux'
-import { UnfollowRequest, ToggleSendFollowRequest, UpdatePrivacySettingsRequest, ToggleFollowUserRequest } from '../../../actions/userActions'
+import { UnfollowRequest, ToggleSendFollowRequest, UpdatePrivacySettingsRequest, ToggleFollowUserRequest, RemoveFollowerRequest } from '../../../actions/userActions'
+import { FetchStoryListRequest } from '../../../actions/storyActions'
+import { FetchPostListRequest } from '../../../actions/postActions'
 
 type ConversationOptionsRouteProp = RouteProp<SuperRootStackParamList, 'ConversationOptions'>
 type ConversationOptionsProps = {
@@ -82,7 +84,7 @@ const ConversationOptions = ({ route }: ConversationOptionsProps) => {
             setFollowType(2)
         }
     }
-    const _onConfirmBlock = () => {
+    const _onConfirmBlock = async () => {
         let currentBlockedAccounts = [...(store.getState().user.setting?.privacy?.blockedAccounts?.blockedAccounts || [])]
         currentBlockedAccounts.push(targetUsername)
         currentBlockedAccounts = Array.from(new Set(currentBlockedAccounts))
@@ -91,6 +93,10 @@ const ConversationOptions = ({ route }: ConversationOptionsProps) => {
                 blockedAccounts: currentBlockedAccounts
             }
         }))
+        await dispatch(UnfollowRequest(targetUsername))
+        dispatch(RemoveFollowerRequest(targetUsername))
+        dispatch(FetchStoryListRequest())
+        dispatch(FetchPostListRequest())
         goBack()
     }
     return (

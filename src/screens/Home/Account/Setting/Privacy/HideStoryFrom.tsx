@@ -19,7 +19,7 @@ const HideStoryFrom = (): JSX.Element => {
     const hideStoryFrom = useSelector(state =>
         state.user.setting?.privacy?.story?.hideStoryFrom)
     const [query, setQuery] = useState<string>('')
-    const [hideList, setHideList] = useState<string[]>(hideStoryFrom || ['vucms.user1'])
+    const [hideList, setHideList] = useState<string[]>(hideStoryFrom || [])
     const [hideUsers, setHideUsers] = useState<UserInfo[]>([])
     const [result, setResult] = useState<UserInfo[]>([])
     const ref = useRef<{

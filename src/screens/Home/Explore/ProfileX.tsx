@@ -59,10 +59,11 @@ const ProfileX = ({ route }: ProfileXProps) => {
         })()
     }
     useEffect(() => {
-        setFollowType((userX.requestedList && userX.requestedList.indexOf(me?.username || '') > -1)
+        const type = (userX.requestedList && userX.requestedList.indexOf(me?.username || '') > -1)
             ? 3 : (
                 (me?.followings && me.followings.indexOf(userXname) > -1) ? 1 : 2
-            ))
+            )
+        setFollowType(type)
     }, [userX])
     useEffect(() => {
         if (me?.username === userXname) {
@@ -222,9 +223,6 @@ const ProfileX = ({ route }: ProfileXProps) => {
 
             }, Function)
         }
-
-
-
     }
     const _onSetHeaderHeight = ({ nativeEvent: { layout: { height } } }: LayoutChangeEvent) => {
         ref.current.headerHeight = height
