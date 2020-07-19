@@ -554,7 +554,7 @@ const ProfileX = ({ route }: ProfileXProps) => {
                                     activeOpacity={1}
                                 >
                                     <AccountGallery
-                                        photos={userX.posts || []}
+                                        photos={userX.posts?.filter(x => !!!userX.archive?.posts.find(y => y.uid !== x.uid)) || []}
                                         hidePopupImage={_hidePopupImage}
                                         showPopupImage={_showPopupImage}
                                     />

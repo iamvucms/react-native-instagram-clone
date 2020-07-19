@@ -29,6 +29,7 @@ import SavedCollection from '../screens/Home/Account/Setting/Account/SavedCollec
 import AddSavedCollection from '../screens/Home/Account/Setting/Account/AddSavedCollection'
 import EditSavedCollection from '../screens/Home/Account/Setting/Account/EditSavedCollection'
 import AddToSavedCollection from '../screens/Home/Account/Setting/Account/AddToSavedCollection'
+import CreateHighlight from '../screens/Home/Account/CreateHighlight'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -50,6 +51,7 @@ const AccountStack = () => {
             <Stack.Screen name="ProfileX" component={ProfileX} />
             <Stack.Screen name="ProfileXFollow" component={ProfileXFollow} />
             <Stack.Screen component={Setting} name="Setting" />
+            <Stack.Screen component={CreateHighlight} name="CreateHighlight" />
             <Stack.Screen options={{
                 ...TransitionPresets.ModalSlideFromBottomIOS,
             }} component={Follow} name="Follow" />

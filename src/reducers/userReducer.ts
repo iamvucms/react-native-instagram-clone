@@ -245,6 +245,11 @@ export type PostArchive = {
     multiple: boolean,
     previewUri: string
 }
+export type Highlight = {
+    name: string,
+    avatarUri: string,
+    stories: StoryArchive[]
+}
 export interface userPayload {
     user: {
         logined?: boolean,
@@ -261,7 +266,8 @@ export interface userPayload {
     archive?: {
         stories: StoryArchive[],
         posts: PostArchive[]
-    }
+    },
+    highlights?: Highlight[]
 }
 export interface ErrorAction {
     type: string,
@@ -311,6 +317,7 @@ export const defaultUserState: userPayload = {
     tagPhotos: [],
     taggedPhotos: [],
     bookmarks: [],
+    highlights: [],
     archive: {
         stories: [],
         posts: []
