@@ -41,7 +41,11 @@ export const userActionTypes = {
     UPDATE_POST_ARCHIVE_SUCCESS: 'UPDATE_POST_ARCHIVE_SUCCESS',
     UPDATE_POST_ARCHIVE_FAILURE: 'UPDATE_POST_ARCHIVE_FAILURE',
     FETCH_ARCHIVE_SUCCESS: 'FETCH_ARCHIVE_SUCCESS',
-    FETCH_ARCHIVE_FAILURE: 'FETCH_ARCHIVE_FAILURE'
+    FETCH_ARCHIVE_FAILURE: 'FETCH_ARCHIVE_FAILURE',
+    FETCH_HIGHLIGHT_SUCCESS: 'FETCH_HIGHLIGHT_SUCCESS',
+    FETCH_HIGHLIGHT_FAILURE: 'FETCH_HIGHLIGHT_FAILURE',
+    UPDATE_HIGHLIGHT_SUCCESS: 'UPDATE_HIGHLIGHT_SUCCESS',
+    UPDATE_HIGHLIGHT_FAILURE: 'UPDATE_HIGHLIGHT_FAILURE'
 }
 /**
  * type:
@@ -300,6 +304,9 @@ export type ArchivePayload = {
         posts: PostArchive[]
     }
 }
+export type HighlightPayload = {
+    highlights: Highlight[]
+}
 export type userAction = SuccessAction<userPayload> | ErrorAction
     | SuccessAction<UserInfo>
     | SuccessAction<ExtraInfoPayload>
@@ -311,6 +318,7 @@ export type userAction = SuccessAction<userPayload> | ErrorAction
     | SuccessAction<StoryArchivePayload>
     | SuccessAction<PostArchivePayload>
     | SuccessAction<ArchivePayload>
+    | SuccessAction<HighlightPayload>
 export const defaultUserState: userPayload = {
     user: {},
     photos: [],
@@ -660,6 +668,19 @@ const reducer = (state: userPayload = defaultUserState, action: userAction): use
             }
             return state
         case userActionTypes.FETCH_ARCHIVE_FAILURE:
+            action = <ErrorAction>action
+            Alert.alert('Error', action.payload.message)
+            return state
+        case userActionTypes.FETCH_HIGHLIGHT_SUCCESS:
+            action = <SuccessAction<HighlightPayload>>action
+            if (!!action.payload) {
+                state = {
+                    ...state,
+                    highlights: action.payload.highlights || []
+                }
+            }
+            return state
+        case userActionTypes.FETCH_HIGHLIGHT_FAILURE:
             action = <ErrorAction>action
             Alert.alert('Error', action.payload.message)
             return state

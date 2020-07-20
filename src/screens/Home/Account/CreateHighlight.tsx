@@ -1,18 +1,21 @@
-import React, { useState, useEffect } from 'react'
-import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { goBack } from '../../../navigations/rootNavigation'
-import { useSelector } from '../../../reducers'
-import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT, SCREEN_WIDTH } from '../../../constants'
-import { getTabBarHeight } from '../../../components/BottomTabBar'
-import SuperImage from '../../../components/SuperImage'
-import { StoryArchive } from '../../../reducers/userReducer'
-import { MONTH_ALIAS } from '../../../components/DatePicker'
 import { firestore } from 'firebase'
-import { StoryProcessedImage } from '../../Others/StoryProcessor'
+import React, { useEffect, useState } from 'react'
+import { FlatList, KeyboardAvoidingView, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import FastImage from 'react-native-fast-image'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useDispatch } from 'react-redux'
+import { getTabBarHeight } from '../../../components/BottomTabBar'
+import { MONTH_ALIAS } from '../../../components/DatePicker'
+import SuperImage from '../../../components/SuperImage'
+import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../../constants'
+import { goBack, navigate } from '../../../navigations/rootNavigation'
+import { useSelector } from '../../../reducers'
+import { StoryArchive } from '../../../reducers/userReducer'
+import { StoryProcessedImage } from '../../Others/StoryProcessor'
+import { AddStoryToHighlightRequest } from '../../../actions/userActions'
 const LIST_HEIGHT = SCREEN_HEIGHT - 44 - STATUS_BAR_HEIGHT - getTabBarHeight()
 const CreateHighlight = () => {
+    const dispatch = useDispatch()
     const stories = useSelector(state => state.user.archive?.stories || [])
     /**
      * step
@@ -55,16 +58,19 @@ const CreateHighlight = () => {
         } else {
             newIndexs.push(index)
         }
+        if (newIndexs.length === 1) setCoverIndex(newIndexs[0])
         setSelectedIndexs(newIndexs)
     }
     const _onSelectCover = (index: number) => {
         setCoverIndex(index)
         setStep(2)
     }
-    const _onNext = () => {
+    const _onNext = async () => {
         if (step === 1) setStep(2)
         else {
-
+            const storyList = selectedIndexs.map(idx => stories[idx])
+            await dispatch(AddStoryToHighlightRequest(storyList, name, imgUris[coverIndex]))
+            navigate('AccountIndex')
         }
     }
     const allowNext = step === 1 && selectedIndexs.length === 0 || step === 2 && name.length === 0
@@ -194,12 +200,13 @@ const CreateHighlight = () => {
                 }}>
                 <FlatList
                     style={{
+                        width: '100%',
                         height: LIST_HEIGHT,
                         backgroundColor: "#fff"
                     }}
                     bounces={false}
                     showsVerticalScrollIndicator={false}
-                    data={stories}
+                    data={stories.filter((_, idx) => idx in selectedIndexs)}
                     numColumns={3}
                     renderItem={({ item, index }) => (
                         <TouchableOpacity

@@ -3,7 +3,7 @@ import { createStackNavigator, StackNavigationOptions, TransitionPresets } from 
 import React from 'react';
 import { ExtraPost } from '../reducers/postReducer';
 import { ProfileX } from '../reducers/profileXReducer';
-import { HashTag, UserInfo, Bookmark } from '../reducers/userReducer';
+import { HashTag, UserInfo, Bookmark, Highlight } from '../reducers/userReducer';
 import DiscoverPeople from '../screens/Home/Account/DiscoverPeople';
 import EditProfile from '../screens/Home/Account/EditProfile';
 import GalleryChooser, { ProcessedImage } from '../screens/Home/Account/GalleryChooser';
@@ -43,6 +43,8 @@ import { Message } from '../reducers/messageReducer';
 import { ExtraStory } from '../reducers/storyReducer';
 import StorySeenList from '../screens/Others/StorySeenList';
 import StoryViewerOptions from '../screens/Others/StoryViewerOptions';
+import HighlightFullView from '../screens/Root/HighlightFullView';
+import EditHighlight from '../screens/Home/Account/EditHighlight';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -100,6 +102,13 @@ export type SuperRootStackParamList = {
     },
     StoryFullView: {
         groupIndex: number
+    },
+    HighlightFullView: {
+        highlight: Highlight,
+        isMyHighlight?: boolean,
+    },
+    EditHighlight: {
+        name: string
     },
     ProfileX: undefined,
     Hashtag: undefined,
@@ -219,6 +228,11 @@ const index = (): JSX.Element => {
                     gestureEnabled: true,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="StoryFullView" component={StoryFullView} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    gestureEnabled: true,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="HighlightFullView" component={HighlightFullView} />
                 <RootStack.Screen name="ConversationOptions" component={ConversationOptions} />
                 <RootStack.Screen name="SharedImages" component={SharedImages} />
                 <RootStack.Screen options={{
@@ -253,6 +267,7 @@ const index = (): JSX.Element => {
                     cardStyle: { backgroundColor: 'transparent' },
                     animationEnabled: false
                 }} name="StorySeenList" component={StorySeenList} />
+                <RootStack.Screen name="EditHighlight" component={EditHighlight} />
                 <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' },

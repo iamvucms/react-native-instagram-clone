@@ -10,11 +10,15 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../../constan
 import { navigate } from '../../../navigations/rootNavigation'
 import { useSelector } from '../../../reducers'
 import { Post } from '../../../reducers/postReducer'
+import HighlightPreviewList from '../../../components/Highlight/HighlightPreviewList'
 const index = () => {
     const dispatch = useDispatch()
     const [selectedPhoto, setSelectedPhoto] = useState<Post>({})
     const [refreshing, setRefreshing] = useState<boolean>(false)
-    const user = useSelector(state => state.user.user)
+    const userState = useSelector(state => state.user)
+    const user = userState.user
+    const highlights = [...(userState.highlights || [])]
+    highlights.reverse()
     const extraInfo = useSelector(state => state.user.extraInfo)
     const archivePosts = useSelector(state => state.user.archive?.posts || [])
     const photos = useSelector(state => state.user.photos || [])
@@ -520,6 +524,11 @@ const index = () => {
                                         fontWeight: '500'
                                     }}>Edit Profile</Text>
                                 </TouchableOpacity>
+                                {highlights.length > 0 &&
+                                    <HighlightPreviewList
+                                        showAdder={true}
+                                        highlights={highlights} />
+                                }
                             </View>
                             <View style={styles.galleryContainer}>
                                 <View style={styles.galleryTabWrapper}>

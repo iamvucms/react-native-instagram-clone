@@ -1220,7 +1220,7 @@ export const AddStoryArchiveRequest = (storyList: StoryArchive[]):
             })
             const rq = await ref.collection('users').doc(myUsername).get()
             if (rq.exists) {
-                rq.ref.update({
+                await rq.ref.update({
                     archive: {
                         stories: storyArchiveList,
                         posts: postArchiveList
@@ -1251,7 +1251,7 @@ export const AddPostArchiveRequest = (postList: PostArchive[]):
             })
             const rq = await ref.collection('users').doc(myUsername).get()
             if (rq.exists) {
-                rq.ref.update({
+                await rq.ref.update({
                     archive: {
                         stories: storyArchiveList,
                         posts: postArchiveList
@@ -1284,7 +1284,7 @@ export const RemovePostArchiveRequest = (uid: number):
             postArchiveList.splice(index, 1)
             const rq = await ref.collection('users').doc(myUsername).get()
             if (rq.exists) {
-                rq.ref.update({
+                await rq.ref.update({
                     archive: {
                         stories: storyArchiveList,
                         posts: postArchiveList
@@ -1298,6 +1298,102 @@ export const RemovePostArchiveRequest = (uid: number):
                 type: userActionTypes.UPDATE_STORY_ARCHIVE_FAILURE,
                 payload: {
                     message: `Can't not remove to archive!`
+                }
+            })
+        }
+    }
+}
+//Highlight actions
+export const FetchHighlightRequest = ():
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const ref = firestore()
+            const myUsername = `${store.getState().user.user.userInfo?.username}`
+            const rq = await ref.collection('users').doc(myUsername).get()
+            const userData: ProfileX = rq.data() as ProfileX
+            const highlights = (userData.highlights || [])
+                .filter(x => x.stories.length > 0)
+            dispatch({
+                type: userActionTypes.FETCH_HIGHLIGHT_SUCCESS,
+                payload: {
+                    highlights,
+                }
+            })
+        }
+        catch (e) {
+
+        }
+    }
+}
+export const AddStoryToHighlightRequest = (storyList: StoryArchive[],
+    targetHighlightName: string, avatarUri?: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const ref = firestore()
+            const myUsername = `${store.getState().user.user.userInfo?.username}`
+            const rq = await ref.collection('users').doc(`${myUsername}`).get()
+            const currentHighLight = [...(store.getState().user.highlights || [])]
+            const index = currentHighLight.findIndex(x => x.name === targetHighlightName)
+            if (index < -1 && rq.exists) {
+                const highlight = { ...currentHighLight[index] }
+                const stories = [...highlight.stories]
+                storyList.map(story => {
+                    if (!!!stories.find(x => x.uid === story.uid)) {
+                        stories.push(story)
+                    }
+                })
+                currentHighLight[index] = highlight
+            } else if (avatarUri && index < 0) {
+                currentHighLight.push({
+                    name: targetHighlightName,
+                    avatarUri,
+                    stories: storyList
+                })
+            }
+            await rq.ref.update({
+                highlights: currentHighLight
+            })
+            dispatch(FetchHighlightRequest())
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.FETCH_HIGHLIGHT_FAILURE,
+                payload: {
+                    message: 'Load highlights failed'
+                }
+            })
+        }
+    }
+}
+export const RemoveFromHighlightRequest = (uid: number, targetHighlightName: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const ref = firestore()
+            const myUsername = `${store.getState().user.user.userInfo?.username}`
+            const rq = await ref.collection('users').doc(`${myUsername}`).get()
+            const currentHighLight = [...(store.getState().user.highlights || [])]
+            const index = currentHighLight.findIndex(x => x.name === targetHighlightName)
+            if (index > -1) {
+                const highlight = { ...currentHighLight[index] }
+                const stories = [...highlight.stories]
+                highlight.stories = stories.filter(x => x.uid !== uid)
+                if (highlight.stories.length === 0) {
+                    currentHighLight.splice(index, 1)
+                } else currentHighLight[index] = highlight
+                await rq.ref.update({
+                    highlights: currentHighLight
+                })
+                dispatch(FetchHighlightRequest())
+            }
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.FETCH_HIGHLIGHT_FAILURE,
+                payload: {
+                    message: 'Remove failed!'
                 }
             })
         }

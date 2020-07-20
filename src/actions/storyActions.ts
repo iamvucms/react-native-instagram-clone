@@ -12,6 +12,7 @@ export const FetchStoryListRequest = ():
         try {
             const ref = firestore()
             const me = store.getState().user.user
+            const myUsername = `${me.userInfo?.username}`
             const request = await ref
                 .collection('users')
                 .doc(me.userInfo?.username)
@@ -66,6 +67,11 @@ export const FetchStoryListRequest = ():
                         (a.create_at?.toMillis() || 0) - (b.create_at?.toMillis() || 0)
                     )
                 })
+                const myStoryIndex = fullStory.findIndex(x => x.ownUser.username === myUsername)
+                if (myStoryIndex > -1) {
+                    const myStory = fullStory.splice(myStoryIndex, 1)[0]
+                    fullStory.unshift(myStory)
+                }
                 dispatch(FetchStoryListSuccess(fullStory))
             } else dispatch(FetchStoryListFailure())
         } catch (e) {

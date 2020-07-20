@@ -10,15 +10,15 @@ export interface CustomAccountIconProps {
 const CustomAccountIcon = ({ focused }: CustomAccountIconProps) => {
     const user = useSelector(state => state.user.user.userInfo)
     const collectionAll = (useSelector(state =>
-        state.user.bookmarks?.filter(x => x.name === 'All Posts')
-    ) || [])[0]
+        state.user.bookmarks?.find(x => x.name === 'All Posts')
+    ) || { bookmarks: [] })
     const _anim = React.useMemo(() => new Animated.Value(0), [])
     const ref = useRef<{
         preBoormarkCount: number,
         animating: boolean
     }>({
         preBoormarkCount: store.getState().user.bookmarks
-            ?.filter(x => x.name === 'All Posts')[0].bookmarks.length || 0,
+            ?.find(x => x.name === 'All Posts')?.bookmarks.length || 0,
         animating: false
     })
     useEffect(() => {
