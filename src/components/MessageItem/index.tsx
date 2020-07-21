@@ -135,7 +135,8 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
                     {
                         scale: _animRatio
                     }
-                ]
+                ],
+                alignItems: isMyMessage ? 'flex-end' : 'flex-start',
             }]}>
                 {item.type === messagesTypes.TEXT &&
                     <Text style={styles.msgText}>{item.text}</Text>
@@ -178,7 +179,9 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
                         </View>
                         <View style={{
                             ...styles.textMessage,
-                            backgroundColor: '#ddd',
+                            backgroundColor: isMyMessage ? '#ddd' : '#fff',
+                            borderWidth: isMyMessage ? 0 : 1,
+                            borderColor: '#ddd',
                             marginTop: 5,
                             borderRadius: 999
                         }}>
@@ -195,7 +198,11 @@ const MessageItem = ({ item, index, owner, showMsgEmojiSelection }: MessageItemP
                         postId={item.postId as number} />
                 }
                 {item.type === messagesTypes.SUPER_IMAGE &&
-                    <Icon name="play" size={30} color="#fff" />
+                    <View style={{
+                        paddingHorizontal: 15
+                    }}>
+                        <Icon name="play" size={30} color="#fff" />
+                    </View>
                 }
                 {item.type === messagesTypes.EMOJI &&
                     <Text style={{

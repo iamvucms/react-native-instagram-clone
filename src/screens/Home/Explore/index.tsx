@@ -4,9 +4,30 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../constants'
 import SearchResult from '../../../components/SearchResult'
 import { getTabBarHeight } from '../../../components/BottomTabBar'
-
+import { navigate } from '../../../navigations/rootNavigation'
+export const IMAGE_CLASSES = [{
+    name: 'Fashion',
+    icon: 'shopping'
+}, {
+    name: 'Cosplay',
+    icon: 'camera'
+}, {
+    name: 'Art',
+    icon: 'artstation'
+}, {
+    name: 'Decor',
+    icon: 'lightbulb-on'
+}, {
+    name: 'Food',
+    icon: 'food-fork-drink'
+}, {
+    name: 'Architecture',
+    icon: 'home-variant'
+}, {
+    name: 'Landscape',
+    icon: 'image'
+}]
 const index = () => {
-
     const [query, setQuery] = useState<string>('')
     const [typing, setTyping] = useState<boolean>(false)
     const inputRef = useRef<TextInput>(null)
@@ -57,74 +78,21 @@ const index = () => {
                     alignItems: 'center'
                 }}
                 style={styles.labelWrapper}>
-                <TouchableOpacity style={styles.labelItem}>
-                    <Icon name="shopping" size={16} />
-                    <Text style={{
-                        marginLeft: 5,
-                        fontWeight: "500"
-                    }}>Shop</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.labelItem}>
-                    <Icon name="shopping" size={16} />
-                    <Text style={{
-                        marginLeft: 5,
-                        fontWeight: "500"
-                    }}>Shop</Text>
-                </TouchableOpacity><TouchableOpacity style={styles.labelItem}>
-                    <Icon name="shopping" size={16} />
-                    <Text style={{
-                        marginLeft: 5,
-                        fontWeight: "500"
-                    }}>Shop</Text>
-                </TouchableOpacity><TouchableOpacity style={styles.labelItem}>
-                    <Icon name="shopping" size={16} />
-                    <Text style={{
-                        marginLeft: 5,
-                        fontWeight: "500"
-                    }}>Shop</Text>
-                </TouchableOpacity><TouchableOpacity style={styles.labelItem}>
-                    <Icon name="shopping" size={16} />
-                    <Text style={{
-                        marginLeft: 5,
-                        fontWeight: "500"
-                    }}>Shop</Text>
-                </TouchableOpacity><TouchableOpacity style={styles.labelItem}>
-                    <Icon name="shopping" size={16} />
-                    <Text style={{
-                        marginLeft: 5,
-                        fontWeight: "500"
-                    }}>Shop</Text>
-                </TouchableOpacity><TouchableOpacity style={styles.labelItem}>
-                    <Icon name="shopping" size={16} />
-                    <Text style={{
-                        marginLeft: 5,
-                        fontWeight: "500"
-                    }}>Shop</Text>
-                </TouchableOpacity><TouchableOpacity style={styles.labelItem}>
-                    <Icon name="shopping" size={16} />
-                    <Text style={{
-                        marginLeft: 5,
-                        fontWeight: "500"
-                    }}>Shop</Text>
-                </TouchableOpacity><TouchableOpacity style={styles.labelItem}>
-                    <Icon name="shopping" size={16} />
-                    <Text style={{
-                        marginLeft: 5,
-                        fontWeight: "500"
-                    }}>Shop</Text>
-                </TouchableOpacity><TouchableOpacity style={styles.labelItem}>
-                    <Icon name="shopping" size={16} />
-                    <Text style={{
-                        marginLeft: 5,
-                        fontWeight: "500"
-                    }}>Shop</Text>
-                </TouchableOpacity><TouchableOpacity style={styles.labelItem}>
-                    <Icon name="shopping" size={16} />
-                    <Text style={{
-                        marginLeft: 5,
-                        fontWeight: "500"
-                    }}>Shop</Text>
-                </TouchableOpacity>
+                {IMAGE_CLASSES.map((imgClass, index) => (
+                    <TouchableOpacity
+                        onPress={() => navigate('ImageClass', {
+                            className: imgClass.name
+                        })}
+                        key={index}
+                        style={styles.labelItem}>
+                        <Icon name={imgClass.icon} size={16} color="#666" />
+                        <Text style={{
+                            marginLeft: 5,
+                            fontWeight: "500"
+                        }}>{imgClass.name}</Text>
+                    </TouchableOpacity>
+                ))}
+
             </ScrollView>
 
         </SafeAreaView >

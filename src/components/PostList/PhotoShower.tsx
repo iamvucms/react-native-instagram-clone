@@ -135,20 +135,11 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
                                     <Animated.View
                                         key={index2}
                                         style={{
-                                            width: _animTags[index][index2].interpolate({
-                                                inputRange: [0, 1],
-                                                outputRange: [0, tag.width]
-                                            }),
-                                            height: _animTags[index][index2].interpolate({
-                                                inputRange: [0, 1],
-                                                outputRange: [0, tag.height]
-                                            }),
-                                            opacity: _animTags[index][index2].interpolate({
-                                                inputRange: [0, 1],
-                                                outputRange: [0, 1]
-                                            }),
-                                            top: tag.y,
-                                            left: tag.x,
+                                            width: getLabelWidth(_animTags, index, index2, tag),
+                                            height: getLabelHeight(_animTags, index, index2, tag),
+                                            opacity: getLabelOpacity(_animTags, index, index2),
+                                            top: Animated.subtract(tag.y, Animated.divide(getLabelHeight(_animTags, index, index2, tag), 2)),
+                                            left: Animated.subtract(tag.x, Animated.divide(getLabelWidth(_animTags, index, index2, tag), 2)),
                                             position: 'absolute'
                                         }}>
                                         <TouchableOpacity
@@ -198,3 +189,27 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     }
 })
+function getLabelOpacity(_animTags: Animated.Value[][], index: number, index2: number) {
+    return _animTags[index][index2].interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+    })
+}
+
+function getLabelHeight(_animTags: Animated.Value[][], index: number, index2: number, tag: { x: number; y: number; width: number; height: number; username: string }) {
+    return _animTags[index][index2].interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, tag.height],
+        extrapolate: 'clamp',
+    })
+}
+
+function getLabelWidth(_animTags: Animated.Value[][], index: number, index2: number, tag: { x: number; y: number; width: number; height: number; username: string }) {
+    return _animTags[index][index2].interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, tag.width],
+        extrapolate: 'clamp',
+    })
+}
+

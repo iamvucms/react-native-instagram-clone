@@ -15,6 +15,7 @@ import StoryPreviewList from '../../components/StoryPreviewList'
 import { SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../constants'
 import CommentInputPopup from '../../components/CommentInputPopup'
 import { useSelector } from '../../reducers'
+import { getTabBarHeight } from '../../components/BottomTabBar'
 const index = () => {
     const dispatch = useDispatch()
     const postList = useSelector(state => state.postList)
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
         position: "relative"
     },
     scrollContainer: {
-        height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44 - 80
+        height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44 - getTabBarHeight()
     },
     loadingIcon: {
         position: 'relative',

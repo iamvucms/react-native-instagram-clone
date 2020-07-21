@@ -13,6 +13,7 @@ import { Post } from '../../../reducers/postReducer'
 import { getStatusBarHeight } from 'react-native-status-bar-height'
 import NavigationBar from '../../../components/NavigationBar'
 import { ToggleFollowUserRequest, ToggleSendFollowRequest } from '../../../actions/userActions'
+import HighlightPreviewList from '../../../components/Highlight/HighlightPreviewList'
 type Params = {
     ProfileX: {
         username: string
@@ -27,6 +28,8 @@ const ProfileX = ({ route }: ProfileXProps) => {
     const me = useSelector(state => state.user.user.userInfo)
     const dispatch = useDispatch()
     const userX = useSelector(state => state.profileX)
+    const highlights = [...(userX.highlights || [])]
+    highlights.reverse()
     const { isBlock } = userX
     const [refreshing, setRefreshing] = useState<boolean>(false)
     const [selectedPhoto, setSelectedPhoto] = useState<Post>({})
@@ -501,10 +504,14 @@ const ProfileX = ({ route }: ProfileXProps) => {
                                         }} />
                                     }
                                 </TouchableOpacity>
-                                <TouchableOpacity style={{
-                                    ...styles.btnAction,
-                                    borderWidth: 1,
-                                }}>
+                                <TouchableOpacity
+                                    onPress={() => navigate('Conversation', {
+                                        username: userX.username
+                                    })}
+                                    style={{
+                                        ...styles.btnAction,
+                                        borderWidth: 1,
+                                    }}>
                                     <Text style={{
                                         fontWeight: '600'
                                     }}>Message</Text>
@@ -519,6 +526,10 @@ const ProfileX = ({ route }: ProfileXProps) => {
                                     <Icon name="chevron-down" size={20} />
                                 </TouchableOpacity>
                             </View>
+                            {highlights.length > 0 &&
+                                <HighlightPreviewList
+                                    highlights={highlights} />
+                            }
                         </View>
                         <View style={styles.galleryContainer}>
                             <View style={styles.galleryTabWrapper}>

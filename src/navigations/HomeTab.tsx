@@ -30,6 +30,7 @@ import AddSavedCollection from '../screens/Home/Account/Setting/Account/AddSaved
 import EditSavedCollection from '../screens/Home/Account/Setting/Account/EditSavedCollection'
 import AddToSavedCollection from '../screens/Home/Account/Setting/Account/AddToSavedCollection'
 import CreateHighlight from '../screens/Home/Account/CreateHighlight'
+import ImageClass from '../screens/Home/Explore/ImageClass'
 export type HomeTabParamList = {
     HomeIndex: undefined,
     Explore: undefined,
@@ -109,6 +110,7 @@ const ExploreStack = () => {
             <Stack.Screen name="Hashtag" component={Hashtag} />
             <Stack.Screen name="ProfileX" component={ProfileX} />
             <Stack.Screen name="ProfileXFollow" component={ProfileXFollow} />
+            <Stack.Screen name="ImageClass" component={ImageClass} />
         </Stack.Navigator>
     )
 }

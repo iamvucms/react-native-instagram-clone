@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Animated, Image, ImageBackground, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Animated, Image, ImageBackground, TouchableWithoutFeedback, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import FastImage from 'react-native-fast-image'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useDispatch } from 'react-redux'

@@ -198,7 +198,7 @@ const Conversation = ({ route }: ConversationProps) => {
             useNativeDriver: true,
             toValue: 1
         }).start()
-    }, [conversation.messageList])
+    }, [conversation?.messageList])
     const _onHideEmojiSelection = () => {
         Animated.timing(_emojiBarAnimRatio, {
             toValue: 0,
@@ -231,7 +231,7 @@ const Conversation = ({ route }: ConversationProps) => {
             ref.current.preventNextScrollToEnd = false
         }
     }
-    if (!!!conversation) return (
+    if (!!!conversation || !!!conversation.online) return (
         <View style={{
             width: '100%',
             height: '100%',

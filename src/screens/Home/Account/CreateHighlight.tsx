@@ -61,8 +61,9 @@ const CreateHighlight = () => {
         if (newIndexs.length === 1) setCoverIndex(newIndexs[0])
         setSelectedIndexs(newIndexs)
     }
-    const _onSelectCover = (index: number) => {
-        setCoverIndex(index)
+    const _onSelectCover = (item: StoryArchive) => {
+        const rootIndex = stories.findIndex(x => x.uid === item.uid)
+        setCoverIndex(rootIndex)
         setStep(2)
     }
     const _onNext = async () => {
@@ -206,12 +207,12 @@ const CreateHighlight = () => {
                     }}
                     bounces={false}
                     showsVerticalScrollIndicator={false}
-                    data={stories.filter((_, idx) => idx in selectedIndexs)}
+                    data={selectedIndexs.map(idx => stories[idx])}
                     numColumns={3}
                     renderItem={({ item, index }) => (
                         <TouchableOpacity
                             activeOpacity={0.8}
-                            onPress={() => _onSelectCover(index)}
+                            onPress={() => _onSelectCover(item)}
                         >
                             <StoryArchiveItem {...{ index, item }} />
                         </TouchableOpacity>

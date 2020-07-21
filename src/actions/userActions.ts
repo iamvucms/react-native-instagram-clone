@@ -2,7 +2,7 @@ import { auth, firestore, storage } from 'firebase';
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { DEFAULT_PHOTO_URI } from '../constants';
 import { navigate } from "../navigations/rootNavigation";
-import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting, HashTag, SearchItem, BookmarkCollection, Bookmark, StoryArchive, PostArchive } from '../reducers/userReducer';
+import { defaultUserState, ErrorAction, ExtraInfoPayload, NotificationProperties, NotificationSetting, PostStoryCommentOptions, PrivacyCommentOptions, PrivacyProperties, PrivacySetting, SuccessAction, userAction, userActionTypes, UserInfo, userPayload, UserSetting, HashTag, SearchItem, BookmarkCollection, Bookmark, StoryArchive, PostArchive, Highlight } from '../reducers/userReducer';
 import { WelcomePropsRouteParams } from '../screens/Auth/Welcome';
 import { store } from '../store';
 import { generateUsernameKeywords, uriToBlob, Timestamp } from '../utils';
@@ -1383,6 +1383,60 @@ export const RemoveFromHighlightRequest = (uid: number, targetHighlightName: str
                 if (highlight.stories.length === 0) {
                     currentHighLight.splice(index, 1)
                 } else currentHighLight[index] = highlight
+                await rq.ref.update({
+                    highlights: currentHighLight
+                })
+                dispatch(FetchHighlightRequest())
+            }
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.FETCH_HIGHLIGHT_FAILURE,
+                payload: {
+                    message: 'Remove failed!'
+                }
+            })
+        }
+    }
+}
+export const RemoveHighlightRequest = (targetHighlightName: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const ref = firestore()
+            const myUsername = `${store.getState().user.user.userInfo?.username}`
+            const rq = await ref.collection('users').doc(`${myUsername}`).get()
+            const currentHighLight = [...(store.getState().user.highlights || [])]
+            const index = currentHighLight.findIndex(x => x.name === targetHighlightName)
+            if (index > -1) {
+                currentHighLight.splice(index, 1)
+                await rq.ref.update({
+                    highlights: currentHighLight
+                })
+                dispatch(FetchHighlightRequest())
+            }
+        }
+        catch (e) {
+            dispatch({
+                type: userActionTypes.FETCH_HIGHLIGHT_FAILURE,
+                payload: {
+                    message: 'Remove failed!'
+                }
+            })
+        }
+    }
+}
+export const EditHighlightRequest = (editedHighlight: Highlight, targetHighlightName: string):
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            const ref = firestore()
+            const myUsername = `${store.getState().user.user.userInfo?.username}`
+            const rq = await ref.collection('users').doc(`${myUsername}`).get()
+            const currentHighLight = [...(store.getState().user.highlights || [])]
+            const index = currentHighLight.findIndex(x => x.name === targetHighlightName)
+            if (index > -1) {
+                currentHighLight[index] = { ...editedHighlight }
                 await rq.ref.update({
                     highlights: currentHighLight
                 })
