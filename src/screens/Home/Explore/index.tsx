@@ -5,6 +5,7 @@ import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../constan
 import SearchResult from '../../../components/SearchResult'
 import { getTabBarHeight } from '../../../components/BottomTabBar'
 import { navigate } from '../../../navigations/rootNavigation'
+import RecommendPostList from '../../../components/Recommend/RecommendPostList'
 export const IMAGE_CLASSES = [{
     name: 'Fashion',
     icon: 'shopping'
@@ -92,9 +93,11 @@ const index = () => {
                         }}>{imgClass.name}</Text>
                     </TouchableOpacity>
                 ))}
-
             </ScrollView>
-
+            <RecommendPostList containerStyle={{
+                maxHeight: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44 - 40 - getTabBarHeight(),
+                overflow: 'hidden'
+            }} />
         </SafeAreaView >
     )
 }

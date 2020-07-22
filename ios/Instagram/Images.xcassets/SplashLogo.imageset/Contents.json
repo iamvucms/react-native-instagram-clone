@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "brasol.vn-logo-instargram-logo-instagram.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "brasol.vn-logo-instargram-logo-instagram-1.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "brasol.vn-logo-instargram-logo-instagram-2.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

@@ -1,7 +1,7 @@
 import { firestore, storage } from "firebase"
 import { UserInfo } from "../reducers/userReducer"
 import { store } from "../store"
-import { MAPBOX_ACCESS_TOKEN } from "../constants"
+import { MAPBOX_ACCESS_TOKEN, CLASSIFY_API } from "../constants"
 import Share, { Options } from "react-native-share"
 import { ExtraPost } from "../reducers/postReducer"
 import { ProfileX } from "../reducers/profileXReducer"
@@ -258,4 +258,22 @@ export const uploadSuperImages = (images: StoryProcessedImage[]): Promise<{
                 })))),
         }
     })
+}
+export const getImageClass = (url: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const data = new FormData()
+        data.append('URL', url)
+        fetch(CLASSIFY_API, {
+            method: 'POST',
+            body: data
+        }).then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    resolve(result.class_name)
+                } else reject('Error')
+            })
+    })
+}
+export function capitalizeFirstLetter(str: string) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
