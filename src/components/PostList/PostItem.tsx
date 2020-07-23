@@ -19,6 +19,7 @@ export interface PostItemProps {
 }
 const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
     const dispatch = useDispatch()
+    const myUsername = store.getState().user.user.userInfo?.username
     const [currentPage, setCurrentPage] = useState<number>(1)
     const bookmarks = useSelector(state => state.user.bookmarks)?.find(x => x.name === 'All Posts')?.bookmarks || []
     const [content, setContent] = useState<JSX.Element[]>([])
@@ -66,16 +67,19 @@ const PostItem = ({ setPost, item, showCommentInput }: PostItemProps) => {
     return (
         <View style={styles.container}>
             <View style={styles.postHeader}>
-                <View
+                <TouchableOpacity
+                    onPress={() => myUsername === item.ownUser?.username ?
+                        navigate('AccountIndex')
+                        : navigate('ProfileX', {
+                            username: item.ownUser?.username
+                        })}
                     style={styles.infoWrapper}>
-                    <TouchableOpacity>
-                        <FastImage style={styles.avatar}
-                            source={{ uri: item.ownUser?.avatarURL }} />
-                    </TouchableOpacity>
+                    <FastImage style={styles.avatar}
+                        source={{ uri: item.ownUser?.avatarURL }} />
                     <Text style={{
                         fontWeight: '600'
                     }}>{item.ownUser?.username}</Text>
-                </View>
+                </TouchableOpacity>
                 <TouchableOpacity onPress={() =>
                     navigation.push('PostOptions', {
                         item,

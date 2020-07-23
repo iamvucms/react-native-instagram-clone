@@ -308,6 +308,7 @@ const ProfileX = ({ route }: ProfileXProps) => {
     const _onViewFollow = () => {
 
     }
+    const posts = (userX.posts || []).filter(x => !!!(userX.archive?.posts || []).find(y => y.uid === x.uid))
     return (
         <SafeAreaView style={styles.container}>
             {selectedPhoto.source && <View
@@ -444,7 +445,7 @@ const ProfileX = ({ route }: ProfileXProps) => {
                                         <Text style={{
                                             fontSize: 18,
                                             fontWeight: "500"
-                                        }}>{userX.posts?.length || 0}</Text>
+                                        }}>{posts.length || 0}</Text>
                                         <Text>Posts</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
@@ -565,7 +566,7 @@ const ProfileX = ({ route }: ProfileXProps) => {
                                     activeOpacity={1}
                                 >
                                     <AccountGallery
-                                        photos={userX.posts?.filter(x => !!!(userX.archive?.posts || []).find(y => y.uid === x.uid)) || []}
+                                        photos={posts}
                                         hidePopupImage={_hidePopupImage}
                                         showPopupImage={_showPopupImage}
                                     />

@@ -3,7 +3,7 @@ import { Animated, Image, ImageBackground, TouchableWithoutFeedback, LayoutChang
 import FastImage from 'react-native-fast-image'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useDispatch } from 'react-redux'
-import { FetchExtraInfoRequest } from '../../../actions/userActions'
+import { FetchExtraInfoRequest, FetchHighlightRequest } from '../../../actions/userActions'
 import AccountGallery from '../../../components/AccountGallery'
 import { getTabBarHeight } from '../../../components/BottomTabBar'
 import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../../constants'
@@ -93,6 +93,7 @@ const index = () => {
         }
         (async () => {
             setRefreshing(true)
+            await dispatch(FetchHighlightRequest())
             await dispatch(FetchExtraInfoRequest())
             setRefreshing(false)
         })()
@@ -461,8 +462,8 @@ const index = () => {
                             <View onLayout={_onSetHeaderHeight}>
                                 <View style={styles.infoWrapper}>
                                     <TouchableOpacity
-                                    onPress={()=>navigate('StoryTaker')}
-                                    style={styles.avatarWrapper}>
+                                        onPress={() => navigate('StoryTaker')}
+                                        style={styles.avatarWrapper}>
                                         <FastImage style={styles.mainAvatar}
                                             source={{ uri: user?.userInfo?.avatarURL }} />
                                         <View style={styles.plusIcon}>
