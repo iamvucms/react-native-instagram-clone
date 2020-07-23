@@ -29,7 +29,7 @@ const index = () => {
                 <Icon name="camera" size={24} />
             </TouchableOpacity>
             <View style={styles.centerBar}>
-                <Image style={styles.logo} source={require('../../assets/images/logo.png')} />
+                <Image style={styles.logo} source={require('../../assets/images/logo2.png')} />
             </View>
             <TouchableOpacity
                 onPress={() => navigation.navigate('Direct')}
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     logo: {
         resizeMode: 'contain',
         height: 30,
-        width: 100
+        width: 150
     },
     btnBack: {
         height: 44,

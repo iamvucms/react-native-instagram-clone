@@ -8,7 +8,7 @@ import SettingComponents from '../screens/Home/Account/Setting';
 import { defaultUserState } from '../reducers/userReducer';
 import { convertToFirebaseDatabasePathName } from '../utils';
 //Define API ClASSIFY
-export const APP_NAME = 'Instagram'
+export const APP_NAME = 'PhotoHub'
 export const CLASSIFY_API = 'http://192.168.1.2:5555/classify'
 const firebaseConfig = {
     apiKey: "AIzaSyATgIePHiOXnqlzUN4rRyyaPw4CTWH7yWA",

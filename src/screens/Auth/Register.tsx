@@ -7,7 +7,7 @@ import {
     ScrollView,
     SafeAreaView
 } from 'react-native'
-import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../../constants'
+import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT, APP_NAME } from '../../constants'
 import { Formik, FormikProps, FormikValues, FormikHelpers } from 'formik'
 import * as yup from 'yup'
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -580,7 +580,7 @@ const Register = () => {
                     <Text style={{
                         color: '#666',
                         fontSize: 12
-                    }}>Your contacts will be periodically synced and stored on Instagram
+                    }}>Your contacts will be periodically synced and stored on {APP_NAME}
                         servers to help you and others find friends, and to help us provide a better service.
                         To remove contact, go to Settings and disconnect.
                         <Text style={{

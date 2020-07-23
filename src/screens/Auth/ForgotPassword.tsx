@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, Animated } from 'react-native'
-import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../constants'
+import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT, APP_NAME } from '../../constants'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { auth, firestore } from 'firebase'
 import NavigationBar from '../../components/NavigationBar'
@@ -112,10 +112,11 @@ const ForgotPassword = ({ navigation }: ForgotPasswordProps) => {
                             textAlign: 'center'
                         }}>Find Your Account</Text>
                         <Text style={{
+                            maxWidth: '90%',
                             marginVertical: 20,
                             color: '#666',
                             textAlign: 'center'
-                        }}>Enter your Instagram username or the email or phone number linked to account.</Text>
+                        }}>Enter your {APP_NAME} username or the email or phone number linked to account.</Text>
                     </View>
                     <View style={styles.formWrapper}>
                         <View style={{

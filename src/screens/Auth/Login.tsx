@@ -70,7 +70,7 @@ const Login = (): JSX.Element => {
                     <Image
                         resizeMode="contain"
                         style={styles.logo}
-                        source={require('../../assets/images/logo.png')} />
+                        source={require('../../assets/images/logo2.png')} />
                 </View>
                 <View style={styles.loginForm}>
                     <View style={styles.textInputWrapper}>
