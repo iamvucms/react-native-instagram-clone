@@ -8,6 +8,7 @@ import { firestore } from 'firebase'
 import { store } from '../../../store'
 import { Post } from '../../../reducers/postReducer'
 import RecommendItem from '../../../components/Recommend/RecommendItem'
+import { capitalizeFirstLetter } from '../../../utils'
 
 type ImageClassRouteProp = RouteProp<{
     ImageClass: {
@@ -37,19 +38,18 @@ const ImageClass = ({ route }: ImageClassProps) => {
             const blockMe = await userRef
                 .where('privacySetting.blockedAccounts.blockedAccounts',
                     'array-contains', myUsername)
-                .limit(l)
                 .get()
             const blockedMeList = blockMe.docs.map(x => x.data().username)
             const postRef = firestore().collection('posts')
             const post = await postRef
                 .where('labels', 'array-contains', labelName)
+                .limit(l)
                 .get()
             const postList: RecommendPost[] = post.docs.map(x => ({
                 ...x.data() as Post,
                 className: labelName
             })).filter(x => currentBlockedList.indexOf(`${x.userId}`) < 0
                 && blockedMeList.indexOf(`${x.userId}`) < 0
-                && x.userId !== myUsername
             )
             resolve([...postList])
         })
@@ -66,7 +66,7 @@ const ImageClass = ({ route }: ImageClassProps) => {
     }
     return (
         <SafeAreaView style={styles.container}>
-            <NavigationBar title={className} callback={goBack} />
+            <NavigationBar title={capitalizeFirstLetter(className)} callback={goBack} />
             <FlatList style={{
                 height: '100%'
             }}

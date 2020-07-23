@@ -437,6 +437,16 @@ const GalleryChooser = ({ navigation, route }: GalleryChooserProps) => {
                     resultList.map(img => {
                         img.tags.map(tag => tagUsername.push(tag.username))
                     })
+                    const regex = /@[a-zA-Z0-9._]{4,}/g;
+                    let m;
+                    while ((m = regex.exec(caption)) !== null) {
+                        if (m.index === regex.lastIndex) {
+                            regex.lastIndex++;
+                        }
+                        m.forEach((match, groupIndex) => {
+                            tagUsername.push(match.slice(1))
+                        });
+                    }
                     tagUsername = Array.from(new Set(tagUsername))
                     setUploading(false)
                     const postData: Post = {

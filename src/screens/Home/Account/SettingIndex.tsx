@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
 import NavigationBar from '../../../components/NavigationBar'
-import { goBack, navigation } from '../../../navigations/rootNavigation'
+import { goBack, navigation, navigate } from '../../../navigations/rootNavigation'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT, settingNavigationMap, SettingNavigation } from '../../../constants'
 import { TextInput } from 'react-native-gesture-handler'
@@ -78,7 +78,7 @@ const Setting = () => {
                                             backgroundColor: '#000'
                                         }}>
                                         <TouchableOpacity
-                                            onPress={() => navigation.navigate(settingNavigation.navigationName)}
+                                            onPress={() => navigate(settingNavigation.navigationName)}
                                             activeOpacity={0.9}
                                             style={styles.settingItem}>
                                             {settingNavigation.icon &&
@@ -103,7 +103,7 @@ const Setting = () => {
                             }}>
                             <TouchableOpacity
                                 onPress={() => {
-                                    navigation.navigate(settingNavigation.navigationName)
+                                    navigate(settingNavigation.navigationName)
                                 }}
 
                                 activeOpacity={0.9}
@@ -126,7 +126,7 @@ const Setting = () => {
                         }}>Logins</Text>
                     </View>
                     <TouchableOpacity
-                        onPress={() => navigation.navigate('AddAccount')}
+                        onPress={() => navigate('AddAccount')}
                         activeOpacity={0.9}
                         style={styles.settingItem}>
                         <Text style={{
@@ -136,7 +136,7 @@ const Setting = () => {
                         }}>Add Account</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        onPress={() => navigation.navigate('Logout')}
+                        onPress={() => navigate('Logout')}
                         activeOpacity={0.9}
                         style={styles.settingItem}>
                         <Text style={{

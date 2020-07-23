@@ -8,6 +8,7 @@ import SettingComponents from '../screens/Home/Account/Setting';
 import { defaultUserState } from '../reducers/userReducer';
 import { convertToFirebaseDatabasePathName } from '../utils';
 //Define API ClASSIFY
+export const APP_NAME = 'Instagram'
 export const CLASSIFY_API = 'http://192.168.1.2:5555/classify'
 const firebaseConfig = {
     apiKey: "AIzaSyATgIePHiOXnqlzUN4rRyyaPw4CTWH7yWA",
@@ -26,7 +27,7 @@ firebase.initializeApp(firebaseConfig)
 //     docs.forEach(doc => {
 //         doc.ref.update({
 //             create_at: new Date(),
-//             seenList: ['vucms.user2', 'vucms.user3', 'vucms.user4', 'vucms.user5', 'vucms0202']
+//             seenList: [ 'vucms.user3', 'vucms.user4', 'vucms.user5', 'vucms0202']
 //         })
 //     })
 // })

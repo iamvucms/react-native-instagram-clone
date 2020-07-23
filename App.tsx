@@ -9,14 +9,14 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, YellowBox } from 'react-native';
+import { StyleSheet, YellowBox, AppState } from 'react-native';
 import { Provider } from 'react-redux';
 import SplashScreen from 'react-native-splash-screen'
 import { PersistGate } from 'redux-persist/integration/react';
 import RootStackNavigation from './src/navigations';
 import { persistor, store } from './src/store';
-import { getImageClass } from './src/utils';
-import { firestore } from 'firebase';
+import { getImageClass, convertToFirebaseDatabasePathName } from './src/utils';
+import { firestore, database } from 'firebase';
 import { Post } from './src/reducers/postReducer';
 YellowBox.ignoreWarnings([
 	'Non-serializable values were found in the navigation state',
@@ -29,9 +29,6 @@ const App = () => {
 	useEffect(() => {
 		clearInterval(ref.current.itv)
 		SplashScreen.hide()
-		/**
-		 * Re-classify all posts
-		 */
 		// const db = firestore()
 		// db.collection('posts').get().then(rs => {
 		// 	rs.docs.map(doc => {
@@ -50,16 +47,16 @@ const App = () => {
 		// 	})
 		// })
 		if (myUsername) {
-			//limit functions quota
-			// ref.current.itv = setInterval(() => {
-			//   if (AppState.currentState === 'active') {
-			//     database().ref(`/online/${convertToFirebaseDatabasePathName(myUsername)}`)
-			//       .update({
-			//         last_online: new Date().getTime(),
-			//         status: 1
-			//       })
-			//   }
-			// }, 15000)
+			// limit functions quota
+			ref.current.itv = setInterval(() => {
+				if (AppState.currentState === 'active') {
+					database().ref(`/online/${convertToFirebaseDatabasePathName(myUsername)}`)
+						.update({
+							last_online: new Date().getTime(),
+							status: 1
+						})
+				}
+			}, 60000)
 		}
 	}, [])
 	console.log("render")

@@ -20,9 +20,13 @@ export const FetchProfileXRequest = (username: string):
                     || myBlockList.indexOf(username) > -1) data.isBlock = true
                 else data.isBlock = false
                 const photos = await ref.collection('posts')
-                    .where('userId', '==', username).get()
+                    .where('userId', '==', username)
+                    .orderBy('create_at', 'desc')
+                    .get()
                 const tagPhotos = await ref.collection('posts')
-                    .where('tagUsername', 'array-contains', username).get()
+                    .where('tagUsername', 'array-contains', username)
+                    .orderBy('create_at', 'desc')
+                    .get()
                 data.posts = photos.docs.map(x => x.data() || {})
                 data.tagPhotos = tagPhotos.docs.map(x => x.data() || {})
                 const followers = await ref.collection('users')

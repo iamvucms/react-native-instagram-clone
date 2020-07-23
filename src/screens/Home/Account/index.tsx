@@ -460,7 +460,9 @@ const index = () => {
                             onPress={_onBackToMainScreen}>
                             <View onLayout={_onSetHeaderHeight}>
                                 <View style={styles.infoWrapper}>
-                                    <TouchableOpacity style={styles.avatarWrapper}>
+                                    <TouchableOpacity
+                                    onPress={()=>navigate('StoryTaker')}
+                                    style={styles.avatarWrapper}>
                                         <FastImage style={styles.mainAvatar}
                                             source={{ uri: user?.userInfo?.avatarURL }} />
                                         <View style={styles.plusIcon}>

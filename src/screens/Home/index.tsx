@@ -113,7 +113,9 @@ const index = () => {
                 <ScrollView
                     keyboardDismissMode="on-drag"
                     ref={_scrollRef}
-                    style={styles.scrollContainer}
+                    style={{
+                        height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44 - getTabBarHeight()
+                    }}
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}
@@ -175,7 +177,7 @@ const styles = StyleSheet.create({
         position: "relative"
     },
     scrollContainer: {
-        height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44 - getTabBarHeight()
+
     },
     loadingIcon: {
         position: 'relative',

@@ -17,6 +17,7 @@ export interface PhotoShowerProps {
     sources: PostImage[],
     onChangePage?: (page: number) => any
 }
+const SCREEN_RATIO = SCREEN_WIDTH / 414
 const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
     const [showTags, setShowTags] = useState<boolean>(false)
     const myUsername = store.getState().user.user.userInfo?.username || ''
@@ -25,14 +26,12 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
             return SCREEN_WIDTH
         } else return img.height * SCREEN_WIDTH / img.width
     }))
-    const _animTags = React.useMemo(() =>
+    const [_animTags, _] = useState<Animated.Value[][]>(
         sources.map(source => {
             return source.tags.map(tag =>
                 new Animated.Value(0)
             )
-        })
-        , [])
-
+        }))
     const [currentPage, setCurrentPage] = useState<number>(1)
     const scrollRef = useRef<ScrollView>(null)
     const _onEndDragHandler = ({ nativeEvent: {
@@ -138,8 +137,8 @@ const PhotoShower = ({ sources, onChangePage }: PhotoShowerProps) => {
                                             width: getLabelWidth(_animTags, index, index2, tag),
                                             height: getLabelHeight(_animTags, index, index2, tag),
                                             opacity: getLabelOpacity(_animTags, index, index2),
-                                            top: Animated.subtract(tag.y, Animated.divide(getLabelHeight(_animTags, index, index2, tag), 2)),
-                                            left: Animated.subtract(tag.x, Animated.divide(getLabelWidth(_animTags, index, index2, tag), 2)),
+                                            top: Animated.add(SCREEN_RATIO * tag.y, Animated.subtract(SCREEN_RATIO * tag.height / 2, Animated.divide(getLabelHeight(_animTags, index, index2, tag), 2))),
+                                            left: Animated.add(SCREEN_RATIO * tag.x, Animated.subtract(SCREEN_RATIO * tag.width / 2, Animated.divide(getLabelWidth(_animTags, index, index2, tag), 2))),
                                             position: 'absolute'
                                         }}>
                                         <TouchableOpacity
@@ -200,7 +199,7 @@ function getLabelOpacity(_animTags: Animated.Value[][], index: number, index2: n
 function getLabelHeight(_animTags: Animated.Value[][], index: number, index2: number, tag: { x: number; y: number; width: number; height: number; username: string }) {
     return _animTags[index][index2].interpolate({
         inputRange: [0, 1],
-        outputRange: [0, tag.height],
+        outputRange: [0, tag.height * SCREEN_RATIO],
         extrapolate: 'clamp',
     })
 }
@@ -208,7 +207,7 @@ function getLabelHeight(_animTags: Animated.Value[][], index: number, index2: nu
 function getLabelWidth(_animTags: Animated.Value[][], index: number, index2: number, tag: { x: number; y: number; width: number; height: number; username: string }) {
     return _animTags[index][index2].interpolate({
         inputRange: [0, 1],
-        outputRange: [0, tag.width],
+        outputRange: [0, tag.width * SCREEN_RATIO],
         extrapolate: 'clamp',
     })
 }

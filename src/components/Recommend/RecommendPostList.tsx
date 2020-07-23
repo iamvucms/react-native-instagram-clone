@@ -77,12 +77,11 @@ const RecommendPostList = ({ containerStyle, ...rest }: RecommendPostListProps) 
             duration: 1000
         }), { iterations: 10 }).start()
     }
-    const _onRefresh = () => {
+    const _onRefresh = async () => {
         setReloading(true)
-        fetchRecommendPosts().then(recommends => {
-            setRecommendPosts(recommends)
-            setReloading(false)
-        })
+        const recommends = await fetchRecommendPosts()
+        setRecommendPosts([...recommends])
+        setReloading(false)
     }
     const _onScrollToEnd = () => {
         setLimit(limit + 12)

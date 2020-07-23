@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-community/async-storage'
 const persistConfig = {
     key: 'root',
     storage: AsyncStorage,
-    whitelist: ['user', 'messages']
+    whitelist: ['user']
 }
 import rootReducer from './reducers/'
 

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Animated, Linking, FlatList, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import NavigationBar from '../../../components/NavigationBar'
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../../../constants'
+import { SCREEN_WIDTH, SCREEN_HEIGHT, STATUS_BAR_HEIGHT } from '../../../constants'
 import { goBack, navigate } from '../../../navigations/rootNavigation'
 import { Post } from '../../../reducers/postReducer'
 import { store } from '../../../store'
@@ -29,7 +29,9 @@ const Location = ({ route }: LocationProps) => {
     const [addressPosts, setLocationPosts] = useState<Post[]>([])
     const _scrollRef = useRef<ScrollView>(null)
     const [currentTab, setCurrentTab] = useState<1 | 2>(1)
+    const [headerHeight, setHeaderHeight] = useState<number>(500)
     const _activeLineOffsetX = React.useMemo(() => new Animated.Value(0), [])
+
     useEffect(() => {
         (async () => {
             const ref = firestore()
@@ -138,7 +140,7 @@ const Location = ({ route }: LocationProps) => {
                         }} source={require('./../../../assets/icons/send.png')} />
                     </TouchableOpacity>
                 </View>
-                <View style={styles.headerContainer}>
+                <View onLayout={({ nativeEvent: { layout: { height } } }) => setHeaderHeight(height)} style={styles.headerContainer}>
                     <View style={styles.infoWrapper}>
                         <Image
                             style={styles.avatar}
@@ -237,41 +239,39 @@ const Location = ({ route }: LocationProps) => {
                             zIndex: 1,
                         }} />
                     </View>
-                    <ScrollView
-                        ref={_scrollRef}
-                        scrollEnabled={false}
-                        horizontal={true}
-                        showsHorizontalScrollIndicator={false}
-                    >
-                        <FlatList
-                            style={{
-                                width: SCREEN_WIDTH,
-                                height: "100%"
-                            }}
-                            data={[...addressPosts].sort((a, b) =>
-                                -((a.likes || []).length + (a.commentList || []).length)
-                                + (b.likes || []).length + (b.commentList || []).length
-                            )}
-                            renderItem={({ item, index }) =>
-                                <PhotoItem {...{ item, index }} key={index} />
-                            }
-                            numColumns={3}
-                            keyExtractor={(item, index) => `${index}`}
-                        />
-                        <FlatList
-                            style={{
-                                width: SCREEN_WIDTH,
-                                height: "100%"
-                            }}
-                            data={addressPosts}
-                            renderItem={({ item, index }) =>
-                                <PhotoItem {...{ item, index }} key={index} />
-                            }
-                            numColumns={3}
-                            keyExtractor={(item, index) => `${index}`}
-                        />
-                    </ScrollView>
                 </View>
+                <ScrollView
+                    ref={_scrollRef}
+                    scrollEnabled={false}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                >
+                    <FlatList
+                        style={{
+                            flex: 1
+                        }}
+                        data={[...addressPosts].sort((a, b) =>
+                            -((a.likes || []).length + (a.commentList || []).length)
+                            + (b.likes || []).length + (b.commentList || []).length
+                        )}
+                        renderItem={({ item, index }) =>
+                            <PhotoItem {...{ item, index }} key={index} />
+                        }
+                        numColumns={3}
+                        keyExtractor={(item, index) => `${index}`}
+                    />
+                    <FlatList
+                        style={{
+                            flex: 1
+                        }}
+                        data={addressPosts}
+                        renderItem={({ item, index }) =>
+                            <PhotoItem {...{ item, index }} key={index} />
+                        }
+                        numColumns={3}
+                        keyExtractor={(item, index) => `${index}`}
+                    />
+                </ScrollView>
             </SafeAreaView >
         </>
     )
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff'
     },
     headerContainer: {
-        paddingVertical: 15
+        paddingTop: 15
     },
     locationPreviewWrapper: {
         marginTop: 15,

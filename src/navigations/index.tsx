@@ -45,6 +45,8 @@ import StorySeenList from '../screens/Others/StorySeenList';
 import StoryViewerOptions from '../screens/Others/StoryViewerOptions';
 import HighlightFullView from '../screens/Root/HighlightFullView';
 import EditHighlight from '../screens/Home/Account/EditHighlight';
+import Logout from '../screens/Home/Account/Setting/Logout';
+import AddToHighlights from '../screens/Others/AddToHighlights';
 export type SuperRootStackParamList = {
     RootTab: undefined,
     Comment: {
@@ -157,6 +159,11 @@ export type SuperRootStackParamList = {
     },
     StoryViewerOptions: {
         username: string
+    },
+    Logout: undefined,
+    AddToHighlights: {
+        uid: number,
+        superId: number
     }
 };
 const RootStack = createStackNavigator<SuperRootStackParamList>()
@@ -179,9 +186,17 @@ const index = (): JSX.Element => {
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="PostOptions" component={PostOptions} />
                 <RootStack.Screen options={{
+                    animationEnabled: false,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="Logout" component={Logout} />
+                <RootStack.Screen options={{
                     ...TransitionPresets.ModalTransition,
                     cardStyle: { backgroundColor: 'transparent' }
                 }} name="ProfileOptions" component={ProfileOptions} />
+                <RootStack.Screen options={{
+                    ...TransitionPresets.ModalTransition,
+                    cardStyle: { backgroundColor: 'transparent' }
+                }} name="AddToHighlights" component={AddToHighlights} />
                 <RootStack.Screen options={{
                     animationEnabled: false,
                     cardStyle: { backgroundColor: 'transparent' }

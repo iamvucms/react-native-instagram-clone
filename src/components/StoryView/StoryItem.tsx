@@ -206,7 +206,6 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
                     <View style={styles.optionsWrapper}>
                         <TouchableHighlight
                             underlayColor="#eee"
-                            onPress={() => { }}
                             style={styles.optionItem}>
                             <Text>Report...</Text>
                         </TouchableHighlight>
@@ -365,11 +364,19 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
                                     flexDirection: 'row',
                                     alignItems: 'center'
                                 }}>
-                                    <TouchableOpacity style={{
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        marginRight: 15
-                                    }}>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            stopAnimation()
+                                            navigate('AddToHighlights', {
+                                                superId: item.storyList[childIndex].source,
+                                                uid: item.storyList[childIndex].uid
+                                            })
+                                        }}
+                                        style={{
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            marginRight: 15
+                                        }}>
                                         <View style={{
                                             height: 30,
                                             width: 30,
@@ -387,7 +394,7 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
                                             color: '#fff',
                                             fontWeight: '500',
                                             fontSize: 12
-                                        }}>Hightlight</Text>
+                                        }}>Highlight</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {

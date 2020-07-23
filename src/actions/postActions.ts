@@ -5,7 +5,7 @@ import { notificationTypes } from '../reducers/notificationReducer';
 import { ExtraPost, LIMIT_POSTS_PER_LOADING, Post, PostAction, postActionTypes, PostErrorAction, PostList, PostSuccessAction } from '../reducers/postReducer';
 import { HashTag, UserInfo } from '../reducers/userReducer';
 import { store } from "../store";
-import { generateUsernameKeywords, Timestamp } from '../utils';
+import { generateUsernameKeywords, Timestamp, getImageClass } from '../utils';
 import { LoadMoreCommentListSuccess } from './commentActions';
 import { CreateNotificationRequest } from './notificationActions';
 
@@ -14,6 +14,15 @@ export const FetchPostListRequest = ():
     return async (dispatch: ThunkDispatch<{}, {}, PostAction>) => {
         try {
             const me = store.getState().user.user
+            const myUsername = `${store.getState().user.user.userInfo?.username}`
+            const currentBlockedList = store.getState().user
+                .setting?.privacy?.blockedAccounts?.blockedAccounts || []
+            const userRef = firestore().collection('users')
+            const blockMe = await userRef
+                .where('privacySetting.blockedAccounts.blockedAccounts',
+                    'array-contains', myUsername)
+                .get()
+            const blockedMeList = blockMe.docs.map(x => x.data().username)
             const request = await firestore()
                 .collection('users')
                 .doc(me.userInfo?.username)
@@ -33,15 +42,16 @@ export const FetchPostListRequest = ():
                         .get()
                     const temp = rs.docs.map(doc => {
                         if (userIds.indexOf(doc.data().userId) < 0) userIds.push(doc.data().userId)
-
                         let post = { ...doc.data() }
                         const rqCmt = doc.ref.collection('comments')
                             .orderBy('create_at', 'desc').get()
                         rqCmt.then(rsx => {
                             post.comments = rsx.docs.map(docx => docx.data())
                         })
-                        return post
-                    })
+                        return post as Post
+                    }).filter(x => currentBlockedList.indexOf(`${x.userId}`) < 0
+                        && blockedMeList.indexOf(`${x.userId}`) < 0
+                    )
                     collection = collection.concat(temp)
                 }
                 let ownInfos: UserInfo[] = []
@@ -90,6 +100,15 @@ export const LoadMorePostListRequest = ():
     return async (dispatch: ThunkDispatch<{}, {}, PostAction>) => {
         try {
             const me = store.getState().user.user
+            const myUsername = `${store.getState().user.user.userInfo?.username}`
+            const currentBlockedList = store.getState().user
+                .setting?.privacy?.blockedAccounts?.blockedAccounts || []
+            const userRef = firestore().collection('users')
+            const blockMe = await userRef
+                .where('privacySetting.blockedAccounts.blockedAccounts',
+                    'array-contains', myUsername)
+                .get()
+            const blockedMeList = blockMe.docs.map(x => x.data().username)
             const request = await firestore()
                 .collection('users')
                 .doc(me.userInfo?.username)
@@ -118,8 +137,13 @@ export const LoadMorePostListRequest = ():
                             doc.ref.collection('comments')
                                 .orderBy('create_at', 'desc').get().then(rqCmt => {
                                     post.comments = rqCmt.docs.map(docx => docx.data())
-                                    if (collection.length < LIMIT_POSTS_PER_LOADING)
+                                    if (collection.length < LIMIT_POSTS_PER_LOADING
+                                        && currentBlockedList.indexOf(`${post.userId}`) < 0
+                                        && blockedMeList.indexOf(`${post.userId}`) < 0
+                                    ) {
                                         collection.push(post)
+                                    }
+
                                 })
                         }
                     })
@@ -369,10 +393,15 @@ export const CreatePostRequest = (postData: Post):
             hashTagList = Array.from(new Set(hashTagList))
             postData.hashtags = [...hashTagList]
             if (rq.size > 0) {
-                const poster: UserInfo = rq.docs[0].data()
+                const labels = await Promise.all(
+                    postData.source?.map(async img => {
+                        return await getImageClass(img.uri)
+                    }) || []
+                )
                 ref.collection('posts').doc(`${uid}`).set({
                     ...postData,
-                    uid
+                    uid,
+                    labels
                 })
                 dispatch(FetchPostListRequest())
                 hashTagList.map(async hashtag => {

@@ -205,8 +205,7 @@ const Hashtag = ({ route }: HashtagProps) => {
                 >
                     <FlatList
                         style={{
-                            width: SCREEN_WIDTH,
-                            height: "100%"
+                            flex: 1
                         }}
                         data={[...hashtagPosts].sort((a, b) =>
                             -((a.likes || []).length + (a.commentList || []).length)
@@ -220,8 +219,7 @@ const Hashtag = ({ route }: HashtagProps) => {
                     />
                     <FlatList
                         style={{
-                            width: SCREEN_WIDTH,
-                            height: "100%"
+                            flex: 1
                         }}
                         data={hashtagPosts}
                         renderItem={({ item, index }) =>

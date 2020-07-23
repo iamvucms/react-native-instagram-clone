@@ -61,7 +61,6 @@ const AccountStack = () => {
             <Stack.Screen component={RecentFollowerInteraction} name="RecentFollowerInteraction" />
             <Stack.Screen component={Archive} name="Archive" />
             <Stack.Screen component={AccountYouDontFollowBack} name="AccountYouDontFollowBack" />
-            <Stack.Screen component={SettingNavigationx.Logout} name="Logout" />
             <Stack.Screen component={SettingNavigationx.AddAccount} name="AddAccount" />
             {settingNavigationMap.map((settingNavigation, index) => (
                 <React.Fragment key={index}>

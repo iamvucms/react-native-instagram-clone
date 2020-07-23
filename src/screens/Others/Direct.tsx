@@ -321,12 +321,17 @@ export const UserMessageItem = React.memo(({ item }: UserMessageItemProps) => {
                         </View>
                     </View>
                 </View>
-                <TouchableOpacity style={{
-                    height: 50,
-                    width: 50,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}>
+                <TouchableOpacity
+                    onPress={() => navigate('StoryTaker', {
+                        sendToDirect: true,
+                        username: item.ownUser.username
+                    })}
+                    style={{
+                        height: 50,
+                        width: 50,
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                    }}>
                     <Image style={{
                         height: 20,
                         width: 20

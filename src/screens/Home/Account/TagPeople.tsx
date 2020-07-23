@@ -176,7 +176,7 @@ export default function TagPeople({ navigation, route }: TagPeopleProps) {
     }
     const _toggleShowDelBtn = (index: number,
         preX: number,
-        preY: number, ) => {
+        preY: number,) => {
         const imgs = [...images]
         const img = { ...imgs[ref.current.currentItem] }
         img.tags[index].showBtnDelete = !img.tags[index].showBtnDelete
@@ -300,7 +300,9 @@ export default function TagPeople({ navigation, route }: TagPeopleProps) {
                         </TouchableOpacity>
                         {searchResult.length > 0 &&
                             <View style={styles.searchResultWrapper}>
-                                <FlatList data={searchResult}
+                                <FlatList
+                                    keyboardShouldPersistTaps="always"
+                                    data={searchResult}
                                     renderItem={({ item, index }) =>
                                         <UserItem {...{
                                             item,

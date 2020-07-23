@@ -24,7 +24,9 @@ export const LoginRequest = (user: userLoginWithEmail):
                 firestore().collection('users')
                     .where('email', '==', user.email).get().then(rq => {
                         if (rq.size > 0) {
-                            navigate('HomeTab') //ADD this line to fix initialRouteName not working on first time
+                            setTimeout(() => {
+                                navigate('HomeTab')
+                            }, 300);
                             const {
                                 avatarURL,
                                 bio,
@@ -92,6 +94,24 @@ export const LoginSuccess = (payload: userPayload): SuccessAction<userPayload> =
     return {
         type: userActionTypes.LOGIN_SUCCESS,
         payload: payload
+    }
+}
+export const LogoutRequest = ():
+    ThunkAction<Promise<void>, {}, {}, userAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, userAction>) => {
+        try {
+            dispatch({
+                type: userActionTypes.LOGOUT_SUCCESS,
+                payload: {}
+            })
+        } catch (e) {
+            dispatch({
+                type: userActionTypes.LOGOUT_FAILURE,
+                payload: {
+                    message: 'Can not logout now!'
+                }
+            })
+        }
     }
 }
 export const RegisterRequest = (userData: RegisterParams):
@@ -211,9 +231,13 @@ export const FetchExtraInfoRequest = ():
             let me: UserInfo = { ...store.getState().user.user.userInfo }
             const ref = firestore()
             const rq = await ref.collection('posts')
-                .where('userId', '==', me.username).get()
+                .where('userId', '==', me.username)
+                .orderBy('create_at', 'desc')
+                .get()
             const tagPhotos = await ref.collection('posts')
-                .where('tagUsername', 'array-contains', me.username).get()
+                .where('tagUsername', 'array-contains', me.username)
+                .orderBy('create_at', 'desc')
+                .get()
             const payload: ExtraInfoPayload = {
                 currentStory: [],
                 extraInfo: {
@@ -1336,7 +1360,7 @@ export const AddStoryToHighlightRequest = (storyList: StoryArchive[],
             const rq = await ref.collection('users').doc(`${myUsername}`).get()
             const currentHighLight = [...(store.getState().user.highlights || [])]
             const index = currentHighLight.findIndex(x => x.name === targetHighlightName)
-            if (index < -1 && rq.exists) {
+            if (index > -1 && rq.exists) {
                 const highlight = { ...currentHighLight[index] }
                 const stories = [...highlight.stories]
                 storyList.map(story => {
@@ -1344,7 +1368,10 @@ export const AddStoryToHighlightRequest = (storyList: StoryArchive[],
                         stories.push(story)
                     }
                 })
-                currentHighLight[index] = highlight
+                currentHighLight[index] = {
+                    ...highlight,
+                    stories
+                }
             } else if (avatarUri && index < 0) {
                 currentHighLight.push({
                     name: targetHighlightName,

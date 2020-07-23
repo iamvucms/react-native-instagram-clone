@@ -1,8 +1,10 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import { SuperRootStackParamList } from '../../../navigations'
 import { RouteProp } from '@react-navigation/native'
 import SuperImage from '../../../components/SuperImage'
+import { STATUS_BAR_HEIGHT } from '../../../constants'
+import { goBack } from '../../../navigations/rootNavigation'
 
 type SuperImageFullViewRouteProp = RouteProp<SuperRootStackParamList, 'SuperImageFullView'>
 type SuperImageFullViewProps = {
@@ -12,6 +14,14 @@ const SuperImageFullView = ({ route }: SuperImageFullViewProps) => {
     const superId = route.params.superId
     return (
         <View>
+            <TouchableOpacity
+                onPress={goBack}
+                style={styles.btnClose}>
+                <Text style={{
+                    fontSize: 30,
+                    color: '#fff',
+                }}>✕</Text>
+            </TouchableOpacity>
             <SuperImage disableNavigation={true} superId={superId} />
         </View>
     )
@@ -19,4 +29,11 @@ const SuperImageFullView = ({ route }: SuperImageFullViewProps) => {
 
 export default SuperImageFullView
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+    btnClose: {
+        position: 'absolute',
+        zIndex: 1,
+        top: STATUS_BAR_HEIGHT + 10,
+        right: 25
+    }
+})

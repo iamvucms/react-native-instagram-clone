@@ -42,7 +42,6 @@ const SearchResult = ({ query }: SearchResultProps) => {
                     data = rq.data() || {}
                 } else {
                     const rs = await searchLocation(item.address || '')
-                    console.warn(item)
                     if (rs.length > 0) {
                         data = rs[0]
                     }

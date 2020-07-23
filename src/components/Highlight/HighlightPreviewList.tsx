@@ -6,9 +6,15 @@ import { SCREEN_WIDTH } from '../../constants'
 import HighlightAdderItem from './HighlightAdderItem'
 export interface HighlightPreviewListProps {
     highlights: Highlight[],
-    showAdder?: boolean
+    showAdder?: boolean,
+    inStoryAddition?: boolean,
+    addtionUid?: number,
+    additionSuperId?: number
+    onAddPress?: () => void
 }
-const HighlightPreviewList = ({ highlights, showAdder }: HighlightPreviewListProps) => {
+const HighlightPreviewList = ({ highlights,
+    additionSuperId, addtionUid, onAddPress,
+    showAdder, inStoryAddition }: HighlightPreviewListProps) => {
     const isMyHighlight = !!showAdder
     return (
         <View style={styles.container}>
@@ -18,7 +24,12 @@ const HighlightPreviewList = ({ highlights, showAdder }: HighlightPreviewListPro
                     alignItems: 'center',
                     paddingHorizontal: 15,
                 }}
-                ListHeaderComponent={showAdder ? HighlightAdderItem : null}
+                ListHeaderComponent={<React.Fragment>
+                    {!!showAdder && <HighlightAdderItem
+                        inStoryAddition={!!inStoryAddition}
+                        onPress={onAddPress}
+                    />}
+                </React.Fragment>}
                 style={{
                     width: SCREEN_WIDTH
                 }}
@@ -26,7 +37,13 @@ const HighlightPreviewList = ({ highlights, showAdder }: HighlightPreviewListPro
                 horizontal
                 data={highlights}
                 renderItem={({ item, index }) => (
-                    <HighlightPreviewItem {...{ item, isMyHighlight }} />
+                    <HighlightPreviewItem {...{
+                        item,
+                        isMyHighlight,
+                        inStoryAddition: !!inStoryAddition,
+                        additionSuperId,
+                        addtionUid
+                    }} />
                 )}
                 keyExtractor={(_, index) => `${index}`}
             />

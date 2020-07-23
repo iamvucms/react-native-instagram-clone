@@ -14,7 +14,7 @@ export type rootStackParamList = {
 export type commonParamList = AuthStackParamList & HomeTabParamList & rootStackParamList
 const RootTab = createMaterialTopTabNavigator<rootStackParamList>()
 const index = (): JSX.Element => {
-    const user = useSelector(state => state.user.user)
+    const user = useSelector(state => state.user)
     const navigationOptions: MaterialTopTabNavigationOptions = {
     }
     const tabBarOptions: MaterialTopTabBarOptions = {
@@ -25,15 +25,16 @@ const index = (): JSX.Element => {
             display: 'none'
         }
     }
+    const logined = !!user?.user?.userInfo
     return (
         <RootTab.Navigator
-            initialRouteName={user.logined ? 'HomeTab' : 'AuthStack'}
+            initialRouteName={logined ? 'HomeTab' : 'AuthStack'}
             screenOptions={navigationOptions}
             tabBarOptions={tabBarOptions}>
-            {!user.logined &&
+            {!logined &&
                 <RootTab.Screen name="AuthStack" component={AuthStack} />
             }
-            {user.logined &&
+            {logined &&
                 <>
                     <RootTab.Screen name="StoryTaker" component={StoryTaker} />
                     <RootTab.Screen name="HomeTab" component={HomeTab} />

@@ -7,6 +7,8 @@ export const userActionTypes = {
     LOGIN_REQUEST: 'LOGIN_REQUEST',
     LOGIN_SUCCESS: 'LOGIN_SUCCESS',
     LOGIN_FAILURE: 'LOGIN_FAILURE',
+    LOGOUT_SUCCESS: 'LOGOUT_SUCCESS',
+    LOGOUT_FAILURE: 'LOGOUT_FAILURE',
     REGISTER_REQUEST: 'REGISTER_REQUEST',
     REGISTER_SUCCESS: 'REGISTER_SUCCESS',
     REGISTER_FAILURE: 'REGISTER_FAILURE',
@@ -254,7 +256,7 @@ export type Highlight = {
     avatarUri: string,
     stories: StoryArchive[]
 }
-export interface userPayload {
+export type userPayload = {
     user: {
         logined?: boolean,
         firebaseUser?: firebase.UserInfo,
@@ -319,6 +321,7 @@ export type userAction = SuccessAction<userPayload> | ErrorAction
     | SuccessAction<PostArchivePayload>
     | SuccessAction<ArchivePayload>
     | SuccessAction<HighlightPayload>
+    | SuccessAction<undefined>
 export const defaultUserState: userPayload = {
     user: {},
     photos: [],
@@ -450,6 +453,12 @@ const reducer = (state: userPayload = defaultUserState, action: userAction): use
             action = <ErrorAction>action
             const message = action.payload.message
             Alert.alert('Error', message)
+            return state
+        case userActionTypes.LOGOUT_SUCCESS:
+            return { user: {} }
+        case userActionTypes.LOGOUT_FAILURE:
+            action = <ErrorAction>action
+            Alert.alert('Error', action.payload.message)
             return state
         case userActionTypes.REGISTER_REQUEST:
             state = { ...state, user: {} }

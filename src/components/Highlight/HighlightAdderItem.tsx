@@ -1,12 +1,20 @@
 import React from 'react'
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { navigate } from '../../navigations/rootNavigation'
-const HighlightAdderItem = () => {
+interface HighlightAdderItemProps {
+    inStoryAddition?: boolean,
+    onPress?: () => any
+}
+const HighlightAdderItem = ({ inStoryAddition, onPress }: HighlightAdderItemProps) => {
+    const _onPress = () => {
+        if (!!!inStoryAddition) navigate('CreateHighlight')
+        else {
+            onPress && onPress()
+        }
+    }
     return (
         <TouchableOpacity
-            onPress={() =>
-                navigate('CreateHighlight')
-            }
+            onPress={_onPress}
             activeOpacity={0.8}
             style={styles.container}
         >
