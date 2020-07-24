@@ -19,35 +19,21 @@
                     <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                     <nil key="highlightedColor"/>
                 </label>
-                <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rxZ-hr-ixw">
-                    <rect key="frame" x="108" y="176" width="240" height="128"/>
-                    <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
-                </view>
-                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="SplashLogo" translatesAutoresizingMaskIntoConstraints="NO" id="USj-S8-eNj">
-                    <rect key="frame" x="190" y="190" width="100" height="100"/>
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="SplashLogo2" translatesAutoresizingMaskIntoConstraints="NO" id="cJi-OO-4T8">
+                    <rect key="frame" x="120" y="176" width="240" height="128"/>
                     <constraints>
-                        <constraint firstAttribute="height" constant="100" id="fkM-9A-Lox"/>
-                        <constraint firstAttribute="width" constant="100" id="r8V-XT-iCp"/>
+                        <constraint firstAttribute="height" constant="128" id="8Ly-L4-Ikt"/>
+                        <constraint firstAttribute="width" constant="240" id="cUo-q3-8yv"/>
                     </constraints>
                 </imageView>
-                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="PhotoHub" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bL6-PI-AjZ">
-                    <rect key="frame" x="149" y="298" width="182.5" height="47"/>
-                    <fontDescription key="fontDescription" type="boldSystem" pointSize="39"/>
-                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                    <nil key="highlightedColor"/>
-                </label>
             </subviews>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
-                <constraint firstItem="bL6-PI-AjZ" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="ACt-rF-Vxc"/>
-                <constraint firstItem="USj-S8-eNj" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="EAt-QZ-CTT"/>
                 <constraint firstAttribute="bottom" secondItem="8ie-xW-0ye" secondAttribute="bottom" constant="20" id="Kzo-t9-V3l"/>
                 <constraint firstItem="8ie-xW-0ye" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="20" symbolic="YES" id="MfP-vx-nX0"/>
-                <constraint firstItem="rxZ-hr-ixw" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="QBJ-Pu-CGU"/>
+                <constraint firstItem="cJi-OO-4T8" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="Y6e-o3-X2S"/>
                 <constraint firstAttribute="centerX" secondItem="8ie-xW-0ye" secondAttribute="centerX" id="ZEH-qu-HZ9"/>
-                <constraint firstItem="bL6-PI-AjZ" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" constant="81.5" id="cz2-wA-of3"/>
-                <constraint firstItem="USj-S8-eNj" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="thW-FA-nNe"/>
-                <constraint firstItem="rxZ-hr-ixw" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="xDe-Km-LCa"/>
+                <constraint firstItem="cJi-OO-4T8" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="cMI-fF-qv6"/>
             </constraints>
             <nil key="simulatedStatusBarMetrics"/>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
@@ -55,6 +41,6 @@
         </view>
     </objects>
     <resources>
-        <image name="SplashLogo" width="256" height="256"/>
+        <image name="SplashLogo2" width="357" height="80.5"/>
     </resources>
 </document>

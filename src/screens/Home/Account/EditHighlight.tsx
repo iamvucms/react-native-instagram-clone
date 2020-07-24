@@ -62,7 +62,7 @@ const EditHighlight = ({ route }: EditHighlightProps) => {
     }, [stories])
     useEffect(() => {
         selectedIndexs.map(idx => {
-            if (!!!selectedStories.find(x => x.uid === stories[idx].uid)) {
+            if (idx > -1 && !!!selectedStories.find(x => x.uid === stories[idx].uid)) {
                 selectedStories.push(stories[idx])
             }
         })

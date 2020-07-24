@@ -19,7 +19,7 @@ import { getImageClass, convertToFirebaseDatabasePathName } from './src/utils';
 import { firestore, database } from 'firebase';
 import { Post } from './src/reducers/postReducer';
 YellowBox.ignoreWarnings([
-	'Non-serializable values were found in the navigation state',
+	'',
 ]);
 const App = () => {
 	const myUsername = store.getState().user.user?.userInfo?.username
