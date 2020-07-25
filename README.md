@@ -12,14 +12,15 @@ The 2nd project what I did with React Native.
 - Redux / Redux-thunk
 ## Installation
 
-Use the package manager [YARN] to install [React Native Instagram Clone].
-
+Use the package manager [YARN] to install [React Native Instagram Clone].\
+First, Install API image classification: [Here](https://github.com/iamvucms/ImageClassifyAPI/blob/master/README.md#installation)
 ```bash
 git clone https://github.com/iamvucms/react-native-instagram-clone.git
 cd react-native-instagram-clone
 yarn
 cd ios && pod install
 ```
+
 
 ## Usage
 
