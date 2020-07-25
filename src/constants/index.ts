@@ -27,7 +27,7 @@ firebase.initializeApp(firebaseConfig)
 //     docs.forEach(doc => {
 //         doc.ref.update({
 //             create_at: new Date(),
-//             seenList: [ 'vucms.user3', 'vucms.user4', 'vucms.user5', 'vucms0202']
+//             seenList: [ 'vucms.user3', 'vucms.user4', 'vucms.user5', 'vucms.user8']
 //         })
 //     })
 // })

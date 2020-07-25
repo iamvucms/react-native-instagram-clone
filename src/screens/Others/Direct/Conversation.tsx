@@ -44,9 +44,11 @@ const Conversation = ({ route }: ConversationProps) => {
     const [selectedEmoijTargetIndex, setSelectedEmoijTargetIndex] = useState<number>(-1)
     const [showGallery, setShowGallery] = useState<boolean>(false)
     const ref = useRef<{
+        scrollTimeOut: NodeJS.Timeout,
         text: string,
         preventNextScrollToEnd: boolean
     }>({
+        scrollTimeOut: setTimeout(() => { }, 0),
         text: '',
         preventNextScrollToEnd: false
     })
@@ -222,10 +224,13 @@ const Conversation = ({ route }: ConversationProps) => {
     }
     const _onMessageBoxSizeChange = () => {
         if (conversation.messageList.length > 0 && !ref.current.preventNextScrollToEnd) {
-            _flatlistRef.current?.scrollToIndex({
-                index: 0,
-                animated: true,
-            })
+            clearTimeout(ref.current.scrollTimeOut)
+            ref.current.scrollTimeOut = setTimeout(() => {
+                _flatlistRef.current?.scrollToIndex({
+                    index: 0,
+                    animated: true,
+                })
+            }, 1000);
         }
         if (ref.current.preventNextScrollToEnd) {
             ref.current.preventNextScrollToEnd = false
@@ -387,7 +392,7 @@ const Conversation = ({ route }: ConversationProps) => {
                     <FlatList
                         showsVerticalScrollIndicator={false}
                         ref={_flatlistRef}
-                        onContentSizeChange={_onMessageBoxSizeChange}
+                        onLayout={_onMessageBoxSizeChange}
                         style={{
                             height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 88 - 30,
                         }}

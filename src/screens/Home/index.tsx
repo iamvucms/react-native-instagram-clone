@@ -114,7 +114,7 @@ const index = () => {
                     keyboardDismissMode="on-drag"
                     ref={_scrollRef}
                     style={{
-                        height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44
+                        height: SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 44 
                     }}
                     refreshControl={
                         <RefreshControl

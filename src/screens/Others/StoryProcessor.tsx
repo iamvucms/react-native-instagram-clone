@@ -737,6 +737,7 @@ const StoryProcessor = ({ route }: StoryProcessorProps) => {
                                 height: 64
                             }}>
                                 <TextInput
+                                    onSubmitEditing={_onDoneLabel}
                                     onContentSizeChange={e => {
                                         ref.current.textHeight = e.nativeEvent.contentSize.height
                                         ref.current.textWidth = e.nativeEvent.contentSize.width

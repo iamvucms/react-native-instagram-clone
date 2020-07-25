@@ -1382,6 +1382,7 @@ export const AddStoryToHighlightRequest = (storyList: StoryArchive[],
             await rq.ref.update({
                 highlights: currentHighLight
             })
+            dispatch(AddStoryArchiveRequest(storyList))
             dispatch(FetchHighlightRequest())
         }
         catch (e) {

@@ -151,7 +151,7 @@ const StoryItem = ({ item, index, maxIndex, controller, setController }: StoryPr
         goBack()
         dispatch(FetchStoryListRequest())
     }
-    const timeoutBarItemWidth = SCREEN_WIDTH / item.storyList.length - 1 * (item.storyList.length - 1)
+    const timeoutBarItemWidth = SCREEN_WIDTH / item.storyList.length - 3
     const seenList = [...(item?.storyList[childIndex]?.seenList || [])]
     const i = seenList.indexOf(myUsername)
     if (index > -1) seenList.splice(i, 1)

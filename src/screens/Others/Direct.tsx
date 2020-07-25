@@ -34,7 +34,6 @@ const Direct = () => {
     }, [])
     useEffect(() => {
         if (focused) {
-
         }
     }, [focused])
     useEffect(() => {
