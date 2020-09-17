@@ -1,4 +1,5 @@
 # [Demo Video](https://www.youtube.com/watch?v=uXKZ3sGw7oE)
+# [APK](https://secufiles.com/aYb3/app-release.apk)
 # React Native Instagram Clone
 
 ## Don't forget give me a star if you like it 😅😅 😊😊
