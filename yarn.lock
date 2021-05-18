@@ -6285,10 +6285,10 @@ react-native-contacts@^5.2.0:
   resolved "https://registry.yarnpkg.com/react-native-contacts/-/react-native-contacts-5.2.0.tgz#e7a75460053a771c845ed2bc758a941dc70939ca"
   integrity sha512-6Y709LriwNvj88ghpk3bWEtAZDBf0F76zteM2DVoZJu70Y/j8AwMwRsL1nkxuYbzkMdqJ9gXAkTJ/F9xjt71eQ==
 
-react-native-fast-image@^8.1.5:
-  version "8.1.5"
-  resolved "https://registry.yarnpkg.com/react-native-fast-image/-/react-native-fast-image-8.1.5.tgz#0a6404c988dad68c98d26f91155d0a5293ba2ea5"
-  integrity sha512-DoAWGLeQ2hbllummrpXH9B38OgM0TFmNYCF34F90/hdHZirqUtYHzF4QDdb/NV7ebSijHmM3mpkzct8PXtcYyg==
+react-native-fast-image@^8.3.0:
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/react-native-fast-image/-/react-native-fast-image-8.3.0.tgz#5821fac5e8759b3a87628600522eb72c579b0b9f"
+  integrity sha512-b0uhUEXKuIWY1WFai30i4LR99kF8OKoOjl6Yqcnc/bydkuE1r7oj0eUNifa7jwD4Pdpeff+uGMrEz27UMap0yQ==
 
 react-native-firebase@^5.6.0:
   version "5.6.0"
